@@ -15,6 +15,9 @@
  * @var string $reference
  * @var array $payment_options
  * @var array $config
+ * @var string $loan_balance
+ * @var bool $has_linked_customer
+ * @var int|null $linked_customer_id
  */
 ?>
 
@@ -400,6 +403,35 @@ if (isset($success)) {
                                         ) ?>
                                     </td>
                                 </tr>
+                                <?php if ($has_linked_customer && $loan_balance > 0) { ?>
+                                    <tr>
+                                        <td colspan="2"><hr style="margin: 5px 0; border-color: #ddd;"></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong><?= lang('Receivings.loan_balance') ?></strong></td>
+                                        <td><strong style="color: #d9534f;"><?= to_currency($loan_balance) ?></strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td><?= lang('Receivings.loan_deduction') ?></td>
+                                        <td>
+                                            <?= form_input([
+                                                'name'  => 'loan_deduction',
+                                                'id'    => 'loan_deduction',
+                                                'value' => '',
+                                                'class' => 'form-control input-sm',
+                                                'size'  => '5',
+                                                'placeholder' => '0.00'
+                                            ]) ?>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><?= lang('Receivings.cash_to_pay') ?></td>
+                                        <td><strong id="cash_to_pay"><?= to_currency($total) ?></strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="2"><hr style="margin: 5px 0; border-color: #ddd;"></td>
+                                    </tr>
+                                <?php } ?>
                                 <tr>
                                     <td><?= lang('Sales.amount_tendered') ?></td>
                                     <td>
@@ -537,6 +569,30 @@ if (isset($success)) {
             $('#cart_' + $(this).attr('data-line')).append($(input));
             $('#cart_' + $(this).attr('data-line')).submit();
         });
+
+        <?php if ($has_linked_customer && $loan_balance > 0) { ?>
+        // Auto-calculate remaining cash to pay when loan deduction changes
+        var receivingTotal = <?= json_encode((float)$total) ?>;
+        var maxLoanDeduction = Math.min(<?= json_encode((float)$loan_balance) ?>, receivingTotal);
+
+        $('#loan_deduction').on('input change', function() {
+            var deduction = parseFloat($(this).val()) || 0;
+
+            // Clamp to valid range
+            if (deduction < 0) deduction = 0;
+            if (deduction > maxLoanDeduction) deduction = maxLoanDeduction;
+
+            var cashToPay = receivingTotal - deduction;
+            $('#cash_to_pay').text('<?= $config['currency_symbol'] ?>' + cashToPay.toFixed(2));
+
+            // If loan covers the full amount, hide cash payment fields
+            if (cashToPay <= 0) {
+                $('#cash_payment_row, #amount_tendered_row').hide();
+            } else {
+                $('#cash_payment_row, #amount_tendered_row').show();
+            }
+        });
+        <?php } ?>
 
     });
 </script>

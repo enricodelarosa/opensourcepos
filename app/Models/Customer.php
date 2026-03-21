@@ -207,6 +207,24 @@ class Customer extends Person
     }
 
     /**
+     * Creates a minimal customer record for an existing person (e.g. when linking a supplier).
+     * The person record must already exist in the people table.
+     */
+    public function create_for_person(int $person_id, string $company_name): bool
+    {
+        $builder = $this->db->table('customers');
+
+        return $builder->insert([
+            'person_id'    => $person_id,
+            'company_name' => $company_name,
+            'taxable'      => 1,
+            'discount'     => 0.00,
+            'discount_type' => 0,
+            'consent'      => 0,
+        ]);
+    }
+
+    /**
      * Inserts or updates a customer
      */
     public function save_customer(array &$person_data, array &$customer_data, int $customer_id = NEW_ENTRY): bool

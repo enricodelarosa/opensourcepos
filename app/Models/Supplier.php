@@ -19,7 +19,8 @@ class Supplier extends Person
         'tax_id',
         'deleted',
         'agency_name',
-        'category'
+        'category',
+        'customer_id'
     ];
 
     /**
@@ -311,5 +312,30 @@ class Supplier extends Person
         } else {
             return  lang('Suppliers.cost');
         }
+    }
+
+    /**
+     * Links a customer to a supplier by setting the customer_id field.
+     */
+    public function link_customer(int $supplier_id, int $customer_id): bool
+    {
+        $builder = $this->db->table('suppliers');
+        $builder->where('person_id', $supplier_id);
+
+        return $builder->update(['customer_id' => $customer_id]);
+    }
+
+    /**
+     * Gets the linked customer_id for a supplier, if any.
+     */
+    public function get_linked_customer_id(int $supplier_id): ?int
+    {
+        $builder = $this->db->table('suppliers');
+        $builder->select('customer_id');
+        $builder->where('person_id', $supplier_id);
+
+        $row = $builder->get()->getRow();
+
+        return ($row && !empty($row->customer_id)) ? (int) $row->customer_id : null;
     }
 }

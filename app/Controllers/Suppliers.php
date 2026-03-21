@@ -2,19 +2,21 @@
 
 namespace App\Controllers;
 
+use App\Models\Customer;
 use App\Models\Supplier;
 use CodeIgniter\HTTP\ResponseInterface;
-use Config\Services;
 
 class Suppliers extends Persons
 {
     private Supplier $supplier;
+    private Customer $customer;
 
     public function __construct()
     {
         parent::__construct('suppliers');
 
         $this->supplier = model(Supplier::class);
+        $this->customer = model(Customer::class);
     }
 
     /**
@@ -104,6 +106,13 @@ class Suppliers extends Persons
         $data['person_info'] = $info;
         $data['categories'] = $this->supplier->get_categories();
 
+        // Build customer dropdown for linking supplier to a customer account
+        $customers_list = ['' => lang('Suppliers.no_linked_customer')];
+        foreach ($this->customer->get_all()->getResult() as $customer) {
+            $customers_list[$customer->person_id] = $customer->first_name . ' ' . $customer->last_name . (!empty($customer->company_name) ? ' [' . $customer->company_name . ']' : '');
+        }
+        $data['customers_list'] = $customers_list;
+
         return view("suppliers/form", $data);
     }
 
@@ -138,24 +147,34 @@ class Suppliers extends Persons
             'comments'     => $this->request->getPost('comments', FILTER_SANITIZE_FULL_SPECIAL_CHARS)
         ];
 
+        $create_linked_customer = $this->request->getPost('create_linked_customer') === '1';
+
         $supplier_data = [
             'company_name'   => $this->request->getPost('company_name', FILTER_SANITIZE_FULL_SPECIAL_CHARS),
             'agency_name'    => $this->request->getPost('agency_name', FILTER_SANITIZE_FULL_SPECIAL_CHARS),
             'category'       => $this->request->getPost('category', FILTER_SANITIZE_FULL_SPECIAL_CHARS),
             'account_number' => $this->request->getPost('account_number') == '' ? null : $this->request->getPost('account_number', FILTER_SANITIZE_FULL_SPECIAL_CHARS),
-            'tax_id'         => $this->request->getPost('tax_id', FILTER_SANITIZE_NUMBER_INT)
+            'tax_id'         => $this->request->getPost('tax_id', FILTER_SANITIZE_NUMBER_INT),
+            'customer_id'    => $create_linked_customer ? null : ($this->request->getPost('customer_id') == '' ? null : $this->request->getPost('customer_id', FILTER_SANITIZE_NUMBER_INT))
         ];
 
         if ($this->supplier->save_supplier($person_data, $supplier_data, $supplier_id)) {
+            $saved_person_id = ($supplier_id == NEW_ENTRY) ? $supplier_data['person_id'] : $supplier_id;
+
+            if ($create_linked_customer) {
+                if ($this->customer->create_for_person($saved_person_id, $supplier_data['company_name'])) {
+                    $this->supplier->link_customer($saved_person_id, $saved_person_id);
+                }
+            }
+
             // New supplier
             if ($supplier_id == NEW_ENTRY) {
                 return $this->response->setJSON([
                     'success' => true,
                     'message' => lang('Suppliers.successful_adding') . ' ' . $supplier_data['company_name'],
-                    'id'      => $supplier_data['person_id']
+                    'id'      => $saved_person_id
                 ]);
             } else { // Existing supplier
-
                 return $this->response->setJSON([
                     'success' => true,
                     'message' => lang('Suppliers.successful_updating') . ' ' . $supplier_data['company_name'],

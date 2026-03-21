@@ -7,6 +7,7 @@ return [
     "available_points_value"        => "",
     "average"                       => "Average spent",
     "avg_discount"                  => "Average discount",
+    "loan_balance"                  => "Loan Balance",
     "basic_information"             => "Information",
     "cannot_be_deleted"             => "Could not delete selected customers, one or more of the selected customers has sales.",
     "company_name"                  => "Company",

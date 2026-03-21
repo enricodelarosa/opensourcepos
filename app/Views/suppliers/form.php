@@ -3,6 +3,7 @@
  * @var string $controller_name
  * @var object $person_info
  * @var array $categories
+ * @var array $customers_list
  */
 ?>
 
@@ -69,6 +70,26 @@
             </div>
         </div>
 
+        <?php if (empty($person_info->person_id)): ?>
+        <div class="form-group form-group-sm">
+            <div class="col-xs-offset-3 col-xs-8">
+                <div class="checkbox">
+                    <label>
+                        <?= form_checkbox(['name' => 'create_linked_customer', 'id' => 'create_linked_customer', 'value' => '1']) ?>
+                        <?= lang('Suppliers.create_linked_customer') ?>
+                    </label>
+                </div>
+            </div>
+        </div>
+        <?php endif; ?>
+
+        <div class="form-group form-group-sm" id="linked_customer_row">
+            <?= form_label(lang('Suppliers.linked_customer'), 'customer_id', ['class' => 'control-label col-xs-3']) ?>
+            <div class="col-xs-8">
+                <?= form_dropdown('customer_id', $customers_list, $person_info->customer_id ?? '', ['class' => 'form-control', 'id' => 'customer_id']) ?>
+            </div>
+        </div>
+
     </fieldset>
 <?= form_close() ?>
 
@@ -86,7 +107,7 @@
                 });
             },
 
-            errorLabelContainer: '#error_message_box',
+        errorLabelContainer: '#error_message_box',
 
             rules: {
                 company_name: 'required',
@@ -102,5 +123,17 @@
                 email: "<?= lang('Common.email_invalid_format') ?>"
             }
         }, form_support.error));
+
+        <?php if (empty($person_info->person_id)): ?>
+        $('#create_linked_customer').on('change', function() {
+            if ($(this).is(':checked')) {
+                $('#linked_customer_row').hide();
+                $('#customer_id').val('').prop('disabled', true);
+            } else {
+                $('#linked_customer_row').show();
+                $('#customer_id').prop('disabled', false);
+            }
+        });
+        <?php endif; ?>
     });
 </script>

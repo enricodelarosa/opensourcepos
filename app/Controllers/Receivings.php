@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Libraries\Receiving_lib;
 use App\Libraries\Token_lib;
 use App\Libraries\Barcode_lib;
+use App\Models\Customer_loan;
 use App\Models\Inventory;
 use App\Models\Item;
 use App\Models\Item_kit;
@@ -170,6 +171,8 @@ class Receivings extends Secure_Controller
 
         $mode = $this->receiving_lib->get_mode();
         $item_id_or_number_or_item_kit_or_receipt = $this->request->getPost('item', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+        $quantity = 1;
+        $price = null;
         $this->token_lib->parse_barcode($quantity, $price, $item_id_or_number_or_item_kit_or_receipt);
         $quantity = ($mode == 'receive' || $mode == 'requisition') ? $quantity : -$quantity;
         $item_location = $this->receiving_lib->get_stock_source();
@@ -334,10 +337,6 @@ class Receivings extends Secure_Controller
         $data['payment_type'] = $this->request->getPost('payment_type', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
         $data['show_stock_locations'] = $this->stock_location->show_locations('receivings');
         $data['stock_location'] = $this->receiving_lib->get_stock_source();
-        if ($this->request->getPost('amount_tendered') != null) {
-            $data['amount_tendered'] = parse_decimals($this->request->getPost('amount_tendered'));
-            $data['amount_change'] = to_currency($data['amount_tendered'] - $data['total']);
-        }
 
         $employee_id = $this->employee->get_logged_in_employee_info()->person_id;
         $employee_info = $this->employee->get_info($employee_id);
@@ -358,13 +357,69 @@ class Receivings extends Secure_Controller
             }
         }
 
+        // Handle loan deduction if provided
+        $loan_deduction = 0;
+        if ($this->request->getPost('loan_deduction') != null && $this->request->getPost('loan_deduction') != '') {
+            $loan_deduction = parse_decimals($this->request->getPost('loan_deduction'));
+        }
+        $data['loan_deduction'] = $loan_deduction;
+
+        // Validate loan deduction amount
+        if ($loan_deduction > 0 && $supplier_id != -1) {
+            $linked_customer_id = $this->supplier->get_linked_customer_id($supplier_id);
+            if ($linked_customer_id) {
+                $customer_loan = model(Customer_loan::class);
+                $current_balance = (float) $customer_loan->get_loan_balance($linked_customer_id);
+
+                if ($loan_deduction > $current_balance) {
+                    $data['error'] = lang('Receivings.loan_deduction_exceeds');
+                    return $this->_reload($data);
+                }
+
+                if ($loan_deduction > $data['total']) {
+                    $data['error'] = lang('Receivings.loan_deduction_exceeds_total');
+                    return $this->_reload($data);
+                }
+            }
+        }
+
+        // Calculate amounts after loan deduction
+        $cash_amount = $data['total'] - $loan_deduction;
+
+        if ($loan_deduction > 0 && $cash_amount <= 0) {
+            // Fully paid by loan deduction — no cash payment needed
+            $data['payment_type'] = lang('Sales.loan_deduction');
+            $data['amount_tendered'] = 0;
+            $data['amount_change'] = to_currency(0);
+        } elseif ($this->request->getPost('amount_tendered') != null && $this->request->getPost('amount_tendered') != '') {
+            $data['amount_tendered'] = parse_decimals($this->request->getPost('amount_tendered'));
+            $data['amount_change'] = to_currency($data['amount_tendered'] - $cash_amount);
+        }
+
         // SAVE receiving to database
-        $data['receiving_id'] = 'RECV ' . $this->receiving->save_value($data['cart'], $supplier_id, $employee_id, $data['comment'], $data['reference'], $data['payment_type'], $data['stock_location']);
+        $receiving_id_num = $this->receiving->save_value($data['cart'], $supplier_id, $employee_id, $data['comment'], $data['reference'], $data['payment_type'], $data['stock_location']);
+        $data['receiving_id'] = 'RECV ' . $receiving_id_num;
 
         if ($data['receiving_id'] == 'RECV -1') {
             $data['error_message'] = lang('Receivings.transaction_failed');
         } else {
             $data['barcode'] = $this->barcode_lib->generate_receipt_barcode($data['receiving_id']);
+
+            // Record loan deduction if applicable
+            if ($loan_deduction > 0 && $supplier_id != -1) {
+                $linked_customer_id = $this->supplier->get_linked_customer_id($supplier_id);
+                if ($linked_customer_id) {
+                    $customer_loan = model(Customer_loan::class);
+                    $customer_loan->record_loan(
+                        $linked_customer_id,
+                        -$loan_deduction,    // Negative = paying off the loan
+                        null,
+                        $receiving_id_num,
+                        'Loan deduction from receiving RECV ' . $receiving_id_num
+                    );
+                    $data['loan_balance_after'] = $customer_loan->get_loan_balance($linked_customer_id);
+                }
+            }
         }
 
         $data['print_after_sale'] = $this->receiving_lib->is_print_after_sale();
@@ -472,6 +527,11 @@ class Receivings extends Secure_Controller
 
         $supplier_id = $this->receiving_lib->get_supplier();
 
+        // Loan balance tracking for linked customers
+        $data['loan_balance'] = '0.00';
+        $data['has_linked_customer'] = false;
+        $data['linked_customer_id'] = null;
+
         if ($supplier_id != -1) {    // TODO: Duplicated Code... replace -1 with a constant
             $supplier_info = $this->supplier->get_info($supplier_id);
             $data['supplier'] = $supplier_info->company_name;
@@ -483,6 +543,15 @@ class Receivings extends Secure_Controller
                 $data['supplier_location'] = $supplier_info->zip . ' ' . $supplier_info->city;
             } else {
                 $data['supplier_location'] = '';
+            }
+
+            // Check if supplier has a linked customer with outstanding loans
+            $linked_customer_id = $this->supplier->get_linked_customer_id($supplier_id);
+            if ($linked_customer_id) {
+                $customer_loan = model(Customer_loan::class);
+                $data['has_linked_customer'] = true;
+                $data['linked_customer_id'] = $linked_customer_id;
+                $data['loan_balance'] = $customer_loan->get_loan_balance($linked_customer_id);
             }
         }
 

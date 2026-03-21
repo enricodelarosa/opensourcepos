@@ -6,16 +6,18 @@
 
 <script type="text/javascript">
     // Live clock
-    var clock_tick = function clock_tick() {
-        setInterval('update_clock();', 1000);
-    }
-
-    // Start the clock immediately
-    clock_tick();
-
     var update_clock = function update_clock() {
-        document.getElementById('liveclock').innerHTML = moment().format("<?= dateformat_momentjs($config['dateformat'] . ' ' . $config['timeformat']) ?>");
+        if (typeof moment !== 'undefined') {
+            document.getElementById('liveclock').innerHTML = moment().format("<?= dateformat_momentjs($config['dateformat'] . ' ' . $config['timeformat']) ?>");
+        }
     }
+
+    var clock_tick = function clock_tick() {
+        setInterval(update_clock, 1000);
+    }
+
+    // Start the clock when DOM is ready
+    document.addEventListener('DOMContentLoaded', clock_tick);
 
     const notify = $.notify;
 

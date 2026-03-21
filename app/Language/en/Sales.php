@@ -223,4 +223,9 @@ return [
     "work_order_number_duplicate"      => "Work Order Number must be unique.",
     "work_order_sent"                  => "Work Order sent to",
     "work_order_unsent"                => "Work Order failed to be sent to",
+    "store_account"                    => "Loan",
+    "loan_balance"                     => "Loan Balance",
+    "loan_deduction"                   => "Loan Deduction",
+    "loan_recorded"                    => "Loan of {0} recorded for customer {1}.",
+    "loan_deduction_applied"           => "Loan deduction of {0} applied. Remaining balance: {1}.",
 ];

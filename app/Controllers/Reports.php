@@ -10,6 +10,7 @@ use App\Models\Reports\Detailed_receivings;
 use App\Models\Reports\Detailed_sales;
 use App\Models\Reports\Inventory_low;
 use App\Models\Reports\Inventory_summary;
+use App\Models\Reports\Customer_loans_report;
 use App\Models\Reports\Specific_customer;
 use App\Models\Reports\Specific_discount;
 use App\Models\Reports\Specific_employee;
@@ -2127,6 +2128,80 @@ class Reports extends Secure_Controller
     /**
      * @return void
      */
+    /**
+     * Customer loan ledger report input form.
+     *
+     * @return string
+     * @noinspection PhpUnused
+     */
+    public function specific_loans_input(): string
+    {
+        $this->clearCache();
+
+        $customers = [];
+        foreach ($this->customer->get_all()->getResult() as $customer) {
+            $name = $customer->first_name . ' ' . $customer->last_name;
+            if (!empty($customer->company_name)) {
+                $name .= ' [' . $customer->company_name . ']';
+            }
+            $customers[$customer->person_id] = $name;
+        }
+
+        $data['specific_input_name'] = lang('Reports.customer');
+        $data['specific_input_data'] = $customers;
+
+        return view('reports/specific_customer_loans_input', $data);
+    }
+
+    /**
+     * Customer loan ledger report. Used in app/Config/Routes.php
+     *
+     * @param string $start_date
+     * @param string $end_date
+     * @param string $customer_id
+     * @return string
+     * @noinspection PhpUnused
+     */
+    public function specific_loans(string $start_date, string $end_date, string $customer_id): string
+    {
+        $this->clearCache();
+
+        $inputs = ['start_date' => $start_date, 'end_date' => $end_date, 'customer_id' => $customer_id];
+
+        $report = model(Customer_loans_report::class);
+        $raw_data = $report->getData($inputs);
+
+        $running_balance = 0.0;
+        $tabular_data = [];
+        foreach ($raw_data as $row) {
+            $running_balance += (float)$row['loan_amount'];
+            $tabular_data[] = [
+                'transaction_time' => to_datetime(strtotime($row['transaction_time'])),
+                'transaction_type' => $row['sale_id'] ? lang('Reports.completed_sales') : lang('Module.receivings'),
+                'reference'        => $row['sale_id'] ? 'Sale #' . $row['sale_id'] : 'Purchase #' . $row['receiving_id'],
+                'loan_amount'      => to_currency($row['loan_amount']),
+                'running_balance'  => to_currency($running_balance),
+                'comment'          => esc($row['comment']),
+            ];
+        }
+
+        $customer_info = $this->customer->get_info($customer_id);
+        $customer_name = $customer_info->first_name . ' ' . $customer_info->last_name;
+        if (!empty($customer_info->company_name)) {
+            $customer_name .= ' [' . $customer_info->company_name . ']';
+        }
+
+        $data = [
+            'title'        => $customer_name . ' — ' . lang('Reports.customer_loans'),
+            'subtitle'     => $this->_get_subtitle_report($inputs),
+            'headers'      => $report->getDataColumns(),
+            'data'         => $tabular_data,
+            'summary_data' => $report->getSummaryData($inputs),
+        ];
+
+        return view('reports/tabular', $data);
+    }
+
     private function clearCache(): void
     {
         // Make sure the report is not cached by the browser

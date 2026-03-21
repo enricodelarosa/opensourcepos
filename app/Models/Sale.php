@@ -924,6 +924,9 @@ class Sale extends Model
             $payments[lang('Sales.credit_deposit')] = lang('Sales.credit_deposit');
         }
 
+        // Store Account payment: allows customer to buy on loan/credit
+        $payments[lang('Sales.store_account')] = lang('Sales.store_account');
+
         return $payments;
     }
 

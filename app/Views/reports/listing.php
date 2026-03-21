@@ -6,12 +6,13 @@
  */
 
 $detailed_reports = [
-    'reports_sales'      => 'detailed',
-    'reports_receivings' => 'detailed',
-    'reports_customers'  => 'specific',
-    'reports_discounts'  => 'specific',
-    'reports_employees'  => 'specific',
-    'reports_suppliers'  => 'specific',
+    'reports_sales'           => 'detailed',
+    'reports_receivings'      => 'detailed',
+    'reports_customers'       => 'specific',
+    'reports_discounts'       => 'specific',
+    'reports_employees'       => 'specific',
+    'reports_suppliers'       => 'specific',
+    'reports_loans'           => 'specific',
 ];
 ?>
 

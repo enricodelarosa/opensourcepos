@@ -37,6 +37,7 @@
  * @var float $non_cash_total
  * @var float $cash_amount_due
  * @var array $config
+ * @var string $customer_loan_balance
  */
 
 use App\Models\Employee;
@@ -338,6 +339,12 @@ helper('url');
                         <th style="width: 55%;"><?= lang(ucfirst($controller_name) . '.customer_total') ?></th>
                         <th style="width: 45%; text-align: right;"><?= to_currency($customer_total) ?></th>
                     </tr>
+                    <?php if (isset($customer_loan_balance) && $customer_loan_balance > 0) { ?>
+                        <tr>
+                            <th style="width: 55%;"><?= lang('Sales.loan_balance') ?></th>
+                            <th style="width: 45%; text-align: right; color: #d9534f;"><?= to_currency($customer_loan_balance) ?></th>
+                        </tr>
+                    <?php } ?>
                     <?php if (!empty($mailchimp_info)) { ?>
                         <tr>
                             <th style="width: 55%;"><?= lang(ucfirst($controller_name) . '.customer_mailchimp_status') ?></th>

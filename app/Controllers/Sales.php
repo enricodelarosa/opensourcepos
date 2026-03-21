@@ -17,6 +17,7 @@ use App\Models\Item;
 use App\Models\Item_kit;
 use App\Models\Sale;
 use App\Models\Stock_location;
+use App\Models\Customer_loan;
 use App\Models\Tokens\Token_invoice_count;
 use App\Models\Tokens\Token_customer;
 use App\Models\Tokens\Token_invoice_sequence;
@@ -68,6 +69,7 @@ class Sales extends Secure_Controller
 
     public function getIndex(): ResponseInterface|string
     {
+        $this->sale_lib->clear_all();
         $this->session->set('allow_temp_items', 1);
         return $this->_reload();    // TODO: Hungarian Notation
     }
@@ -455,6 +457,15 @@ class Sales extends Secure_Controller
                         $this->sale_lib->add_payment($payment_type, $amount_tendered);
                     }
                 }
+            } elseif ($payment_type === lang('Sales.store_account')) {
+                // Store Account payment: customer buys on loan/credit. Requires a customer to be selected.
+                $customer_id = $this->sale_lib->get_customer();
+                if ($customer_id == NEW_ENTRY) {
+                    $data['error'] = lang('Sales.customer_required');
+                } else {
+                    $amount_tendered = parse_decimals($this->request->getPost('amount_tendered'));
+                    $this->sale_lib->add_payment($payment_type, $amount_tendered);
+                }
             } elseif ($payment_type === lang('Sales.cash')) {
                 $amount_due = $this->sale_lib->get_total();
                 $sales_total = $this->sale_lib->get_total(false);
@@ -785,6 +796,7 @@ class Sales extends Secure_Controller
                 if ($data['sale_id_num'] == NEW_ENTRY) {
                     $data['error_message'] = lang('Sales.transaction_failed');
                 } else {
+                    $this->_record_store_account_loan($customer_id, $data['sale_id_num'], $data['payments']);
                     $data['barcode'] = $this->barcode_lib->generate_receipt_barcode($data['sale_id']);
                     return view('sales/' . $invoice_view, $data);
                     $this->sale_lib->clear_all();
@@ -870,9 +882,42 @@ class Sales extends Secure_Controller
             if ($data['sale_id_num'] == NEW_ENTRY) {
                 $data['error_message'] = lang('Sales.transaction_failed');
             } else {
+                $this->_record_store_account_loan($customer_id, $data['sale_id_num'], $data['payments']);
                 $data['barcode'] = $this->barcode_lib->generate_receipt_barcode($data['sale_id']);
                 return view('sales/receipt', $data);
                 $this->sale_lib->clear_all();
+            }
+        }
+    }
+
+    /**
+     * Records a loan for a customer when a Store Account payment is used.
+     *
+     * @param int $customer_id
+     * @param int $sale_id
+     * @param array $payments
+     * @return void
+     */
+    private function _record_store_account_loan(int $customer_id, int $sale_id, array $payments): void
+    {
+        if ($customer_id == NEW_ENTRY) {
+            return;
+        }
+
+        $store_account_key = lang('Sales.store_account');
+        if (isset($payments[$store_account_key])) {
+            $loan_amount = $payments[$store_account_key]['payment_amount'];
+            if ($loan_amount > 0) {
+                $customer_loan = model(Customer_loan::class);
+                $customer_info = $this->customer->get_info($customer_id);
+                $customer_name = $customer_info->first_name . ' ' . $customer_info->last_name;
+                $customer_loan->record_loan(
+                    $customer_id,
+                    $loan_amount,
+                    $sale_id,
+                    null,
+                    lang('Sales.loan_recorded', [to_currency($loan_amount), $customer_name])
+                );
             }
         }
     }
@@ -1013,6 +1058,11 @@ class Sales extends Secure_Controller
                 $cust_stats = $this->customer->get_stats($customer_id);
                 $data['customer_total'] = empty($cust_stats) ? 0 : $cust_stats->total;
             }
+
+            // Load loan balance if customer has outstanding loans
+            $customer_loan = model(Customer_loan::class);
+            $loan_balance = $customer_loan->get_loan_balance($customer_id);
+            $data['customer_loan_balance'] = $loan_balance;
 
             $data['customer_info'] = implode("\n", [
                 $data['customer'],

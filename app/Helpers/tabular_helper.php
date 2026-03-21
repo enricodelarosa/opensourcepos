@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Attribute;
+use App\Models\Customer_loan;
 use App\Models\Employee;
 use App\Models\Item_taxes;
 use App\Models\Tax_category;
@@ -259,7 +260,8 @@ function customer_headers(): array
         ['first_name'       => lang('Common.first_name')],
         ['email'            => lang('Common.email')],
         ['phone_number'     => lang('Common.phone_number')],
-        ['total'            => lang('Common.total_spent'), 'sortable' => false]
+        ['total'            => lang('Common.total_spent'), 'sortable' => false],
+        ['loan_balance'     => lang('Customers.loan_balance'), 'sortable' => false, 'escape' => false]
     ];
 }
 
@@ -286,6 +288,8 @@ function get_customer_manage_table_headers(): string
 function get_customer_data_row(object $person, object $stats): array
 {
     $controller = get_controller();
+    $customer_loan = model(Customer_loan::class);
+    $loan_balance = $customer_loan->get_loan_balance($person->person_id);
 
     return [
         'people.person_id' => $person->person_id,
@@ -294,6 +298,7 @@ function get_customer_data_row(object $person, object $stats): array
         'email'            => empty($person->email) ? '' : mailto($person->email, $person->email),
         'phone_number'     => $person->phone_number,
         'total'            => to_currency($stats->total),
+        'loan_balance'     => $loan_balance > 0 ? '<span style="color:#d9534f;font-weight:bold;">' . to_currency($loan_balance) . '</span>' : to_currency(0),
         'messages'         => empty($person->phone_number)
             ? ''
             : anchor(
@@ -327,7 +332,9 @@ function supplier_headers(): array
         ['last_name'        => lang('Common.last_name')],
         ['first_name'       => lang('Common.first_name')],
         ['email'            => lang('Common.email')],
-        ['phone_number'     => lang('Common.phone_number')]
+        ['phone_number'     => lang('Common.phone_number')],
+        ['linked_customer'  => lang('Suppliers.linked_customer'), 'sortable' => false, 'escape' => false],
+        ['loan_balance'     => lang('Customers.loan_balance'), 'sortable' => false, 'escape' => false]
     ];
 }
 
@@ -355,6 +362,22 @@ function get_supplier_data_row(object $supplier): array
 {
     $controller = get_controller();
 
+    // Get linked customer info and loan balance
+    $linked_customer_name = '';
+    $loan_balance_display = to_currency(0);
+    if (!empty($supplier->customer_id)) {
+        $customer_model = model(\App\Models\Customer::class);
+        $customer_info = $customer_model->get_info($supplier->customer_id);
+        if ($customer_info->person_id) {
+            $linked_customer_name = $customer_info->first_name . ' ' . $customer_info->last_name;
+        }
+        $customer_loan = model(Customer_loan::class);
+        $balance = $customer_loan->get_loan_balance($supplier->customer_id);
+        if ($balance > 0) {
+            $loan_balance_display = '<span style="color:#d9534f;font-weight:bold;">' . to_currency($balance) . '</span>';
+        }
+    }
+
     return [
         'people.person_id' => $supplier->person_id,
         'company_name'     => html_entity_decode($supplier->company_name),
@@ -364,6 +387,8 @@ function get_supplier_data_row(object $supplier): array
         'first_name'       => $supplier->first_name,
         'email'            => empty($supplier->email) ? '' : mailto($supplier->email, $supplier->email),
         'phone_number'     => $supplier->phone_number,
+        'linked_customer'  => $linked_customer_name,
+        'loan_balance'     => $loan_balance_display,
         'messages'         => empty($supplier->phone_number)
             ? ''
             : anchor(

@@ -22,4 +22,7 @@ return [
     "supplier_id"           => "Id",
     "tax_id"                => "Tax Id",
     "update"                => "Update Supplier",
+    "linked_customer"          => "Linked Customer",
+    "no_linked_customer"       => "-- No Linked Customer --",
+    "create_linked_customer"   => "Also create as a customer",
 ];

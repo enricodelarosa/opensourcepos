@@ -104,7 +104,28 @@ echo view('partial/print_receipt', ['print_after_sale', $print_after_sale, 'sele
                 </td>
             </tr>
 
-            <?php if (isset($amount_change)) { ?>
+            <?php if (isset($loan_deduction) && $loan_deduction > 0) { ?>
+                <tr>
+                    <td colspan="3" style="text-align: right;"><strong><?= lang('Sales.loan_deduction') ?></strong></td>
+                    <td>
+                        <div class="total-value" style="color: #d9534f;"><strong>-<?= to_currency($loan_deduction) ?></strong></div>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="3" style="text-align: right;"><?= lang('Sales.amount_tendered') ?></td>
+                    <td>
+                        <div class="total-value"><?= to_currency($total - $loan_deduction) ?></div>
+                    </td>
+                </tr>
+                <?php if (isset($loan_balance_after)) { ?>
+                    <tr>
+                        <td colspan="3" style="text-align: right;"><?= lang('Receivings.loan_balance') ?></td>
+                        <td>
+                            <div class="total-value"><?= to_currency($loan_balance_after) ?></div>
+                        </td>
+                    </tr>
+                <?php } ?>
+            <?php } elseif (isset($amount_change)) { ?>
                 <tr>
                     <td colspan="3" style="text-align: right;"><?= lang('Sales.amount_tendered') ?></td>
                     <td>
