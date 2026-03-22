@@ -25,4 +25,5 @@ return [
     "linked_customer"          => "Linked Customer",
     "no_linked_customer"       => "-- No Linked Customer --",
     "create_linked_customer"   => "Also create as a customer",
+    "starting_loan_amount"     => "Starting Loan Amount",
 ];

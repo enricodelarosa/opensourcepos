@@ -81,6 +81,21 @@
                 </div>
             </div>
         </div>
+
+        <div class="form-group form-group-sm">
+            <?= form_label(lang('Suppliers.starting_loan_amount'), 'starting_loan_amount', ['class' => 'control-label col-xs-3']) ?>
+            <div class="col-xs-4">
+                <?= form_input([
+                    'name'  => 'starting_loan_amount',
+                    'id'    => 'starting_loan_amount',
+                    'class' => 'form-control input-sm',
+                    'type'  => 'number',
+                    'step'  => '0.01',
+                    'min'   => '0',
+                    'value' => '0.00'
+                ]) ?>
+            </div>
+        </div>
         <?php endif; ?>
 
         <div class="form-group form-group-sm" id="linked_customer_row">

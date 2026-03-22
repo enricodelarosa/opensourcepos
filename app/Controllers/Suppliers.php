@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Models\Customer;
+use App\Models\Customer_loan;
 use App\Models\Supplier;
 use CodeIgniter\HTTP\ResponseInterface;
 
@@ -10,6 +11,7 @@ class Suppliers extends Persons
 {
     private Supplier $supplier;
     private Customer $customer;
+    private Customer_loan $customer_loan;
 
     public function __construct()
     {
@@ -17,6 +19,7 @@ class Suppliers extends Persons
 
         $this->supplier = model(Supplier::class);
         $this->customer = model(Customer::class);
+        $this->customer_loan = model(Customer_loan::class);
     }
 
     /**
@@ -158,13 +161,21 @@ class Suppliers extends Persons
             'customer_id'    => $create_linked_customer ? null : ($this->request->getPost('customer_id') == '' ? null : $this->request->getPost('customer_id', FILTER_SANITIZE_NUMBER_INT))
         ];
 
+        $starting_loan_amount = (float) $this->request->getPost('starting_loan_amount');
+
         if ($this->supplier->save_supplier($person_data, $supplier_data, $supplier_id)) {
             $saved_person_id = ($supplier_id == NEW_ENTRY) ? $supplier_data['person_id'] : $supplier_id;
+            $effective_customer_id = $supplier_data['customer_id'];
 
             if ($create_linked_customer) {
                 if ($this->customer->create_for_person($saved_person_id, $supplier_data['company_name'])) {
                     $this->supplier->link_customer($saved_person_id, $saved_person_id);
+                    $effective_customer_id = $saved_person_id;
                 }
+            }
+
+            if ($supplier_id == NEW_ENTRY && $starting_loan_amount != 0 && !empty($effective_customer_id)) {
+                $this->customer_loan->record_loan((int) $effective_customer_id, $starting_loan_amount, null, null, lang('Suppliers.starting_loan_amount'));
             }
 
             // New supplier
