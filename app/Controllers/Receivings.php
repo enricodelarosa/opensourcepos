@@ -260,7 +260,7 @@ class Receivings extends Secure_Controller
             $data['employees'][$stored_employee_id] = $stored_employee->first_name . ' ' . $stored_employee->last_name;
         }
 
-        $data['selected_supplier_name'] = !empty($receiving_info['supplier_id']) ? $receiving_info['company_name'] : '';
+        $data['selected_supplier_name'] = !empty($receiving_info['supplier_id']) ? $receiving_info['first_name'] . ' ' . $receiving_info['last_name'] : '';
         $data['selected_supplier_id'] = $receiving_info['supplier_id'];
         $data['receiving_info'] = $receiving_info;
         $data['can_assign_employee'] = $can_assign_employee;
@@ -345,7 +345,7 @@ class Receivings extends Secure_Controller
         $supplier_id = $this->receiving_lib->get_supplier();
         if ($supplier_id != -1) {
             $supplier_info = $this->supplier->get_info($supplier_id);
-            $data['supplier'] = $supplier_info->company_name;    // TODO: duplicated code
+            $data['supplier'] = $supplier_info->first_name . ' ' . $supplier_info->last_name;    // TODO: duplicated code
             $data['first_name'] = $supplier_info->first_name;
             $data['last_name'] = $supplier_info->last_name;
             $data['supplier_email'] = $supplier_info->email;
@@ -481,7 +481,7 @@ class Receivings extends Secure_Controller
         $supplier_id = $this->receiving_lib->get_supplier();    // TODO: Duplicated code
         if ($supplier_id != -1) {
             $supplier_info = $this->supplier->get_info($supplier_id);
-            $data['supplier'] = $supplier_info->company_name;
+            $data['supplier'] = $supplier_info->first_name . ' ' . $supplier_info->last_name;
             $data['first_name'] = $supplier_info->first_name;
             $data['last_name'] = $supplier_info->last_name;
             $data['supplier_email'] = $supplier_info->email;
@@ -534,7 +534,7 @@ class Receivings extends Secure_Controller
 
         if ($supplier_id != -1) {    // TODO: Duplicated Code... replace -1 with a constant
             $supplier_info = $this->supplier->get_info($supplier_id);
-            $data['supplier'] = $supplier_info->company_name;
+            $data['supplier'] = $supplier_info->first_name . ' ' . $supplier_info->last_name;
             $data['first_name'] = $supplier_info->first_name;
             $data['last_name'] = $supplier_info->last_name;
             $data['supplier_email'] = $supplier_info->email;

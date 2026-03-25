@@ -73,7 +73,7 @@ class App extends BaseConfig
      *
      * @var list<string>
      */
-    public array $allowedHostnames = ['angeltrader.enricodelarosa.tech', '209.97.164.186'];
+    public array $allowedHostnames = ['angeltrader.enricodelarosa.tech', '209.97.164.186','localhost'];
 
     /**
      * --------------------------------------------------------------------------

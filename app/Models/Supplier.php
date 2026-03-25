@@ -167,7 +167,7 @@ class Supplier extends Person
         $builder->orderBy('company_name', 'asc');
 
         foreach ($builder->get()->getResult() as $row) {
-            $suggestions[] = ['value' => $row->person_id, 'label' => $row->company_name];
+            $suggestions[] = ['value' => $row->person_id, 'label' => $row->first_name . ' ' . $row->last_name];
         }
 
         $builder = $this->db->table('suppliers');
