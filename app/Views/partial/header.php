@@ -63,8 +63,8 @@ $request = Services::request();
         <script src="resources/js/es6-promise-855125e6f5.js"></script>
         <script src="resources/js/FileSaver-e73b1946e8.js"></script>
         <script src="resources/js/html2canvas-e1d3a8d7cd.js"></script>
-        <script src="resources/js/jspdf-81c4900447.umd.js"></script>
-        <script src="resources/js/purify-f71b63cae1.js"></script>
+        <script src="resources/js/jspdf-bbbebb610c.umd.js"></script>
+        <script src="resources/js/purify-87a00e56b7.js"></script>
         <script src="resources/js/jspdf-92d87e47e8.plugin.autotable.js"></script>
         <script src="resources/js/tableExport-3d506dfa61.min.js"></script>
         <script src="resources/js/chartist-8a7ecb4445.js"></script>
@@ -91,7 +91,7 @@ $request = Services::request();
         <?php } ?>
         <!-- inject:prod:js -->
         <script src="resources/jquery-2c872dbe60.min.js"></script>
-        <script src="resources/opensourcepos-60f9a94e38.min.js"></script>
+        <script src="resources/opensourcepos-5d9546efb8.min.js"></script>
         <!-- endinject -->
     <?php endif; ?>
 

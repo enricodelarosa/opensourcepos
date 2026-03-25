@@ -36,7 +36,6 @@ services:
             target: ospos_dev
         container_name: ospos_dev
         restart: always
-        user: "${USERID}:${GROUPID}"
         depends_on:
             - mysql
         ports:
@@ -44,7 +43,7 @@ services:
         networks:
             - app_net
         volumes:
-            - .:/app
+          - ./app:/app/app
         environment:
             - CI_ENVIRONMENT=development
             - MYSQL_USERNAME=admin

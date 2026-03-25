@@ -1,27 +1,34 @@
 include:
-    - docker/docker-mysql.yml
+  - docker/docker-mysql.yml
 
 services:
-    sqlscript:
-        image: jekkos/opensourcepos:sql-master
-        command: /bin/sh -c 'exit 0'
-    ospos:
-        image: jekkos/opensourcepos:master
-        restart: always
-        depends_on:
-            - mysql
-        ports:
-            - "80:80"
-        networks:
-            - app_net
-        volumes:
-            - uploads:/app/public/uploads
-            - logs:/app/writable/logs
-        environment:
-            - CI_ENVIRONMENT=production
-            - FORCE_HTTPS=false
-            - PHP_TIMEZONE=UTC
-            - MYSQL_USERNAME=admin
-            - MYSQL_PASSWORD=pointofsale
-            - MYSQL_DB_NAME=ospos
-            - MYSQL_HOST_NAME=mysql
+  sqlscript:
+    image: jekkos/opensourcepos:sql-master
+    command: /bin/sh -c 'exit 0'
+
+  ospos:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+       USERID: 1000
+       GROUPID: 1000
+    container_name: ospos_dev
+    restart: always
+    depends_on:
+      - mysql
+    ports:
+      - "80:80"
+    networks:
+      - app_net
+    volumes:
+      - uploads:/app/public/uploads
+      - logs:/app/writable/logs
+    environment:
+      - CI_ENVIRONMENT=production
+      - FORCE_HTTPS=false
+      - PHP_TIMEZONE=UTC
+      - MYSQL_USERNAME=admin
+      - MYSQL_PASSWORD=pointofsale
+      - MYSQL_DB_NAME=ospos
+      - MYSQL_HOST_NAME=mysql
