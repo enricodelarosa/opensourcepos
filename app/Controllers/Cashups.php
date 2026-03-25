@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Models\Cashup;
 use App\Models\Expense;
+use App\Models\Loan_adjustment;
 use App\Models\Reports\Summary_payments;
 use CodeIgniter\HTTP\ResponseInterface;
 use Config\OSPOS;
@@ -13,6 +14,7 @@ class Cashups extends Secure_Controller
 {
     private Cashup $cashup;
     private Expense $expense;
+    private Loan_adjustment $loan_adjustment;
     private Summary_payments $summary_payments;
     private array $config;
 
@@ -20,10 +22,11 @@ class Cashups extends Secure_Controller
     {
         parent::__construct('cashups');
 
-        $this->cashup = model(Cashup::class);
-        $this->expense = model(Expense::class);
+        $this->cashup           = model(Cashup::class);
+        $this->expense          = model(Expense::class);
+        $this->loan_adjustment  = model(Loan_adjustment::class);
         $this->summary_payments = model(Summary_payments::class);
-        $this->config = config(OSPOS::class)->settings;
+        $this->config           = config(OSPOS::class)->settings;
     }
 
     /**
@@ -178,6 +181,11 @@ class Cashups extends Secure_Controller
             foreach ($payments as $row) {
                 $cash_ups_info->closed_amount_cash -= $row['amount'];
             }
+
+            // Adjust for manual loan adjustments that involved cash.
+            // Positive loan_amount = cash went OUT (subtract); Negative = cash came IN (subtract a negative = add).
+            $loan_cash_total = $this->loan_adjustment->get_cash_total_for_period($inputs['start_date'], $inputs['end_date']);
+            $cash_ups_info->closed_amount_cash -= $loan_cash_total;
 
             $cash_ups_info->closed_amount_total = $this->_calculate_total($cash_ups_info->open_amount_cash, $cash_ups_info->transfer_amount_cash, $cash_ups_info->closed_amount_cash, $cash_ups_info->closed_amount_due, $cash_ups_info->closed_amount_card, $cash_ups_info->closed_amount_check);
         }

@@ -32,6 +32,8 @@ return [
     "migrate_desc"               => "Update the OSPOS Database.",
     "office"                     => "Office",
     "office_desc"                => "List office menu modules.",
+    "loan_adjustments"           => "Loan Adjustments",
+    "loan_adjustments_desc"      => "Manually adjust supplier loan balances and track cash impact.",
     "receivings"                 => "Supplier Purchases",
     "receivings_desc"            => "Process Supplier Purchases.",
     "reports"                    => "Reports",

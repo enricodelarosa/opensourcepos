@@ -882,6 +882,58 @@ function get_expenses_manage_payments_summary(array $payments, ResultInterface $
     return $table;
 }
 
+/**
+ * Returns the column definitions for the loan_adjustments bootstrap table.
+ */
+function loan_adjustment_headers(): array
+{
+    return [
+        ['adjustment_id'   => lang('Loan_adjustments.adjustment_id')],
+        ['adjustment_time' => lang('Loan_adjustments.date_col')],
+        ['supplier_name'   => lang('Loan_adjustments.supplier_col')],
+        ['type'            => lang('Loan_adjustments.type_col')],
+        ['loan_amount'     => lang('Loan_adjustments.amount_col')],
+        ['comment'         => lang('Loan_adjustments.comment_col')],
+        ['employee_name'   => lang('Loan_adjustments.employee_col')]
+    ];
+}
+
+/**
+ * Returns the JSON-ready header string for the loan_adjustments manage table.
+ */
+function get_loan_adjustments_manage_table_headers(): string
+{
+    return transform_headers(loan_adjustment_headers());
+}
+
+/**
+ * Returns a single data row for the loan_adjustments bootstrap table.
+ */
+function get_loan_adjustment_data_row(object $adjustment): array
+{
+    $controller = get_controller();
+    $is_increase = $adjustment->loan_amount >= 0;
+
+    return [
+        'adjustment_id'   => $adjustment->adjustment_id,
+        'adjustment_time' => to_datetime(strtotime($adjustment->adjustment_time)),
+        'supplier_name'   => $adjustment->supplier_first_name . ' ' . $adjustment->supplier_last_name,
+        'type'            => $is_increase ? lang('Loan_adjustments.type_increase') : lang('Loan_adjustments.type_decrease'),
+        'loan_amount'     => to_currency(abs($adjustment->loan_amount)),
+        'comment'         => $adjustment->comment,
+        'employee_name'   => $adjustment->employee_first_name . ' ' . $adjustment->employee_last_name,
+        'edit'            => anchor(
+            "$controller/view/$adjustment->adjustment_id",
+            '<span class="glyphicon glyphicon-edit"></span>',
+            [
+                'class'           => 'modal-dlg',
+                'data-btn-submit' => lang('Common.submit'),
+                'title'           => lang(ucfirst($controller) . '.new')
+            ]
+        )
+    ];
+}
+
 function cashup_headers(): array
 {
     return [
