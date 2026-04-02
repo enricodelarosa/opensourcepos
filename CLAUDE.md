@@ -75,5 +75,22 @@ Tests use real database connections (integration testing), not mocks. Test confi
 ### CI/CD
 GitHub Actions runs PHPUnit across PHP 8.1–8.4 with MariaDB, PHP syntax linting, and CodeQL security scanning on every push.
 
+### Manage View Pattern (Bootstrap Table + Daterangepicker)
+Every `manage.php` view that has a daterangepicker and a filters dropdown **must** include these two event listeners inside `$(document).ready`, after the daterangepicker partial is loaded:
+
+```js
+$('#filters').on('hidden.bs.select', function(e) {
+    table_support.refresh();
+});
+
+<?= view('partial/daterangepicker') ?>
+
+$("#daterangepicker").on('apply.daterangepicker', function(ev, picker) {
+    table_support.refresh();
+});
+```
+
+Without these, changing the date range or toggling filters will not refresh the table. See `app/Views/sales/manage.php` as the canonical reference.
+
 ## Fork Additions
 This ospos fork was specifically adapted for copra dealer. So the business is selling goods like rice, equipment etc but these are purchased via loans. These loans are then paid when the customers (which are now suppliers) sell copra to the business, and the business buys the copra using the loan balance that they had, plus cash if the loan is lower than the copra being soled to the business.
