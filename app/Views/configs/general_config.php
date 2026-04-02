@@ -39,6 +39,24 @@
             </div>
 
             <div class="form-group form-group-sm">
+                <?= form_label(lang('Config.font_size'), 'font_size', ['class' => 'control-label col-xs-2']) ?>
+                <div class="col-xs-2">
+                    <?= form_dropdown(
+                        'font_size',
+                        [
+                            '14' => '14px (Small)',
+                            '16' => '16px (Default)',
+                            '18' => '18px (Large)',
+                            '20' => '20px (X-Large)',
+                            '22' => '22px (XX-Large)'
+                        ],
+                        empty($config['font_size']) ? '16' : $config['font_size'],
+                        'class="form-control input-sm"'
+                    ) ?>
+                </div>
+            </div>
+
+            <div class="form-group form-group-sm">
                 <?= form_label(lang('Config.login_form'), 'login_form', ['class' => 'control-label col-xs-2']) ?>
                 <div class="col-xs-2">
                     <?= form_dropdown(

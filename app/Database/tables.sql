@@ -80,6 +80,7 @@ INSERT INTO `ospos_app_config` (`key`, `value`) VALUES
     ('smtp_crypto', 'ssl'),
     ('receipt_template', 'receipt_default'),
     ('theme', 'flatly'),
+    ('font_size', '16'),
     ('statistics', '1'),
     ('language', 'english'),
     ('language_code', 'en');

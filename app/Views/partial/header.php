@@ -102,6 +102,9 @@ $request = Services::request();
         html {
             overflow: auto;
         }
+        body {
+            font-size: <?= empty($config['font_size']) ? '16' : (int)$config['font_size'] ?>px;
+        }
     </style>
 </head>
 

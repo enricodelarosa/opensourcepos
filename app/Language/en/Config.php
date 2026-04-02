@@ -316,6 +316,7 @@ return [
     "tax_decimals"                              => "Tax Decimals",
     "tax_id"                                    => "Tax Id",
     "tax_included"                              => "Tax Included",
+    "font_size"                                 => "Font Size",
     "theme"                                     => "Theme",
     "theme_preview"                             => "Preview Theme:",
     "thousands_separator"                       => "Thousands Separator",
