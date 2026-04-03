@@ -218,6 +218,7 @@
             sidePagination: 'server',
             selectItemName: 'btSelectItem',
             pageSize: options.pageSize,
+            pageList: [10, 25, 50, 100, 300, 500],
             pagination: true,
             search: options.resource || false,
             showColumns: true,
