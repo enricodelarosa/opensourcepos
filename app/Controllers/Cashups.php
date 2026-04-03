@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Models\Cashup;
 use App\Models\Expense;
 use App\Models\Loan_adjustment;
+use App\Models\Receiving;
 use App\Models\Reports\Summary_payments;
 use CodeIgniter\HTTP\ResponseInterface;
 use Config\OSPOS;
@@ -15,6 +16,7 @@ class Cashups extends Secure_Controller
     private Cashup $cashup;
     private Expense $expense;
     private Loan_adjustment $loan_adjustment;
+    private Receiving $receiving;
     private Summary_payments $summary_payments;
     private array $config;
 
@@ -25,6 +27,7 @@ class Cashups extends Secure_Controller
         $this->cashup           = model(Cashup::class);
         $this->expense          = model(Expense::class);
         $this->loan_adjustment  = model(Loan_adjustment::class);
+        $this->receiving        = model(Receiving::class);
         $this->summary_payments = model(Summary_payments::class);
         $this->config           = config(OSPOS::class)->settings;
     }
@@ -148,11 +151,13 @@ class Cashups extends Secure_Controller
 
             // Get all the transactions payment summaries
             $reports_data = $this->summary_payments->getData($inputs);
+            $sales_cash_total = 0;
 
             foreach ($reports_data as $row) {
                 if ($row['trans_group'] == lang('Reports.trans_payments')) {
                     if ($row['trans_type'] == lang('Sales.cash')) {
                         $cash_ups_info->closed_amount_cash += $row['trans_amount'];
+                        $sales_cash_total += $row['trans_amount'];
                     } elseif ($row['trans_type'] == lang('Sales.due')) {
                         $cash_ups_info->closed_amount_due += $row['trans_amount'];
                     } elseif (
@@ -177,9 +182,11 @@ class Cashups extends Secure_Controller
             ];
 
             $payments = $this->expense->get_payments_summary('', array_merge($inputs, $filters));
+            $expenses_cash_total = 0;
 
             foreach ($payments as $row) {
                 $cash_ups_info->closed_amount_cash -= $row['amount'];
+                $expenses_cash_total += $row['amount'];
             }
 
             // Adjust for manual loan adjustments that involved cash.
@@ -187,7 +194,17 @@ class Cashups extends Secure_Controller
             $loan_cash_total = $this->loan_adjustment->get_cash_total_for_period($inputs['start_date'], $inputs['end_date']);
             $cash_ups_info->closed_amount_cash -= $loan_cash_total;
 
+            $receivings_cash_total = $this->receiving->get_cash_total_for_period($inputs['start_date'], $inputs['end_date']);
+            $cash_ups_info->closed_amount_cash -= $receivings_cash_total;
+
             $cash_ups_info->closed_amount_total = $this->_calculate_total($cash_ups_info->open_amount_cash, $cash_ups_info->transfer_amount_cash, $cash_ups_info->closed_amount_cash, $cash_ups_info->closed_amount_due, $cash_ups_info->closed_amount_card, $cash_ups_info->closed_amount_check);
+
+            $data['cash_breakdown'] = [
+                'sales_cash'        => $sales_cash_total,
+                'expenses_cash'     => $expenses_cash_total,
+                'loan_adjustments'  => $loan_cash_total,
+                'receivings_cash'   => $receivings_cash_total,
+            ];
         }
 
         $data['cash_ups_info'] = $cash_ups_info;

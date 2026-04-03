@@ -299,6 +299,23 @@ class Receiving extends Model
     }
 
     /**
+     * Returns the total cash paid for receivings within a date range.
+     */
+    public function get_cash_total_for_period(string $start_date, string $end_date): float
+    {
+        $builder = $this->db->table('receivings');
+        $builder->select('SUM(receivings_items.quantity_purchased * receivings_items.item_unit_price * (1 - receivings_items.discount_percent / 100)) AS total');
+        $builder->join('receivings_items', 'receivings_items.receiving_id = receivings.receiving_id');
+        $builder->where('receivings.payment_type', lang('Sales.cash'));
+        $builder->where('DATE(receivings.receiving_time) >=', $start_date);
+        $builder->where('DATE(receivings.receiving_time) <=', $end_date);
+
+        $result = $builder->get()->getRow();
+
+        return $result && $result->total ? (float)$result->total : 0.0;
+    }
+
+    /**
      * Create a temp table that allows us to do easy report/receiving queries
      */
     public function create_temp_table(array $inputs): void

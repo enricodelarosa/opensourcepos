@@ -4,6 +4,7 @@
  * @var array $employees
  * @var string $controller_name
  * @var array $config
+ * @var array|null $cash_breakdown
  */
 ?>
 
@@ -105,6 +106,36 @@
                 <?= form_dropdown('close_employee_id', $employees, $cash_ups_info->close_employee_id, 'id="close_employee_id" class="form-control"') ?>
             </div>
         </div>
+
+        <?php if (!empty($cash_breakdown)): ?>
+        <div class="form-group form-group-sm">
+            <div class="col-xs-offset-3 col-xs-8">
+                <table class="table table-condensed table-bordered" style="margin-bottom: 5px;">
+                    <thead>
+                        <tr><th colspan="2"><?= lang('Cashups.breakdown') ?></th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><?= lang('Cashups.sales_cash') ?></td>
+                            <td class="text-right"><?= to_currency($cash_breakdown['sales_cash']) ?></td>
+                        </tr>
+                        <tr>
+                            <td><?= lang('Cashups.expenses_cash') ?></td>
+                            <td class="text-right">-<?= to_currency($cash_breakdown['expenses_cash']) ?></td>
+                        </tr>
+                        <tr>
+                            <td><?= lang('Cashups.loan_adjustments') ?></td>
+                            <td class="text-right">-<?= to_currency($cash_breakdown['loan_adjustments']) ?></td>
+                        </tr>
+                        <tr>
+                            <td><?= lang('Cashups.receivings_cash') ?></td>
+                            <td class="text-right">-<?= to_currency($cash_breakdown['receivings_cash']) ?></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <?php endif; ?>
 
         <div class="form-group form-group-sm">
             <?= form_label(lang('Cashups.closed_amount_cash'), 'closed_amount_cash', ['class' => 'control-label col-xs-3']) ?>

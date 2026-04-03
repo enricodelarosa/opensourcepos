@@ -2,6 +2,11 @@
 
 return [
     "amount"                     => "Amount",
+    "breakdown"                  => "Transaction Breakdown",
+    "sales_cash"                 => "Sales (Cash)",
+    "expenses_cash"              => "Expenses (Cash)",
+    "loan_adjustments"           => "Loan Adjustments",
+    "receivings_cash"            => "Purchases (Cash)",
     "amount_number"              => "Amount must be a number",
     "amount_required"            => "Amount is a Required Field.",
     "cancel_cashups"             => "",
