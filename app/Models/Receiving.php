@@ -304,11 +304,11 @@ class Receiving extends Model
     public function get_cash_total_for_period(string $start_date, string $end_date): float
     {
         $builder = $this->db->table('receivings');
-        $builder->select('SUM(receivings_items.quantity_purchased * receivings_items.item_unit_price * (1 - receivings_items.discount_percent / 100)) AS total');
+        $builder->select('SUM(CASE WHEN discount_type = ' . PERCENT . ' THEN quantity_purchased * item_unit_price * (1 - discount / 100) ELSE quantity_purchased * item_unit_price - discount END) AS total');
         $builder->join('receivings_items', 'receivings_items.receiving_id = receivings.receiving_id');
-        $builder->where('receivings.payment_type', lang('Sales.cash'));
-        $builder->where('DATE(receivings.receiving_time) >=', $start_date);
-        $builder->where('DATE(receivings.receiving_time) <=', $end_date);
+        $builder->where('payment_type', lang('Sales.cash'));
+        $builder->where('DATE(receiving_time) >=', $start_date);
+        $builder->where('DATE(receiving_time) <=', $end_date);
 
         $result = $builder->get()->getRow();
 
