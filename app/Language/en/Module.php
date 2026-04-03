@@ -34,7 +34,7 @@ return [
     "office_desc"                => "List office menu modules.",
     "loan_adjustments"           => "Loan Adjustments",
     "loan_adjustments_desc"      => "Manually adjust supplier loan balances and track cash impact.",
-    "receivings"                 => "Supplier Purchases",
+    "receivings"                 => "Supplier Purchases/CP",
     "receivings_desc"            => "Process Supplier Purchases.",
     "reports"                    => "Reports",
     "reports_desc"               => "View and generate Reports.",
