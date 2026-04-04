@@ -316,6 +316,29 @@ class Receiving extends Model
     }
 
     /**
+     * Returns individual cash receivings for a date range as rows with supplier name and amount.
+     */
+    public function get_cash_receivings_for_period(string $start_date, string $end_date): array
+    {
+        $builder = $this->db->table('receivings');
+        $db_prefix = $this->db->getPrefix();
+        $builder->select([
+            "CONCAT(COALESCE({$db_prefix}people.first_name, ''), ' ', COALESCE({$db_prefix}people.last_name, '')) AS particular",
+            'SUM(CASE WHEN discount_type = ' . PERCENT . ' THEN quantity_purchased * item_unit_price * (1 - discount / 100) ELSE quantity_purchased * item_unit_price - discount END) AS amount',
+            'receivings.receiving_time AS trans_time',
+        ]);
+        $builder->join('receivings_items', 'receivings_items.receiving_id = receivings.receiving_id');
+        $builder->join('people', 'people.person_id = receivings.supplier_id', 'LEFT');
+        $builder->where('payment_type', lang('Sales.cash'));
+        $builder->where('DATE(receiving_time) >=', $start_date);
+        $builder->where('DATE(receiving_time) <=', $end_date);
+        $builder->groupBy('receivings.receiving_id');
+        $builder->orderBy('receivings.receiving_time', 'ASC');
+
+        return $builder->get()->getResultArray();
+    }
+
+    /**
      * Create a temp table that allows us to do easy report/receiving queries
      */
     public function create_temp_table(array $inputs): void

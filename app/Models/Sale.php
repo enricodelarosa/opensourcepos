@@ -1513,4 +1513,28 @@ class Sale extends Model
             $builder->like('payments.payment_type', lang('Sales.check'));
         }
     }
+
+    /**
+     * Returns individual cash sales for a date range as rows with customer name and amount.
+     */
+    public function get_cash_sales_for_period(string $start_date, string $end_date): array
+    {
+        $builder = $this->db->table('sales');
+        $db_prefix = $this->db->getPrefix();
+        $builder->select([
+            "CONCAT(COALESCE({$db_prefix}people.first_name, ''), ' ', COALESCE({$db_prefix}people.last_name, '')) AS particular",
+            "{$db_prefix}sales_payments.payment_amount AS amount",
+            'sales.sale_time AS trans_time',
+        ]);
+        $builder->join('sales_payments', 'sales_payments.sale_id = sales.sale_id');
+        $builder->join('people', 'people.person_id = sales.customer_id', 'LEFT');
+        $builder->where('sale_status', COMPLETED);
+        $builder->where('payment_amount >', 0);
+        $builder->like('payment_type', lang('Sales.cash'));
+        $builder->where('DATE(sale_time) >=', $start_date);
+        $builder->where('DATE(sale_time) <=', $end_date);
+        $builder->orderBy('sale_time', 'ASC');
+
+        return $builder->get()->getResultArray();
+    }
 }

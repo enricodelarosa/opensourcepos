@@ -934,6 +934,40 @@ function get_loan_adjustment_data_row(object $adjustment): array
     ];
 }
 
+function cash_summary_headers(): array
+{
+    return [
+        ['session'        => lang('Cash_summary.session_col'),        'sortable' => false],
+        ['cash_beginning' => lang('Cash_summary.cash_beginning_col'), 'sortable' => false],
+        ['cash_sales'     => lang('Cash_summary.cash_sales_col'),     'sortable' => false],
+        ['cash_advance'   => lang('Cash_summary.cash_advance_col'),   'sortable' => false],
+        ['copra_purchase' => lang('Cash_summary.copra_purchase_col'), 'sortable' => false],
+        ['expenses'       => lang('Cash_summary.expenses_col'),       'sortable' => false],
+        ['cash_ending'    => lang('Cash_summary.cash_ending_col'),    'sortable' => false],
+    ];
+}
+
+function get_cash_summary_manage_table_headers(): string
+{
+    return transform_headers(cash_summary_headers(), true, false);
+}
+
+function get_cash_summary_data_row(object $cashup, float $cash_sales, float $cash_advance, float $copra_purchase, float $expenses): array
+{
+    $label       = (!empty($cashup->description) ? esc($cashup->description) . ' — ' : '') . to_date(strtotime($cashup->open_date));
+    $cash_ending = floatval($cashup->open_amount_cash) + $cash_sales - $cash_advance - $copra_purchase - $expenses;
+
+    return [
+        'session'        => $label,
+        'cash_beginning' => to_currency($cashup->open_amount_cash),
+        'cash_sales'     => to_currency($cash_sales),
+        'cash_advance'   => to_currency($cash_advance),
+        'copra_purchase' => to_currency($copra_purchase),
+        'expenses'       => to_currency($expenses),
+        'cash_ending'    => to_currency($cash_ending),
+    ];
+}
+
 function cashup_headers(): array
 {
     return [
