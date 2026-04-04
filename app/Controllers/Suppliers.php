@@ -116,6 +116,21 @@ class Suppliers extends Persons
         }
         $data['customers_list'] = $customers_list;
 
+        // Build partner supplier dropdown
+        $partners_list = ['' => lang('Suppliers.no_partner_supplier')];
+        foreach ($this->supplier->get_all(0, 0, GOODS_SUPPLIER)->getResult() as $s) {
+            if ($s->person_id != $supplier_id) {
+                $partners_list[$s->person_id] = $s->first_name . ' ' . $s->last_name
+                    . (!empty($s->company_name) ? ' [' . $s->company_name . ']' : '');
+            }
+        }
+        $data['partners_list'] = $partners_list;
+
+        // Resolve effective partner (checks both forward and reverse directions)
+        if ($supplier_id !== NEW_ENTRY) {
+            $info->partner_supplier_id = $this->supplier->get_partner_supplier_id($supplier_id);
+        }
+
         return view("suppliers/form", $data);
     }
 
@@ -158,7 +173,8 @@ class Suppliers extends Persons
             'category'       => $this->request->getPost('category', FILTER_SANITIZE_FULL_SPECIAL_CHARS),
             'account_number' => $this->request->getPost('account_number') == '' ? null : $this->request->getPost('account_number', FILTER_SANITIZE_FULL_SPECIAL_CHARS),
             'tax_id'         => $this->request->getPost('tax_id', FILTER_SANITIZE_NUMBER_INT),
-            'customer_id'    => $create_linked_customer ? null : ($this->request->getPost('customer_id') == '' ? null : $this->request->getPost('customer_id', FILTER_SANITIZE_NUMBER_INT))
+            'customer_id'         => $create_linked_customer ? null : ($this->request->getPost('customer_id') == '' ? null : $this->request->getPost('customer_id', FILTER_SANITIZE_NUMBER_INT)),
+            'partner_supplier_id' => $this->request->getPost('partner_supplier_id') == '' ? null : $this->request->getPost('partner_supplier_id', FILTER_SANITIZE_NUMBER_INT)
         ];
 
         $starting_loan_amount = (float) $this->request->getPost('starting_loan_amount');

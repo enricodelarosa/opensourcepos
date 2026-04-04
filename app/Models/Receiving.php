@@ -316,23 +316,36 @@ class Receiving extends Model
     }
 
     /**
+     * Records a per-supplier cash payment for a receiving.
+     */
+    public function record_payment(int $receiving_id, int $supplier_id, float $cash_amount): bool
+    {
+        return $this->db->table('receiving_payments')->insert([
+            'receiving_id' => $receiving_id,
+            'supplier_id'  => $supplier_id,
+            'cash_amount'  => $cash_amount,
+        ]);
+    }
+
+    /**
      * Returns individual cash receivings for a date range as rows with supplier name and amount.
+     * Uses ospos_receiving_payments for per-supplier split when available, falls back to supplier_id on the receiving.
      */
     public function get_cash_receivings_for_period(string $start_date, string $end_date): array
     {
-        $builder = $this->db->table('receivings');
         $db_prefix = $this->db->getPrefix();
+
+        // Per-supplier split from receiving_payments table (new receivings)
+        $builder = $this->db->table('receiving_payments');
         $builder->select([
             "CONCAT(COALESCE({$db_prefix}people.first_name, ''), ' ', COALESCE({$db_prefix}people.last_name, '')) AS particular",
-            'SUM(CASE WHEN discount_type = ' . PERCENT . ' THEN quantity_purchased * item_unit_price * (1 - discount / 100) ELSE quantity_purchased * item_unit_price - discount END) AS amount',
+            "{$db_prefix}receiving_payments.cash_amount AS amount",
             'receivings.receiving_time AS trans_time',
         ]);
-        $builder->join('receivings_items', 'receivings_items.receiving_id = receivings.receiving_id');
-        $builder->join('people', 'people.person_id = receivings.supplier_id', 'LEFT');
-        $builder->where('payment_type', lang('Sales.cash'));
+        $builder->join('receivings', 'receivings.receiving_id = receiving_payments.receiving_id');
+        $builder->join('people', 'people.person_id = receiving_payments.supplier_id', 'LEFT');
         $builder->where('DATE(receiving_time) >=', $start_date);
         $builder->where('DATE(receiving_time) <=', $end_date);
-        $builder->groupBy('receivings.receiving_id');
         $builder->orderBy('receivings.receiving_time', 'ASC');
 
         return $builder->get()->getResultArray();

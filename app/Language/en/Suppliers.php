@@ -26,4 +26,6 @@ return [
     "no_linked_customer"       => "-- No Linked Customer --",
     "create_linked_customer"   => "Also create as a customer",
     "starting_loan_amount"     => "Starting Loan Amount",
+    "partner_supplier"         => "Land Owner/Tenant",
+    "no_partner_supplier"      => "-- No Land Owner/Tenant --",
 ];

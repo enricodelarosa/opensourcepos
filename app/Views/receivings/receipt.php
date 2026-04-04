@@ -104,17 +104,16 @@ echo view('partial/print_receipt', ['print_after_sale', $print_after_sale, 'sele
                 </td>
             </tr>
 
-            <?php if (isset($loan_deduction) && $loan_deduction > 0) { ?>
+            <?php
+                $partner_loan_deduction = $partner_loan_deduction ?? 0;
+                $has_any_loan_deduction = (isset($loan_deduction) && $loan_deduction > 0) || $partner_loan_deduction > 0;
+            ?>
+            <?php if ($has_any_loan_deduction) { ?>
+                <?php if (isset($loan_deduction) && $loan_deduction > 0) { ?>
                 <tr>
                     <td colspan="3" style="text-align: right;"><strong><?= lang('Sales.loan_deduction') ?></strong></td>
                     <td>
                         <div class="total-value" style="color: #d9534f;"><strong>-<?= to_currency($loan_deduction) ?></strong></div>
-                    </td>
-                </tr>
-                <tr>
-                    <td colspan="3" style="text-align: right;"><?= lang('Sales.amount_tendered') ?></td>
-                    <td>
-                        <div class="total-value"><?= to_currency($total - $loan_deduction) ?></div>
                     </td>
                 </tr>
                 <?php if (isset($loan_balance_after)) { ?>
@@ -124,6 +123,52 @@ echo view('partial/print_receipt', ['print_after_sale', $print_after_sale, 'sele
                             <div class="total-value"><?= to_currency($loan_balance_after) ?></div>
                         </td>
                     </tr>
+                <?php } ?>
+                <?php } ?>
+                <?php if ($partner_loan_deduction > 0) { ?>
+                <tr>
+                    <td colspan="3" style="text-align: right;"><strong><?= lang('Receivings.partner_supplier') ?><?= isset($partner_supplier_name) ? ': ' . esc($partner_supplier_name) : '' ?></strong></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td colspan="3" style="text-align: right;"><?= lang('Receivings.partner_loan_deduction') ?></td>
+                    <td>
+                        <div class="total-value" style="color: #d9534f;"><strong>-<?= to_currency($partner_loan_deduction) ?></strong></div>
+                    </td>
+                </tr>
+                <?php if (isset($partner_loan_balance_after)) { ?>
+                    <tr>
+                        <td colspan="3" style="text-align: right;"><?= lang('Receivings.loan_balance_after_partner') ?></td>
+                        <td>
+                            <div class="total-value"><?= to_currency($partner_loan_balance_after) ?></div>
+                        </td>
+                    </tr>
+                <?php } ?>
+                <?php } ?>
+                <?php
+                    $partner_amount_tendered = $partner_amount_tendered ?? 0;
+                    $primary_cash = $amount_tendered ?? ($total - ($loan_deduction ?? 0) - $partner_loan_deduction - $partner_amount_tendered);
+                ?>
+                <?php if ($partner_amount_tendered > 0) { ?>
+                <tr>
+                    <td colspan="3" style="text-align: right;"><?= lang('Receivings.cash_to_supplier') ?> <?= esc($supplier ?? '') ?></td>
+                    <td>
+                        <div class="total-value"><?= to_currency($primary_cash) ?></div>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="3" style="text-align: right;"><?= lang('Receivings.cash_to_partner') ?> <?= esc($partner_supplier_name ?? '') ?></td>
+                    <td>
+                        <div class="total-value"><?= to_currency($partner_amount_tendered) ?></div>
+                    </td>
+                </tr>
+                <?php } else { ?>
+                <tr>
+                    <td colspan="3" style="text-align: right;"><?= lang('Sales.amount_tendered') ?></td>
+                    <td>
+                        <div class="total-value"><?= to_currency($primary_cash) ?></div>
+                    </td>
+                </tr>
                 <?php } ?>
             <?php } elseif (isset($amount_change)) { ?>
                 <tr>

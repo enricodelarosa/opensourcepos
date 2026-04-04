@@ -20,7 +20,8 @@ class Supplier extends Person
         'deleted',
         'agency_name',
         'category',
-        'customer_id'
+        'customer_id',
+        'partner_supplier_id'
     ];
 
     /**
@@ -337,5 +338,31 @@ class Supplier extends Person
         $row = $builder->get()->getRow();
 
         return ($row && !empty($row->customer_id)) ? (int) $row->customer_id : null;
+    }
+
+    /**
+     * Gets the partner supplier_id for a given supplier.
+     * Checks both directions: A→B (forward) and B→A (reverse), making the link symmetric.
+     */
+    public function get_partner_supplier_id(int $supplier_id): ?int
+    {
+        // Forward: this supplier explicitly names a partner
+        $builder = $this->db->table('suppliers');
+        $builder->select('partner_supplier_id');
+        $builder->where('person_id', $supplier_id);
+        $row = $builder->get()->getRow();
+
+        if ($row && !empty($row->partner_supplier_id)) {
+            return (int) $row->partner_supplier_id;
+        }
+
+        // Reverse: another supplier names this one as their partner
+        $builder2 = $this->db->table('suppliers');
+        $builder2->select('person_id');
+        $builder2->where('partner_supplier_id', $supplier_id);
+        $builder2->where('deleted', 0);
+        $row2 = $builder2->get()->getRow();
+
+        return ($row2) ? (int) $row2->person_id : null;
     }
 }

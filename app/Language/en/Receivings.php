@@ -61,4 +61,13 @@ return [
     "loan_deduction_exceeds"       => "Loan deduction cannot exceed the outstanding loan balance.",
     "loan_deduction_exceeds_total" => "Loan deduction cannot exceed the receiving total.",
     "cash_to_pay"                  => "Remaining Cash to Pay",
+    "partner_supplier"             => "Land Owner/Tenant",
+    "partner_loan_balance"         => "Partner Loan Balance",
+    "partner_loan_deduction"       => "Deduct from Partner Loan",
+    "partner_loan_deduction_exceeds" => "Partner loan deduction cannot exceed the partner's outstanding loan balance.",
+    "combined_deduction_exceeds_total" => "Combined loan deductions cannot exceed the receiving total.",
+    "loan_balance_after_partner"   => "Partner Loan Balance After",
+    "cash_to_supplier"             => "Cash to",
+    "cash_to_partner"              => "Cash to",
+    "cash_amounts_mismatch"        => "Cash amounts must add up to the remaining cash to pay.",
 ];

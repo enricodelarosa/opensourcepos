@@ -364,36 +364,74 @@ class Receivings extends Secure_Controller
         }
         $data['loan_deduction'] = $loan_deduction;
 
-        // Validate loan deduction amount
+        // Handle partner loan deduction if provided
+        $partner_loan_deduction = 0;
+        if ($this->request->getPost('partner_loan_deduction') != null && $this->request->getPost('partner_loan_deduction') != '') {
+            $partner_loan_deduction = parse_decimals($this->request->getPost('partner_loan_deduction'));
+        }
+        $data['partner_loan_deduction'] = $partner_loan_deduction;
+
+        $customer_loan = model(Customer_loan::class);
+
+        // Validate primary loan deduction
         if ($loan_deduction > 0 && $supplier_id != -1) {
             $linked_customer_id = $this->supplier->get_linked_customer_id($supplier_id);
             if ($linked_customer_id) {
-                $customer_loan = model(Customer_loan::class);
                 $current_balance = (float) $customer_loan->get_loan_balance($linked_customer_id);
 
                 if ($loan_deduction > $current_balance) {
                     $data['error'] = lang('Receivings.loan_deduction_exceeds');
                     return $this->_reload($data);
                 }
+            }
+        }
 
-                if ($loan_deduction > $data['total']) {
-                    $data['error'] = lang('Receivings.loan_deduction_exceeds_total');
-                    return $this->_reload($data);
+        // Validate partner loan deduction
+        if ($partner_loan_deduction > 0 && $supplier_id != -1) {
+            $partner_supplier_id = $this->supplier->get_partner_supplier_id($supplier_id);
+            if ($partner_supplier_id) {
+                $partner_customer_id = $this->supplier->get_linked_customer_id($partner_supplier_id);
+                if ($partner_customer_id) {
+                    $partner_balance = (float) $customer_loan->get_loan_balance($partner_customer_id);
+                    if ($partner_loan_deduction > $partner_balance) {
+                        $data['error'] = lang('Receivings.partner_loan_deduction_exceeds');
+                        return $this->_reload($data);
+                    }
                 }
             }
         }
 
-        // Calculate amounts after loan deduction
-        $cash_amount = $data['total'] - $loan_deduction;
+        // Validate combined deductions do not exceed receiving total
+        if (($loan_deduction + $partner_loan_deduction) > $data['total']) {
+            $data['error'] = lang('Receivings.combined_deduction_exceeds_total');
+            return $this->_reload($data);
+        }
 
-        if ($loan_deduction > 0 && $cash_amount <= 0) {
+        // Calculate amounts after loan deductions
+        $cash_amount = $data['total'] - $loan_deduction - $partner_loan_deduction;
+
+        $partner_amount_tendered = 0;
+        if ($this->request->getPost('partner_amount_tendered') != null && $this->request->getPost('partner_amount_tendered') != '') {
+            $partner_amount_tendered = parse_decimals($this->request->getPost('partner_amount_tendered'));
+        }
+        $data['partner_amount_tendered'] = $partner_amount_tendered;
+
+        if (($loan_deduction + $partner_loan_deduction) > 0 && $cash_amount <= 0) {
             // Fully paid by loan deduction — no cash payment needed
             $data['payment_type'] = lang('Sales.loan_deduction');
             $data['amount_tendered'] = 0;
             $data['amount_change'] = to_currency(0);
         } elseif ($this->request->getPost('amount_tendered') != null && $this->request->getPost('amount_tendered') != '') {
             $data['amount_tendered'] = parse_decimals($this->request->getPost('amount_tendered'));
-            $data['amount_change'] = to_currency($data['amount_tendered'] - $cash_amount);
+            $total_tendered = $data['amount_tendered'] + $partner_amount_tendered;
+
+            // Validate split amounts sum to cash_amount when partner is involved
+            if ($partner_amount_tendered > 0 && abs($total_tendered - $cash_amount) > 0.01) {
+                $data['error'] = lang('Receivings.cash_amounts_mismatch');
+                return $this->_reload($data);
+            }
+
+            $data['amount_change'] = to_currency($total_tendered - $cash_amount);
         }
 
         // SAVE receiving to database
@@ -405,11 +443,10 @@ class Receivings extends Secure_Controller
         } else {
             $data['barcode'] = $this->barcode_lib->generate_receipt_barcode($data['receiving_id']);
 
-            // Record loan deduction if applicable
+            // Record primary loan deduction if applicable
             if ($loan_deduction > 0 && $supplier_id != -1) {
                 $linked_customer_id = $this->supplier->get_linked_customer_id($supplier_id);
                 if ($linked_customer_id) {
-                    $customer_loan = model(Customer_loan::class);
                     $customer_loan->record_loan(
                         $linked_customer_id,
                         -$loan_deduction,    // Negative = paying off the loan
@@ -418,6 +455,43 @@ class Receivings extends Secure_Controller
                         'Loan deduction from receiving RECV ' . $receiving_id_num
                     );
                     $data['loan_balance_after'] = $customer_loan->get_loan_balance($linked_customer_id);
+                }
+            }
+
+            // Record partner loan deduction if applicable
+            $partner_supplier_id = $this->supplier->get_partner_supplier_id($supplier_id);
+            if ($partner_loan_deduction > 0 && $partner_supplier_id) {
+                $partner_customer_id = $this->supplier->get_linked_customer_id($partner_supplier_id);
+                if ($partner_customer_id) {
+                    $customer_loan->record_loan(
+                        $partner_customer_id,
+                        -$partner_loan_deduction,
+                        null,
+                        $receiving_id_num,
+                        'Partner loan deduction from receiving RECV ' . $receiving_id_num
+                    );
+                    $data['partner_loan_balance_after'] = $customer_loan->get_loan_balance($partner_customer_id);
+                }
+            }
+
+            if ($partner_supplier_id) {
+                $partner_info = $this->supplier->get_info($partner_supplier_id);
+                $data['partner_supplier_name'] = $partner_info->first_name . ' ' . $partner_info->last_name;
+            }
+
+            // Record per-supplier cash payments for cash summary reporting
+            if ($cash_amount > 0 && $supplier_id != -1) {
+                if ($partner_supplier_id && ($data['amount_tendered'] > 0 || $partner_amount_tendered > 0)) {
+                    // Split cash: record separately for each party
+                    if (($data['amount_tendered'] ?? 0) > 0) {
+                        $this->receiving->record_payment($receiving_id_num, $supplier_id, (float) $data['amount_tendered']);
+                    }
+                    if ($partner_amount_tendered > 0) {
+                        $this->receiving->record_payment($receiving_id_num, $partner_supplier_id, $partner_amount_tendered);
+                    }
+                } else {
+                    // Single supplier — record full cash amount
+                    $this->receiving->record_payment($receiving_id_num, $supplier_id, $cash_amount);
                 }
             }
         }
@@ -531,6 +605,10 @@ class Receivings extends Secure_Controller
         $data['loan_balance'] = '0.00';
         $data['has_linked_customer'] = false;
         $data['linked_customer_id'] = null;
+        $data['has_partner_supplier'] = false;
+        $data['partner_supplier_name'] = '';
+        $data['partner_loan_balance'] = '0.00';
+        $data['partner_customer_id'] = null;
 
         if ($supplier_id != -1) {    // TODO: Duplicated Code... replace -1 with a constant
             $supplier_info = $this->supplier->get_info($supplier_id);
@@ -552,6 +630,21 @@ class Receivings extends Secure_Controller
                 $data['has_linked_customer'] = true;
                 $data['linked_customer_id'] = $linked_customer_id;
                 $data['loan_balance'] = $customer_loan->get_loan_balance($linked_customer_id);
+            }
+
+            // Check if supplier has a linked partner (always show cash split, loan section only if balance > 0)
+            $partner_supplier_id = $this->supplier->get_partner_supplier_id($supplier_id);
+            if ($partner_supplier_id) {
+                $partner_info = $this->supplier->get_info($partner_supplier_id);
+                $data['has_partner_supplier'] = true;
+                $data['partner_supplier_name'] = $partner_info->first_name . ' ' . $partner_info->last_name;
+                $partner_customer_id = $this->supplier->get_linked_customer_id($partner_supplier_id);
+                if ($partner_customer_id) {
+                    $customer_loan = $customer_loan ?? model(Customer_loan::class);
+                    $partner_balance = (float) $customer_loan->get_loan_balance($partner_customer_id);
+                    $data['partner_loan_balance'] = $partner_balance;
+                    $data['partner_customer_id'] = $partner_customer_id;
+                }
             }
         }
 

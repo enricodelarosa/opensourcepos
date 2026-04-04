@@ -105,6 +105,13 @@
             </div>
         </div>
 
+        <div class="form-group form-group-sm" id="partner_supplier_row">
+            <?= form_label(lang('Suppliers.partner_supplier'), 'partner_supplier_id', ['class' => 'control-label col-xs-3']) ?>
+            <div class="col-xs-8">
+                <?= form_dropdown('partner_supplier_id', $partners_list, $person_info->partner_supplier_id ?? '', ['class' => 'form-control', 'id' => 'partner_supplier_id']) ?>
+            </div>
+        </div>
+
     </fieldset>
 <?= form_close() ?>
 

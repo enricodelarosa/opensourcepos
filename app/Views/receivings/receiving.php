@@ -18,6 +18,10 @@
  * @var string $loan_balance
  * @var bool $has_linked_customer
  * @var int|null $linked_customer_id
+ * @var bool $has_partner_supplier
+ * @var string $partner_supplier_name
+ * @var string $partner_loan_balance
+ * @var int|null $partner_customer_id
  */
 ?>
 
@@ -403,46 +407,113 @@ if (isset($success)) {
                                         ) ?>
                                     </td>
                                 </tr>
-                                <?php if ($has_linked_customer && $loan_balance > 0) { ?>
+                                <?php $show_any_loan = ($has_linked_customer && $loan_balance > 0) || ($has_partner_supplier && $partner_loan_balance > 0); ?>
+                                <?php if ($show_any_loan) { ?>
+                                    <!-- Primary supplier loan section -->
+                                    <?php if ($has_linked_customer && $loan_balance > 0) { ?>
                                     <tr>
-                                        <td colspan="2"><hr style="margin: 5px 0; border-color: #ddd;"></td>
+                                        <td colspan="2" style="padding-top: 12px;">
+                                            <strong style="font-size: 1.05em;"><?= esc($supplier) ?></strong>
+                                            <hr style="margin: 4px 0; border-color: #aaa;">
+                                        </td>
                                     </tr>
                                     <tr>
-                                        <td><strong><?= lang('Receivings.loan_balance') ?></strong></td>
+                                        <td><?= lang('Receivings.loan_balance') ?></td>
                                         <td><strong style="color: #d9534f;"><?= to_currency($loan_balance) ?></strong></td>
                                     </tr>
                                     <tr>
                                         <td><?= lang('Receivings.loan_deduction') ?></td>
                                         <td>
                                             <?= form_input([
-                                                'name'  => 'loan_deduction',
-                                                'id'    => 'loan_deduction',
-                                                'value' => '',
-                                                'class' => 'form-control input-sm',
-                                                'size'  => '5',
+                                                'name'        => 'loan_deduction',
+                                                'id'          => 'loan_deduction',
+                                                'value'       => '',
+                                                'class'       => 'form-control input-sm',
+                                                'size'        => '5',
                                                 'placeholder' => '0.00'
                                             ]) ?>
                                         </td>
                                     </tr>
+                                    <?php } ?>
+                                    <!-- Partner supplier loan section -->
+                                    <?php if ($has_partner_supplier && $partner_loan_balance > 0) { ?>
                                     <tr>
-                                        <td><?= lang('Receivings.cash_to_pay') ?></td>
+                                        <td colspan="2" style="padding-top: 12px;">
+                                            <strong style="font-size: 1.05em;"><?= esc($partner_supplier_name) ?></strong>
+                                            <hr style="margin: 4px 0; border-color: #aaa;">
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><?= lang('Receivings.partner_loan_balance') ?></td>
+                                        <td><strong style="color: #d9534f;"><?= to_currency($partner_loan_balance) ?></strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td><?= lang('Receivings.partner_loan_deduction') ?></td>
+                                        <td>
+                                            <?= form_input([
+                                                'name'        => 'partner_loan_deduction',
+                                                'id'          => 'partner_loan_deduction',
+                                                'value'       => '',
+                                                'class'       => 'form-control input-sm',
+                                                'size'        => '5',
+                                                'placeholder' => '0.00'
+                                            ]) ?>
+                                        </td>
+                                    </tr>
+                                    <?php } ?>
+                                    <!-- Cash to pay summary -->
+                                    <tr>
+                                        <td colspan="2"><hr style="margin: 10px 0; border-color: #ddd;"></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong><?= lang('Receivings.cash_to_pay') ?></strong></td>
                                         <td><strong id="cash_to_pay"><?= to_currency($total) ?></strong></td>
                                     </tr>
                                     <tr>
-                                        <td colspan="2"><hr style="margin: 5px 0; border-color: #ddd;"></td>
+                                        <td colspan="2"><hr style="margin: 10px 0; border-color: #ddd;"></td>
                                     </tr>
                                 <?php } ?>
+                                <?php if ($has_partner_supplier) { ?>
+                                <tr>
+                                    <td><?= lang('Receivings.cash_to_supplier') ?>: <strong><?= esc($supplier) ?></strong></td>
+                                    <td>
+                                        <?= form_input([
+                                            'name'        => 'amount_tendered',
+                                            'id'          => 'amount_tendered',
+                                            'value'       => '',
+                                            'class'       => 'form-control input-sm',
+                                            'size'        => '5',
+                                            'placeholder' => '0.00'
+                                        ]) ?>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><?= lang('Receivings.cash_to_partner') ?>: <strong><?= esc($partner_supplier_name) ?></strong></td>
+                                    <td>
+                                        <?= form_input([
+                                            'name'        => 'partner_amount_tendered',
+                                            'id'          => 'partner_amount_tendered',
+                                            'value'       => '',
+                                            'class'       => 'form-control input-sm',
+                                            'size'        => '5',
+                                            'placeholder' => '0.00'
+                                        ]) ?>
+                                    </td>
+                                </tr>
+                                <?php } else { ?>
                                 <tr>
                                     <td><?= lang('Sales.amount_tendered') ?></td>
                                     <td>
                                         <?= form_input([
                                             'name'  => 'amount_tendered',
+                                            'id'    => 'amount_tendered',
                                             'value' => '',
                                             'class' => 'form-control input-sm',
                                             'size'  => '5'
                                         ]) ?>
                                     </td>
                                 </tr>
+                                <?php } ?>
                             </table>
                         </div>
 
@@ -570,28 +641,55 @@ if (isset($success)) {
             $('#cart_' + $(this).attr('data-line')).submit();
         });
 
-        <?php if ($has_linked_customer && $loan_balance > 0) { ?>
-        // Auto-calculate remaining cash to pay when loan deduction changes
+        <?php if (($has_linked_customer && $loan_balance > 0) || ($has_partner_supplier && $partner_loan_balance > 0)) { ?>
+        // Auto-calculate remaining cash to pay when loan deductions change
         var receivingTotal = <?= json_encode((float)$total) ?>;
-        var maxLoanDeduction = Math.min(<?= json_encode((float)$loan_balance) ?>, receivingTotal);
+        var maxLoanDeduction = Math.min(<?= json_encode((float)($loan_balance ?? 0)) ?>, receivingTotal);
+        var maxPartnerDeduction = Math.min(<?= json_encode((float)($partner_loan_balance ?? 0)) ?>, receivingTotal);
 
-        $('#loan_deduction').on('input change', function() {
-            var deduction = parseFloat($(this).val()) || 0;
+        function updateCashToPay() {
+            var deduction = parseFloat($('#loan_deduction').val()) || 0;
+            var partnerDeduction = parseFloat($('#partner_loan_deduction').val()) || 0;
 
-            // Clamp to valid range
             if (deduction < 0) deduction = 0;
             if (deduction > maxLoanDeduction) deduction = maxLoanDeduction;
+            if (partnerDeduction < 0) partnerDeduction = 0;
+            if (partnerDeduction > maxPartnerDeduction) partnerDeduction = maxPartnerDeduction;
 
-            var cashToPay = receivingTotal - deduction;
+            var combined = deduction + partnerDeduction;
+            if (combined > receivingTotal) {
+                partnerDeduction = Math.max(0, receivingTotal - deduction);
+            }
+
+            var cashToPay = receivingTotal - deduction - partnerDeduction;
             $('#cash_to_pay').text('<?= $config['currency_symbol'] ?>' + cashToPay.toFixed(2));
 
-            // If loan covers the full amount, hide cash payment fields
             if (cashToPay <= 0) {
                 $('#cash_payment_row, #amount_tendered_row').hide();
             } else {
                 $('#cash_payment_row, #amount_tendered_row').show();
             }
+
+            <?php if ($has_partner_supplier) { ?>
+            // Auto-fill supplier cash; partner cash gets the remainder
+            var supplierCash = parseFloat($('#amount_tendered').val()) || 0;
+            if (supplierCash > cashToPay) supplierCash = cashToPay;
+            $('#partner_amount_tendered').val((cashToPay - supplierCash).toFixed(2));
+            <?php } ?>
+        }
+
+        $('#loan_deduction, #partner_loan_deduction').on('input change', updateCashToPay);
+
+        <?php if ($has_partner_supplier) { ?>
+        // When supplier cash changes, partner cash auto-fills the remainder
+        $('#amount_tendered').on('input change', function() {
+            var cashToPay = parseFloat($('#cash_to_pay').text().replace(/[^0-9.-]/g, '')) || 0;
+            var supplierCash = parseFloat($(this).val()) || 0;
+            if (supplierCash < 0) supplierCash = 0;
+            if (supplierCash > cashToPay) supplierCash = cashToPay;
+            $('#partner_amount_tendered').val((cashToPay - supplierCash).toFixed(2));
         });
+        <?php } ?>
         <?php } ?>
 
     });

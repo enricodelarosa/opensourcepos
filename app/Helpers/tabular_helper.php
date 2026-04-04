@@ -334,7 +334,8 @@ function supplier_headers(): array
         ['email'            => lang('Common.email')],
         ['phone_number'     => lang('Common.phone_number')],
         ['linked_customer'  => lang('Suppliers.linked_customer'), 'sortable' => false, 'escape' => false],
-        ['loan_balance'     => lang('Customers.loan_balance'), 'sortable' => false, 'escape' => false]
+        ['loan_balance'     => lang('Customers.loan_balance'), 'sortable' => false, 'escape' => false],
+        ['partner_supplier' => lang('Suppliers.partner_supplier'), 'sortable' => false]
     ];
 }
 
@@ -378,6 +379,18 @@ function get_supplier_data_row(object $supplier): array
         }
     }
 
+    // Get partner supplier name (checks both directions)
+    $partner_supplier = '';
+    $supplier_model = model(\App\Models\Supplier::class);
+    $partner_id = $supplier_model->get_partner_supplier_id((int) $supplier->person_id);
+    if ($partner_id) {
+        $partner_info = $supplier_model->get_info($partner_id);
+        $partner_supplier = trim($partner_info->first_name . ' ' . $partner_info->last_name);
+        if (!empty($partner_info->company_name)) {
+            $partner_supplier .= ' [' . $partner_info->company_name . ']';
+        }
+    }
+
     return [
         'people.person_id' => $supplier->person_id,
         'company_name'     => html_entity_decode($supplier->company_name),
@@ -389,6 +402,7 @@ function get_supplier_data_row(object $supplier): array
         'phone_number'     => $supplier->phone_number,
         'linked_customer'  => $linked_customer_name,
         'loan_balance'     => $loan_balance_display,
+        'partner_supplier' => $partner_supplier,
         'messages'         => empty($supplier->phone_number)
             ? ''
             : anchor(
