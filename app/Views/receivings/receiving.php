@@ -1,27 +1,30 @@
 <?php
 /**
- * @var string $controller_name
- * @var array $modes
- * @var string $mode
- * @var bool $show_stock_locations
- * @var array $stock_locations
- * @var int $stock_source
- * @var string $stock_destination
- * @var array $cart
- * @var bool $items_module_allowed
- * @var float $total
- * @var string $comment
- * @var bool $print_after_sale
- * @var string $reference
- * @var array $payment_options
- * @var array $config
- * @var string $loan_balance
- * @var bool $has_linked_customer
- * @var int|null $linked_customer_id
- * @var bool $has_partner_supplier
- * @var string $partner_supplier_name
- * @var string $partner_loan_balance
- * @var int|null $partner_customer_id
+ * @var string      $controller_name
+ * @var array       $modes
+ * @var string      $mode
+ * @var bool        $show_stock_locations
+ * @var array       $stock_locations
+ * @var int         $stock_source
+ * @var string      $stock_destination
+ * @var array       $cart
+ * @var bool        $items_module_allowed
+ * @var float       $total
+ * @var string      $comment
+ * @var bool        $print_after_sale
+ * @var string      $reference
+ * @var array       $payment_options
+ * @var array       $config
+ * @var string      $loan_balance
+ * @var bool        $has_linked_customer
+ * @var int|null    $linked_customer_id
+ * @var array       $lunas
+ * @var int         $selected_luna_id
+ * @var object|null $selected_luna
+ * @var bool        $has_partner_supplier
+ * @var string      $partner_supplier_name
+ * @var string      $partner_loan_balance
+ * @var int|null    $partner_customer_id
  */
 ?>
 
@@ -32,12 +35,12 @@ if (isset($error)) {
     echo '<div class="alert alert-dismissible alert-danger">' . esc($error) . '</div>';
 }
 
-if (!empty($warning)) {
+if (! empty($warning)) {
     echo '<div class="alert alert-dismissible alert-warning">' . esc($warning) . '</div>';
 }
 
 if (isset($success)) {
-    echo '<div class="alert alert-dismissible alert-success">' .esc($success) . '</div>';
+    echo '<div class="alert alert-dismissible alert-success">' . esc($success) . '</div>';
 }
 ?>
 
@@ -45,7 +48,7 @@ if (isset($success)) {
 
     <!-- Top register controls -->
 
-    <?= form_open("$controller_name/changeMode", ['id' => 'mode_form', 'class' => 'form-horizontal panel panel-default']) ?>
+    <?= form_open("{$controller_name}/changeMode", ['id' => 'mode_form', 'class' => 'form-horizontal panel panel-default']) ?>
 
     <div class="panel-body form-group">
         <ul>
@@ -64,7 +67,7 @@ if (isset($success)) {
                     <?= form_dropdown('stock_source', $stock_locations, $stock_source, ['onchange' => "$('#mode_form').submit();", 'class' => 'selectpicker show-menu-arrow', 'data-style' => 'btn-default btn-sm', 'data-width' => 'fit']) ?>
                 </li>
 
-                <?php if ($mode == 'requisition') { ?>
+                <?php if ($mode === 'requisition') { ?>
                     <li class="pull-left">
                         <label class="control-label"><?= lang(ucfirst($controller_name) . '.stock_destination') ?></label>
                     </li>
@@ -74,19 +77,19 @@ if (isset($success)) {
             <?php
                 }
             }
-            ?>
+?>
         </ul>
     </div>
 
     <?= form_close() ?>
 
-    <?= form_open("$controller_name/add", ['id' => 'add_item_form', 'class' => 'form-horizontal panel panel-default']) ?>
+    <?= form_open("{$controller_name}/add", ['id' => 'add_item_form', 'class' => 'form-horizontal panel panel-default']) ?>
 
     <div class="panel-body form-group">
         <ul>
             <li class="pull-left first_li">
                 <label for="item" class="control-label">
-                    <?php if ($mode == 'receive' or $mode == 'requisition') { ?>
+                    <?php if ($mode === 'receive' || $mode === 'requisition') { ?>
                         <?= lang(ucfirst($controller_name) . '.find_or_scan_item') ?>
                     <?php } else { ?>
                         <?= lang(ucfirst($controller_name) . '.find_or_scan_item_or_receipt') ?>
@@ -99,7 +102,7 @@ if (isset($success)) {
             </li>
 
             <li class="pull-right">
-                <button id="new_item_button" class="btn btn-info btn-sm pull-right modal-dlg" data-btn-submit="<?= lang('Common.submit') ?>" data-btn-new="<?= lang('Common.new') ?>" data-href="<?= "items/view" ?>" title="<?= lang('Sales.new_item') ?>">
+                <button id="new_item_button" class="btn btn-info btn-sm pull-right modal-dlg" data-btn-submit="<?= lang('Common.submit') ?>" data-btn-new="<?= lang('Common.new') ?>" data-href="<?= 'items/view' ?>" title="<?= lang('Sales.new_item') ?>">
                     <span class="glyphicon glyphicon-tag">&nbsp;</span><?= lang('Sales.new_item') ?>
                 </button>
             </li>
@@ -126,7 +129,7 @@ if (isset($success)) {
         </thead>
 
         <tbody id="cart_contents">
-            <?php if (count($cart) == 0) { ?>
+            <?php if (count($cart) === 0) { ?>
                 <tr>
                     <td colspan="9">
                         <div class="alert alert-dismissible alert-info"><?= lang('Sales.no_items_in_cart') ?></div>
@@ -135,26 +138,26 @@ if (isset($success)) {
                 <?php
             } else {
                 foreach (array_reverse($cart, true) as $line => $item) {
-                ?>
+                    ?>
 
-                    <?= form_open("$controller_name/editItem/$line", ['class' => 'form-horizontal', 'id' => "cart_$line"]) ?>
+                    <?= form_open("{$controller_name}/editItem/{$line}", ['class' => 'form-horizontal', 'id' => "cart_{$line}"]) ?>
 
                     <tr>
-                        <td><?= anchor("$controller_name/deleteItem/$line", '<span class="glyphicon glyphicon-trash"></span>') ?></td>
+                        <td><?= anchor("{$controller_name}/deleteItem/{$line}", '<span class="glyphicon glyphicon-trash"></span>') ?></td>
                         <td><?= esc($item['item_number']) ?></td>
                         <td style="text-align: center;">
                             <?= esc($item['name'] . ' ' . implode(' ', [$item['attribute_values'], $item['attribute_dtvalues']])) ?><br>
                             <?= '[' . to_quantity_decimals($item['in_stock']) . ' in ' . esc($item['stock_name']) . ']' ?>
-                            <?= form_hidden('location', (string)$item['item_location']) ?>
+                            <?= form_hidden('location', (string) $item['item_location']) ?>
                         </td>
 
-                        <?php if ($items_module_allowed && $mode != 'requisition') { ?>
+                        <?php if ($items_module_allowed && $mode !== 'requisition') { ?>
                             <td>
                                 <?= form_input([
                                     'name'    => 'price',
                                     'class'   => 'form-control input-sm',
                                     'value'   => to_currency_no_money($item['price']),
-                                    'onClick' => 'this.select();'
+                                    'onClick' => 'this.select();',
                                 ]) ?>
                             </td>
                         <?php } else { ?>
@@ -172,11 +175,11 @@ if (isset($success)) {
                                 'receiving_quantity',
                                 $item['receiving_quantity_choices'],
                                 $item['receiving_quantity'],
-                                ['class' => 'form-control input-sm']
+                                ['class' => 'form-control input-sm'],
                             ) ?>
                         </td>
 
-                        <?php if ($items_module_allowed && $mode != 'requisition') { ?>
+                        <?php if ($items_module_allowed && $mode !== 'requisition') { ?>
                             <td>
                                 <div class="input-group">
                                     <?= form_input(['name' => 'discount', 'class' => 'form-control input-sm', 'value' => $item['discount_type'] ? to_currency_no_money($item['discount']) : to_decimals($item['discount']), 'onClick' => 'this.select();']) ?>
@@ -185,45 +188,45 @@ if (isset($success)) {
                                             'id'           => 'discount_toggle',
                                             'name'         => 'discount_toggle',
                                             'value'        => 1,
-                                            'data-toggle'  => "toggle",
+                                            'data-toggle'  => 'toggle',
                                             'data-size'    => 'small',
                                             'data-onstyle' => 'success',
                                             'data-on'      => '<b>' . $config['currency_symbol'] . '</b>',
                                             'data-off'     => '<b>%</b>',
                                             'data-line'    => $line,
-                                            'checked'      => $item['discount_type'] == 1
+                                            'checked'      => $item['discount_type'] === 1,
                                         ]) ?>
                                     </span>
                                 </div>
                             </td>
                         <?php } else { ?>
                             <td><?= $item['discount'] ?></td>
-                            <?= form_hidden('discount', (string)$item['discount']) ?>
+                            <?= form_hidden('discount', (string) $item['discount']) ?>
                         <?php } ?>
                         <td>
-                            <?= to_currency(($item['discount_type'] == PERCENT) ? $item['price'] * $item['quantity'] * $item['receiving_quantity'] - $item['price'] * $item['quantity'] * $item['receiving_quantity'] * $item['discount'] / 100 : $item['price'] * $item['quantity'] * $item['receiving_quantity'] - $item['discount']) ?>
+                            <?= to_currency(($item['discount_type'] === PERCENT) ? $item['price'] * $item['quantity'] * $item['receiving_quantity'] - $item['price'] * $item['quantity'] * $item['receiving_quantity'] * $item['discount'] / 100 : $item['price'] * $item['quantity'] * $item['receiving_quantity'] - $item['discount']) ?>
                         </td>
                         <td>
-                            <a href="javascript:$('#<?= esc("cart_$line", 'js') ?>').submit();" title=<?= lang(ucfirst($controller_name) . '.update') ?>>
+                            <a href="javascript:$('#<?= esc("cart_{$line}", 'js') ?>').submit();" title=<?= lang(ucfirst($controller_name) . '.update') ?>>
                                 <span class="glyphicon glyphicon-refresh"></span>
                             </a>
                         </td>
                     </tr>
                     <tr>
-                        <?php if ($item['allow_alt_description'] == 1) {    // TODO: ===?
-                        ?>
+                        <?php if ($item['allow_alt_description'] === 1) {    // TODO: ===?
+                            ?>
                             <td style="color: #2F4F4F;"><?= lang('Sales.description_abbrv') . ':' ?></td>
                         <?php } ?>
                         <td colspan="2" style="text-align: left;">
                             <?php
-                            if ($item['allow_alt_description'] == 1) {    // TODO: ===?
-                                echo form_input([
-                                    'name'  => 'description',
-                                    'class' => 'form-control input-sm',
-                                    'value' => $item['description']
-                                ]);
+                                if ($item['allow_alt_description'] === 1) {    // TODO: ===?
+                                    echo form_input([
+                                        'name'  => 'description',
+                                        'class' => 'form-control input-sm',
+                                        'value' => $item['description'],
+                                    ]);
                                 } else {
-                                    if ($item['description'] != '') {    // TODO: !==?
+                                    if ($item['description'] !== '') {    // TODO: !==?
                                         echo esc($item['description']);
                                         echo form_hidden('description', $item['description']);
                                     } else {
@@ -231,7 +234,7 @@ if (isset($success)) {
                                         echo form_hidden('description', '');
                                     }
                                 }
-                            ?>
+                    ?>
                         </td>
                         <td colspan="7"></td>
                     </tr>
@@ -241,7 +244,7 @@ if (isset($success)) {
             <?php
                 }
             }
-            ?>
+?>
         </tbody>
     </table>
 </div>
@@ -257,19 +260,19 @@ if (isset($success)) {
                     <th style="width: 55%;"><?= lang(ucfirst($controller_name) . '.supplier') ?></th>
                     <th style="width: 45%; text-align: right;"><?= esc($supplier) ?></th>
                 </tr>
-                <?php if (!empty($supplier_email)) { ?>
+                <?php if (! empty($supplier_email)) { ?>
                     <tr>
                         <th style="width: 55%;"><?= lang(ucfirst($controller_name) . '.supplier_email') ?></th>
                         <th style="width: 45%; text-align: right;"><?= esc($supplier_email) ?></th>
                     </tr>
                 <?php } ?>
-                <?php if (!empty($supplier_address)) { ?>
+                <?php if (! empty($supplier_address)) { ?>
                     <tr>
                         <th style="width: 55%;"><?= lang(ucfirst($controller_name) . '.supplier_address') ?></th>
                         <th style="width: 45%; text-align: right;"><?= esc($supplier_address) ?></th>
                     </tr>
                 <?php } ?>
-                <?php if (!empty($supplier_location)) { ?>
+                <?php if (! empty($supplier_location)) { ?>
                     <tr>
                         <th style="width: 55%;"><?= lang(ucfirst($controller_name) . '.supplier_location') ?></th>
                         <th style="width: 45%; text-align: right;"><?= esc($supplier_location) ?></th>
@@ -277,19 +280,74 @@ if (isset($success)) {
                 <?php } ?>
             </table>
 
+            <?php
+                $selected_luna_label = '';
+            ?>
+            <?php if (! empty($lunas)) { ?>
+                <?php
+                $luna_options        = [-1 => '-- ' . lang('Receivings.select_luna') . ' --'];
+                $last_harvest_label  = lang('Suppliers.no_harvest_recorded');
+                $next_expected_label = lang('Suppliers.no_harvest_recorded');
+
+                if ($selected_luna) {
+                    $selected_luna_label = $selected_luna->area_name;
+                    if (! empty($selected_luna->barangay)) {
+                        $selected_luna_label .= ' (' . $selected_luna->barangay . ')';
+                    }
+                    $last_harvest_label  = $selected_luna->last_harvest_date ?? $last_harvest_label;
+                    $next_expected_label = $selected_luna->next_expected_harvest_date ?? $next_expected_label;
+                }
+
+                foreach ($lunas as $luna_row) {
+                    $label = $luna_row['area_name'];
+                    if (! empty($luna_row['barangay'])) {
+                        $label .= ' (' . $luna_row['barangay'] . ')';
+                    }
+                    $luna_options[$luna_row['luna_id']] = $label;
+                }
+                ?>
+                <?= form_open("{$controller_name}/selectLuna", ['id' => 'select_luna_form', 'class' => 'form-horizontal', 'style' => 'margin-top: 12px;']) ?>
+                    <table class="sales_table_100">
+                        <tr>
+                            <th style="width: 55%;"><?= lang('Receivings.select_luna') ?></th>
+                            <td style="width: 45%; text-align: right;">
+                                <?= form_dropdown('luna_id', $luna_options, $selected_luna_id, ['class' => 'form-control input-sm', 'id' => 'luna_id_selector']) ?>
+                            </td>
+                        </tr>
+                    </table>
+                <?= form_close() ?>
+
+                <?php if ($selected_luna) { ?>
+                    <table class="sales_table_100" style="margin-top: 8px;">
+                        <tr>
+                            <th style="width: 55%;"><?= lang('Suppliers.luna') ?></th>
+                            <td style="width: 45%; text-align: right;"><?= esc($selected_luna_label) ?></td>
+                        </tr>
+                        <tr>
+                            <th style="width: 55%;"><?= lang('Suppliers.last_harvest') ?></th>
+                            <td style="width: 45%; text-align: right;"><?= esc($last_harvest_label) ?></td>
+                        </tr>
+                        <tr>
+                            <th style="width: 55%;"><?= lang('Suppliers.next_expected_harvest') ?></th>
+                            <td style="width: 45%; text-align: right;"><?= esc($next_expected_label) ?></td>
+                        </tr>
+                    </table>
+                <?php } ?>
+            <?php } ?>
+
             <?= anchor(
-                "$controller_name/removeSupplier",
+                "{$controller_name}/removeSupplier",
                 '<span class="glyphicon glyphicon-remove">&nbsp;</span>' . lang('Common.remove') . ' ' . lang('Suppliers.supplier'),
                 [
                     'class' => 'btn btn-danger btn-sm',
                     'id'    => 'remove_supplier_button',
-                    'title' => lang('Common.remove') . ' ' . lang('Suppliers.supplier')
-                ]
+                    'title' => lang('Common.remove') . ' ' . lang('Suppliers.supplier'),
+                ],
             ) ?>
 
         <?php } else { ?>
 
-            <?= form_open("$controller_name/selectSupplier", ['id' => 'select_supplier_form', 'class' => 'form-horizontal']) ?>
+            <?= form_open("{$controller_name}/selectSupplier", ['id' => 'select_supplier_form', 'class' => 'form-horizontal']) ?>
 
             <div class="form-group" id="select_customer">
                 <label id="supplier_label" for="supplier" class="control-label" style="margin-bottom: 1em; margin-top: -1em;">
@@ -299,10 +357,10 @@ if (isset($success)) {
                     'name'  => 'supplier',
                     'id'    => 'supplier',
                     'class' => 'form-control input-sm',
-                    'value' => lang(ucfirst($controller_name) . '.start_typing_supplier_name')
+                    'value' => lang(ucfirst($controller_name) . '.start_typing_supplier_name'),
                 ]) ?>
 
-                <button id="new_supplier_button" class="btn btn-info btn-sm modal-dlg" data-btn-submit="<?= lang('Common.submit') ?>" data-href="<?= "suppliers/view" ?>" title="<?= lang(ucfirst($controller_name) . '.new_supplier') ?>">
+                <button id="new_supplier_button" class="btn btn-info btn-sm modal-dlg modal-dlg-wide" data-btn-submit="<?= lang('Common.submit') ?>" data-href="<?= 'suppliers/view' ?>" title="<?= lang(ucfirst($controller_name) . '.new_supplier') ?>">
                     <span class="glyphicon glyphicon-user">&nbsp;</span><?= lang(ucfirst($controller_name) . '.new_supplier') ?>
                 </button>
 
@@ -314,7 +372,7 @@ if (isset($success)) {
 
         <table class="sales_table_100" id="sale_totals">
             <tr>
-                <?php if ($mode != 'requisition') { ?>
+                <?php if ($mode !== 'requisition') { ?>
                     <th style="width: 55%;"><?= lang('Sales.total') ?></th>
                     <th style="width: 45%; text-align: right;"><?= to_currency($total) ?></th>
                 <?php } else { ?>
@@ -326,9 +384,9 @@ if (isset($success)) {
 
         <?php if (count($cart) > 0) { ?>
             <div id="finish_sale">
-                <?php if ($mode == 'requisition') { ?>
+                <?php if ($mode === 'requisition') { ?>
 
-                    <?= form_open("$controller_name/requisitionComplete", ['id' => 'finish_receiving_form', 'class' => 'form-horizontal']) ?>
+                    <?= form_open("{$controller_name}/requisitionComplete", ['id' => 'finish_receiving_form', 'class' => 'form-horizontal']) ?>
 
                     <div class="form-group form-group-sm">
                         <label id="comment_label" for="comment"><?= lang('Common.comments') ?></label>
@@ -337,7 +395,7 @@ if (isset($success)) {
                             'id'    => 'comment',
                             'class' => 'form-control input-sm',
                             'value' => $comment,
-                            'rows'  => '4'
+                            'rows'  => '4',
                         ]) ?>
 
                         <div class="btn btn-sm btn-danger pull-left" id="cancel_receiving_button">
@@ -352,7 +410,7 @@ if (isset($success)) {
 
                 <?php } else { ?>
 
-                    <?= form_open("$controller_name/complete", ['id' => 'finish_receiving_form', 'class' => 'form-horizontal']) ?>
+                    <?= form_open("{$controller_name}/complete", ['id' => 'finish_receiving_form', 'class' => 'form-horizontal']) ?>
 
                     <div class="form-group form-group-sm">
                         <label id="comment_label" for="comment"><?= lang('Common.comments') ?></label>
@@ -361,7 +419,13 @@ if (isset($success)) {
                             'id'    => 'comment',
                             'class' => 'form-control input-sm',
                             'value' => $comment,
-                            'rows'  => '4'
+                            'rows'  => '4',
+                        ]) ?>
+                        <?= form_input([
+                            'type'  => 'hidden',
+                            'name'  => 'selected_luna_id',
+                            'id'    => 'selected_luna_id',
+                            'value' => (string) $selected_luna_id,
                         ]) ?>
                         <div id="payment_details">
                             <table class="sales_table_100">
@@ -373,11 +437,11 @@ if (isset($success)) {
                                             'id'      => 'recv_print_after_sale',
                                             'class'   => 'checkbox',
                                             'value'   => 1,
-                                            'checked' => $print_after_sale == 1
+                                            'checked' => $print_after_sale === 1,
                                         ]) ?>
                                     </td>
                                 </tr>
-                                <?php if ($mode == "receive") { ?>
+                                <?php if ($mode === 'receive') { ?>
                                     <tr>
                                         <td><?= lang(ucfirst($controller_name) . '.reference') ?></td>
                                         <td>
@@ -386,7 +450,7 @@ if (isset($success)) {
                                                 'id'    => 'recv_reference',
                                                 'class' => 'form-control input-sm',
                                                 'value' => $reference,
-                                                'size'  => 5
+                                                'size'  => 5,
                                             ]) ?>
                                         </td>
                                     </tr>
@@ -402,23 +466,26 @@ if (isset($success)) {
                                                 'id'         => 'payment_types',
                                                 'class'      => 'selectpicker show-menu-arrow',
                                                 'data-style' => 'btn-default btn-sm',
-                                                'data-width' => 'auto'
-                                            ]
+                                                'data-width' => 'auto',
+                                            ],
                                         ) ?>
                                     </td>
                                 </tr>
-                                <?php $show_any_loan = ($has_linked_customer && $loan_balance > 0) || ($has_partner_supplier && $partner_loan_balance > 0); ?>
+                                <?php
+                                    $show_partner_loan = $has_partner_supplier && $partner_customer_id && $partner_loan_balance > 0;
+                    $show_any_loan                     = ($has_linked_customer && $loan_balance > 0) || $show_partner_loan;
+                    ?>
                                 <?php if ($show_any_loan) { ?>
                                     <!-- Primary supplier loan section -->
                                     <?php if ($has_linked_customer && $loan_balance > 0) { ?>
                                     <tr>
                                         <td colspan="2" style="padding-top: 12px;">
-                                            <strong style="font-size: 1.05em;"><?= esc($supplier) ?></strong>
+                                            <strong style="font-size: 1.05em;"><?= esc($supplier) ?><?php if ($selected_luna_label !== '') { ?> - <?= esc($selected_luna_label) ?><?php } ?></strong>
                                             <hr style="margin: 4px 0; border-color: #aaa;">
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td><?= lang('Receivings.loan_balance') ?></td>
+                                        <td><?= $selected_luna ? lang('Receivings.luna_loan_balance') : lang('Receivings.loan_balance') ?></td>
                                         <td><strong style="color: #d9534f;"><?= to_currency($loan_balance) ?></strong></td>
                                     </tr>
                                     <tr>
@@ -430,25 +497,25 @@ if (isset($success)) {
                                                 'value'       => '',
                                                 'class'       => 'form-control input-sm',
                                                 'size'        => '5',
-                                                'placeholder' => '0.00'
+                                                'placeholder' => '0.00',
                                             ]) ?>
                                         </td>
                                     </tr>
                                     <?php } ?>
-                                    <!-- Partner supplier loan section -->
-                                    <?php if ($has_partner_supplier && $partner_loan_balance > 0) { ?>
+                                    <!-- Selected luna loan section -->
+                                    <?php if ($show_partner_loan) { ?>
                                     <tr>
                                         <td colspan="2" style="padding-top: 12px;">
-                                            <strong style="font-size: 1.05em;"><?= esc($partner_supplier_name) ?></strong>
+                                            <strong style="font-size: 1.05em;"><?= esc($partner_supplier_name) ?><?php if ($selected_luna_label !== '') { ?> - <?= esc($selected_luna_label) ?><?php } ?></strong>
                                             <hr style="margin: 4px 0; border-color: #aaa;">
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td><?= lang('Receivings.partner_loan_balance') ?></td>
+                                        <td><?= lang('Receivings.luna_loan_balance') ?></td>
                                         <td><strong style="color: #d9534f;"><?= to_currency($partner_loan_balance) ?></strong></td>
                                     </tr>
                                     <tr>
-                                        <td><?= lang('Receivings.partner_loan_deduction') ?></td>
+                                        <td><?= lang('Receivings.loan_deduction') ?></td>
                                         <td>
                                             <?= form_input([
                                                 'name'        => 'partner_loan_deduction',
@@ -456,7 +523,7 @@ if (isset($success)) {
                                                 'value'       => '',
                                                 'class'       => 'form-control input-sm',
                                                 'size'        => '5',
-                                                'placeholder' => '0.00'
+                                                'placeholder' => '0.00',
                                             ]) ?>
                                         </td>
                                     </tr>
@@ -483,7 +550,7 @@ if (isset($success)) {
                                             'value'       => '',
                                             'class'       => 'form-control input-sm',
                                             'size'        => '5',
-                                            'placeholder' => '0.00'
+                                            'placeholder' => '0.00',
                                         ]) ?>
                                     </td>
                                 </tr>
@@ -496,7 +563,7 @@ if (isset($success)) {
                                             'value'       => '',
                                             'class'       => 'form-control input-sm',
                                             'size'        => '5',
-                                            'placeholder' => '0.00'
+                                            'placeholder' => '0.00',
                                         ]) ?>
                                     </td>
                                 </tr>
@@ -509,7 +576,7 @@ if (isset($success)) {
                                             'id'    => 'amount_tendered',
                                             'value' => '',
                                             'class' => 'form-control input-sm',
-                                            'size'  => '5'
+                                            'size'  => '5',
                                         ]) ?>
                                     </td>
                                 </tr>
@@ -536,7 +603,7 @@ if (isset($success)) {
 <script type="text/javascript">
     $(document).ready(function() {
         $("#item").autocomplete({
-            source: '<?= esc("$controller_name/stockItemSearch") ?>',
+            source: '<?= esc("{$controller_name}/stockItemSearch") ?>',
             minChars: 0,
             delay: 10,
             autoFocus: false,
@@ -561,19 +628,19 @@ if (isset($success)) {
         });
 
         $('#comment').keyup(function() {
-            $.post('<?= esc("$controller_name/setComment") ?>', {
+            $.post('<?= esc("{$controller_name}/setComment") ?>', {
                 comment: $('#comment').val()
             });
         });
 
         $('#recv_reference').keyup(function() {
-            $.post('<?= esc("$controller_name/setReference") ?>', {
+            $.post('<?= esc("{$controller_name}/setReference") ?>', {
                 recv_reference: $('#recv_reference').val()
             });
         });
 
         $("#recv_print_after_sale").change(function() {
-            $.post('<?= esc("$controller_name/setPrintAfterSale") ?>', {
+            $.post('<?= esc("{$controller_name}/setPrintAfterSale") ?>', {
                 recv_print_after_sale: $(this).is(":checked")
             });
         });
@@ -583,7 +650,7 @@ if (isset($success)) {
         });
 
         $("#supplier").autocomplete({
-            source: '<?= "suppliers/suggest" ?>',
+            source: '<?= 'suppliers/suggest' ?>',
             minChars: 0,
             delay: 10,
             select: function(a, ui) {
@@ -598,13 +665,17 @@ if (isset($success)) {
             $(this).attr('value', "<?= lang(ucfirst($controller_name) . '.start_typing_supplier_name') ?>");
         });
 
+        $('#luna_id_selector').change(function() {
+            $('#select_luna_form').submit();
+        });
+
         $("#finish_receiving_button").click(function() {
             $('#finish_receiving_form').submit();
         });
 
         $("#cancel_receiving_button").click(function() {
             if (confirm('<?= lang(ucfirst($controller_name) . '.confirm_cancel_receiving') ?>')) {
-                $('#finish_receiving_form').attr('action', '<?= esc("$controller_name/cancelReceiving") ?>');
+                $('#finish_receiving_form').attr('action', '<?= esc("{$controller_name}/cancelReceiving") ?>');
                 $('#finish_receiving_form').submit();
             }
         });
@@ -641,11 +712,11 @@ if (isset($success)) {
             $('#cart_' + $(this).attr('data-line')).submit();
         });
 
-        <?php if (($has_linked_customer && $loan_balance > 0) || ($has_partner_supplier && $partner_loan_balance > 0)) { ?>
+        <?php if (($has_linked_customer && $loan_balance > 0) || ($partner_customer_id && $partner_loan_balance > 0) || $has_partner_supplier) { ?>
         // Auto-calculate remaining cash to pay when loan deductions change
-        var receivingTotal = <?= json_encode((float)$total) ?>;
-        var maxLoanDeduction = Math.min(<?= json_encode((float)($loan_balance ?? 0)) ?>, receivingTotal);
-        var maxPartnerDeduction = Math.min(<?= json_encode((float)($partner_loan_balance ?? 0)) ?>, receivingTotal);
+        var receivingTotal = <?= json_encode((float) $total) ?>;
+        var maxLoanDeduction = Math.min(<?= json_encode((float) ($loan_balance ?? 0)) ?>, receivingTotal);
+        var maxPartnerDeduction = Math.min(<?= json_encode((float) ($partner_loan_balance ?? 0)) ?>, receivingTotal);
 
         function updateCashToPay() {
             var deduction = parseFloat($('#loan_deduction').val()) || 0;

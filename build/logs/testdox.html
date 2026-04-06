@@ -51,12 +51,108 @@
         </style>
     </head>
     <body>
+        <h2>App (Tests\Config\App)</h2>
+        <ul>
+            <li class="success">Get valid host returns host when valid</li>
+            <li class="success">Get valid host returns fallback for invalid host</li>
+            <li class="success">Get valid host returns localhost when no whitelist</li>
+            <li class="success">Get valid host handles missing http host</li>
+            <li class="success">Base u r l contains valid host</li>
+            <li class="success">Base u r l uses fallback host when invalid host provided</li>
+        </ul>
+        <h2>Employee (Tests\Models\Employee)</h2>
+        <ul>
+            <li class="defect">Is admin returns true for person id 1</li>
+            <li class="defect">Is admin returns true for employee with all permissions</li>
+            <li class="defect">Is admin returns false when missing permissions</li>
+            <li class="defect">Can modify employee returns true for own account</li>
+            <li class="defect">Can modify employee returns true for own admin account</li>
+            <li class="defect">Can modify employee returns false when non admin modifies admin</li>
+            <li class="defect">Can modify employee returns true when admin modifies non admin</li>
+            <li class="defect">Can modify employee returns true when non admin modifies non admin</li>
+            <li class="defect">Can modify employee returns false for non admin editing admin</li>
+            <li class="defect">Has grant returns true for actual grant</li>
+            <li class="defect">Has grant returns false for missing grant</li>
+        </ul>
+        <h2>Employees Controller (Tests\Controllers\EmployeesController)</h2>
+        <ul>
+            <li class="defect">Non admin cannot view admin account</li>
+            <li class="defect">Non admin cannot modify admin account</li>
+            <li class="defect">Non admin cannot delete admin account</li>
+            <li class="defect">Non admin cannot grant permissions they dont have</li>
+            <li class="defect">Admin can modify any account</li>
+            <li class="defect">Admin can delete any account</li>
+            <li class="defect">User can modify own account</li>
+            <li class="defect">Permission delegation rule</li>
+            <li class="defect">Admin can grant any permission</li>
+        </ul>
+        <h2>Home (Tests\Controllers\Home)</h2>
+        <ul>
+            <li class="defect">PasswordMinLength Rejects7Characters</li>
+            <li class="defect">PasswordMinLength Accepts8Characters</li>
+            <li class="defect">PasswordMinLength RejectsEmptyString</li>
+            <li class="defect">PasswordMinLength RejectsWhitespaceOnly</li>
+            <li class="defect">PasswordMinLength AcceptsSpecialCharacters</li>
+            <li class="defect">PasswordMinLength RejectsPreviousBehavior</li>
+            <li class="defect">Non admin cannot view admin password form</li>
+            <li class="defect">Non admin cannot change admin password</li>
+            <li class="defect">User can view own password form</li>
+            <li class="defect">User can change own password</li>
+            <li class="defect">Admin can view any password form</li>
+            <li class="defect">Admin can change any password</li>
+            <li class="defect">Default employee id uses current user</li>
+            <li class="defect">Non admin cannot view other non admin password form</li>
+            <li class="defect">Non admin cannot change other non admin password</li>
+        </ul>
+        <h2>Items Csv Import (Tests\Controllers\ItemsCsvImport)</h2>
+        <ul>
+            <li class="defect">Generate csv header basic</li>
+            <li class="defect">Generate csv header multiple locations</li>
+            <li class="defect">Generate csv header with attributes</li>
+            <li class="defect">Generate stock location headers</li>
+            <li class="defect">Generate attribute headers</li>
+            <li class="defect">Generate attribute headers removes negative one index</li>
+            <li class="defect">Get csv file basic</li>
+            <li class="defect">Get csv file with bom</li>
+            <li class="defect">Get csv file multiple rows</li>
+            <li class="defect">Bom exists</li>
+            <li class="defect">Bom not exists</li>
+            <li class="defect">Import item basic fields</li>
+            <li class="defect">Import item with quantity</li>
+            <li class="defect">Import item creates inventory record</li>
+            <li class="defect">Import item with taxes</li>
+            <li class="defect">Import multiple items from simulated csv</li>
+            <li class="defect">Import update existing item</li>
+            <li class="defect">Import item with attribute text</li>
+            <li class="defect">Import item with attribute dropdown</li>
+            <li class="defect">Import item quantity zero</li>
+            <li class="defect">Import item with negative reorder level</li>
+            <li class="defect">Import item with high precision prices</li>
+            <li class="defect">Import item with hsn code</li>
+            <li class="defect">Import item quantity multiple locations</li>
+            <li class="defect">Csv import quantity validation numeric</li>
+            <li class="defect">Csv import empty barcode allowed</li>
+            <li class="defect">Csv import item exists check</li>
+            <li class="defect">Full csv import flow simulated</li>
+            <li class="defect">Import csv invalid stock location column</li>
+            <li class="defect">Import csv valid stock location column</li>
+            <li class="defect">Import csv mixed valid and invalid locations</li>
+            <li class="defect">Validate csv stock locations</li>
+            <li class="defect">Import item quantity only for valid locations</li>
+            <li class="defect">Detect csv location columns</li>
+            <li class="defect">Validate location names case sensitivity</li>
+        </ul>
+        <h2>Reports Controller (Tests\Controllers\ReportsController)</h2>
+        <ul>
+            <li class="success">Redirect pattern uses header and exit</li>
+            <li class="success">Submodule permission check occurs before controller initialization</li>
+        </ul>
         <h2>Token_lib (Tests\Libraries\Token_lib)</h2>
         <ul>
             <li class="success">Render returns input string when no tokens</li>
             <li class="success">Render handles string with percent not in date format</li>
             <li class="success">Render handles invalid date format percent dash percent</li>
-            <li class="success">Render handles invalid date format percent y percent q percent bad</li>
+            <li class="defect">Render handles invalid date format percent y percent q percent bad</li>
             <li class="success">Render handles string with percent a percent</li>
             <li class="success">Render handles extremely long string</li>
             <li class="success">Render handles string with multiple percent symbols</li>
@@ -82,6 +178,20 @@
             <li class="success">Render does not replace invalid format specifiers</li>
             <li class="success">Render replaces timezone format</li>
             <li class="success">Scan works with mixed content</li>
+            <li class="success">Render replaces composite directive percent f</li>
+            <li class="success">Render replaces composite directive percent d</li>
+            <li class="success">Render handles percent t</li>
+            <li class="success">Render handles percent r</li>
+            <li class="success">Render handles percent c</li>
+            <li class="success">Render handles lowercase percent c</li>
+            <li class="success">Render handles percent n</li>
+            <li class="success">Render handles lowercase percent t</li>
+            <li class="success">Render handles percent x</li>
+            <li class="success">Render handles percent h</li>
+        </ul>
+        <h2>Url Helper</h2>
+        <ul>
+            <li class="success">Base 64url encode</li>
         </ul>
     </body>
 </html>

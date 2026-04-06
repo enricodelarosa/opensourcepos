@@ -56,7 +56,7 @@ class Cash_summary extends Secure_Controller
         $sessions = [];
 
         foreach ($cash_ups->getResult() as $cash_up) {
-            $start = substr($cash_up->open_date,  0, 10);
+            $start = substr($cash_up->open_date, 0, 10);
             $end   = substr($cash_up->close_date, 0, 10);
 
             // Fetch individual rows for each transaction type
@@ -67,10 +67,10 @@ class Cash_summary extends Secure_Controller
 
             // Merge into a unified row list: each entry has [particular, cn, ca, cp, oe]
             $rows = array_merge(
-                array_map(fn($r) => ['particular' => $r['particular'], 'cn' => $r['amount'], 'ca' => null, 'cp' => null, 'oe' => null], $cn_rows),
-                array_map(fn($r) => ['particular' => $r['particular'], 'cn' => null, 'ca' => $r['amount'],  'cp' => null, 'oe' => null], $ca_rows),
-                array_map(fn($r) => ['particular' => $r['particular'], 'cn' => null, 'ca' => null, 'cp' => $r['amount'],  'oe' => null], $cp_rows),
-                array_map(fn($r) => ['particular' => $r['particular'], 'cn' => null, 'ca' => null, 'cp' => null, 'oe' => $r['amount']],  $oe_rows)
+                array_map(static fn ($r) => ['particular' => $r['particular'], 'cn' => $r['amount'], 'ca' => null, 'cp' => null, 'oe' => null], $cn_rows),
+                array_map(static fn ($r) => ['particular' => $r['particular'], 'cn' => null, 'ca' => $r['amount'], 'cp' => null, 'oe' => null], $ca_rows),
+                array_map(static fn ($r) => ['particular' => $r['particular'], 'cn' => null, 'ca' => null, 'cp' => $r['amount'], 'oe' => null], $cp_rows),
+                array_map(static fn ($r) => ['particular' => $r['particular'], 'cn' => null, 'ca' => null, 'cp' => null, 'oe' => $r['amount']], $oe_rows),
             );
 
             $cn_total = array_sum(array_column($cn_rows, 'amount'));
@@ -78,7 +78,7 @@ class Cash_summary extends Secure_Controller
             $cp_total = array_sum(array_column($cp_rows, 'amount'));
             $oe_total = array_sum(array_column($oe_rows, 'amount'));
 
-            $cash_beginning = floatval($cash_up->open_amount_cash);
+            $cash_beginning = (float) ($cash_up->open_amount_cash);
             $cash_ending    = $cash_beginning + $cn_total - $ca_total - $cp_total - $oe_total;
 
             $sessions[] = [
@@ -103,23 +103,7 @@ class Cash_summary extends Secure_Controller
 
     private function _get_ca_rows(string $open_date, string $close_date): array
     {
-        $filters = [
-            'start_date' => substr($open_date, 0, 10),
-            'end_date'   => substr($close_date, 0, 10),
-            'is_deleted' => false,
-        ];
-
-        $result = $this->loan_adjustment->search('', $filters, 0, 0, 'adjustment_id', 'asc');
-        $rows   = [];
-
-        foreach ($result->getResult() as $adj) {
-            $rows[] = [
-                'particular' => trim($adj->supplier_first_name . ' ' . $adj->supplier_last_name),
-                'amount'     => floatval($adj->loan_amount),
-            ];
-        }
-
-        return $rows;
+        return $this->loan_adjustment->get_cash_rows_for_period(substr($open_date, 0, 10), substr($close_date, 0, 10));
     }
 
     private function _get_cp_rows(string $start, string $end): array
@@ -146,7 +130,7 @@ class Cash_summary extends Secure_Controller
         foreach ($result->getResult() as $exp) {
             $rows[] = [
                 'particular' => $exp->description ?: $exp->category_name,
-                'amount'     => floatval($exp->amount),
+                'amount'     => (float) ($exp->amount),
             ];
         }
 

@@ -9,11 +9,11 @@ use CodeIgniter\Database\ResultInterface;
  */
 class Supplier extends Person
 {
-    protected $table = 'suppliers';
-    protected $primaryKey = 'person_id';
+    protected $table            = 'suppliers';
+    protected $primaryKey       = 'person_id';
     protected $useAutoIncrement = false;
-    protected $useSoftDeletes = false;
-    protected $allowedFields = [
+    protected $useSoftDeletes   = false;
+    protected $allowedFields    = [
         'company_name',
         'account_number',
         'tax_id',
@@ -21,7 +21,6 @@ class Supplier extends Person
         'agency_name',
         'category',
         'customer_id',
-        'partner_supplier_id'
     ];
 
     /**
@@ -33,7 +32,7 @@ class Supplier extends Person
         $builder->join('people', 'people.person_id = suppliers.person_id');
         $builder->where('suppliers.person_id', $person_id);
 
-        return ($builder->get()->getNumRows() == 1);    // TODO: ===
+        return $builder->get()->getNumRows() === 1;    // TODO: ===
     }
 
     /**
@@ -50,11 +49,13 @@ class Supplier extends Person
     /**
      * Returns all the suppliers
      */
-    public function get_all(int $limit = 0, int $offset = 0, int $category = GOODS_SUPPLIER): ResultInterface
+    public function get_all(int $limit = 0, int $offset = 0, ?int $category = GOODS_SUPPLIER): ResultInterface
     {
         $builder = $this->db->table('suppliers');
         $builder->join('people', 'suppliers.person_id = people.person_id');
-        $builder->where('category', $category);
+        if ($category !== null) {
+            $builder->where('category', $category);
+        }
         $builder->where('deleted', 0);
         $builder->orderBy('company_name', 'asc');
 
@@ -75,20 +76,19 @@ class Supplier extends Person
         $builder->where('suppliers.person_id', $person_id);
         $query = $builder->get();
 
-        if ($query->getNumRows() == 1) {    // TODO: ===
+        if ($query->getNumRows() === 1) {    // TODO: ===
             return $query->getRow();
-        } else {
-            // Get empty base parent object, as $supplier_id is NOT a supplier
-            $person_obj = parent::get_info(NEW_ENTRY);
-
-            // Get all the fields from supplier table
-            // Append those fields to base parent object, we have a complete empty object
-            foreach ($this->db->getFieldNames('suppliers') as $field) {
-                $person_obj->$field = '';
-            }
-
-            return $person_obj;
         }
+        // Get empty base parent object, as $supplier_id is NOT a supplier
+        $person_obj = parent::get_info(NEW_ENTRY);
+
+        // Get all the fields from supplier table
+        // Append those fields to base parent object, we have a complete empty object
+        foreach ($this->db->getFieldNames('suppliers') as $field) {
+            $person_obj->{$field} = '';
+        }
+
+        return $person_obj;
     }
 
     /**
@@ -116,9 +116,9 @@ class Supplier extends Person
 
         if (parent::save_value($person_data, $supplier_id)) {
             $builder = $this->db->table('suppliers');
-            if ($supplier_id == NEW_ENTRY || !$this->exists($supplier_id)) {
+            if ($supplier_id === NEW_ENTRY || ! $this->exists($supplier_id)) {
                 $supplier_data['person_id'] = $person_data['person_id'];
-                $success = $builder->insert($supplier_data);
+                $success                    = $builder->insert($supplier_data);
             } else {
                 $builder->where('person_id', $supplier_id);
                 $success = $builder->update($supplier_data);
@@ -134,6 +134,8 @@ class Supplier extends Person
 
     /**
      * Deletes one supplier
+     *
+     * @param mixed|null $supplier_id
      */
     public function delete($supplier_id = null, bool $purge = false): bool
     {
@@ -197,7 +199,7 @@ class Supplier extends Person
             $suggestions[] = ['value' => $row->person_id, 'label' => $row->first_name . ' ' . $row->last_name];
         }
 
-        if (!$unique) {
+        if (! $unique) {
             $builder = $this->db->table('suppliers');
             $builder->join('people', 'suppliers.person_id = people.person_id');
             $builder->where('deleted', 0);
@@ -251,11 +253,11 @@ class Supplier extends Person
     public function search(string $search, ?int $rows = 25, ?int $limit_from = 0, ?string $sort = 'last_name', ?string $order = 'asc', ?bool $count_only = false)
     {
         // Set default values on null
-        $rows = $rows ?? 25;
-        $limit_from = $limit_from ?? 0;
-        $sort = $sort ?? 'last_name';
-        $order = $order ?? 'asc';
-        $count_only = $count_only ?? false;
+        $rows ??= 25;
+        $limit_from ??= 0;
+        $sort ??= 'last_name';
+        $order ??= 'asc';
+        $count_only ??= false;
 
         $builder = $this->db->table('suppliers AS suppliers');
 
@@ -296,22 +298,35 @@ class Supplier extends Person
     public function get_categories(): array
     {
         return [
-            GOODS_SUPPLIER => lang('Suppliers.goods'),
-            COST_SUPPLIER => lang('Suppliers.cost')
+            GOODS_SUPPLIER      => lang('Suppliers.goods'),
+            COST_SUPPLIER       => lang('Suppliers.cost'),
+            LAND_OWNER_SUPPLIER => lang('Suppliers.land_owner'),
+            TENANT_SUPPLIER     => lang('Suppliers.tenant'),
         ];
     }
 
     /**
      * Return a category name given its id.
+     *
      * @param int $supplier_type Constant representing the type of supplier.
+     *
      * @return string Language string for the given supplier type.
      */
     public function get_category_name(int $supplier_type): string
     {
-        if ($supplier_type == 0) {
-            return lang('Suppliers.goods');
-        } else {
-            return  lang('Suppliers.cost');
+        switch ($supplier_type) {
+            case COST_SUPPLIER:
+                return lang('Suppliers.cost');
+
+            case LAND_OWNER_SUPPLIER:
+                return lang('Suppliers.land_owner');
+
+            case TENANT_SUPPLIER:
+                return lang('Suppliers.tenant');
+
+            case GOODS_SUPPLIER:
+            default:
+                return lang('Suppliers.goods');
         }
     }
 
@@ -337,32 +352,77 @@ class Supplier extends Person
 
         $row = $builder->get()->getRow();
 
-        return ($row && !empty($row->customer_id)) ? (int) $row->customer_id : null;
+        return ($row && ! empty($row->customer_id)) ? (int) $row->customer_id : null;
     }
 
     /**
-     * Gets the partner supplier_id for a given supplier.
-     * Checks both directions: A→B (forward) and B→A (reverse), making the link symmetric.
+     * Gets the supplier linked to a customer account, if any.
      */
-    public function get_partner_supplier_id(int $supplier_id): ?int
+    public function get_info_by_customer_id(int $customer_id): ?object
     {
-        // Forward: this supplier explicitly names a partner
         $builder = $this->db->table('suppliers');
-        $builder->select('partner_supplier_id');
-        $builder->where('person_id', $supplier_id);
+        $builder->select('person_id');
+        $builder->where('customer_id', $customer_id);
+        $builder->where('deleted', 0);
+
         $row = $builder->get()->getRow();
 
-        if ($row && !empty($row->partner_supplier_id)) {
-            return (int) $row->partner_supplier_id;
+        return $row ? $this->get_info((int) $row->person_id) : null;
+    }
+
+    /**
+     * Ensures landowner/tenant suppliers always have a linked customer account.
+     * Returns the linked customer_id when available.
+     */
+    public function ensure_auto_linked_customer(int $supplier_id): ?int
+    {
+        $supplier_info = $this->get_info($supplier_id);
+
+        if (empty($supplier_info->person_id) || (int) ($supplier_info->deleted ?? 0) === DELETED) {
+            return null;
         }
 
-        // Reverse: another supplier names this one as their partner
-        $builder2 = $this->db->table('suppliers');
-        $builder2->select('person_id');
-        $builder2->where('partner_supplier_id', $supplier_id);
-        $builder2->where('deleted', 0);
-        $row2 = $builder2->get()->getRow();
+        if (! empty($supplier_info->customer_id)) {
+            return (int) $supplier_info->customer_id;
+        }
 
-        return ($row2) ? (int) $row2->person_id : null;
+        $category = (int) ($supplier_info->category ?? 0);
+        if (! in_array($category, [LAND_OWNER_SUPPLIER, TENANT_SUPPLIER], true)) {
+            return null;
+        }
+
+        $customer = model(Customer::class);
+        if (! $customer->exists($supplier_id)) {
+            $created = $customer->create_for_person($supplier_id, (string) ($supplier_info->company_name ?? ''));
+            if (! $created) {
+                return null;
+            }
+        }
+
+        if (! $this->link_customer($supplier_id, $supplier_id)) {
+            return null;
+        }
+
+        return $supplier_id;
+    }
+
+    /**
+     * Returns all lunas accessible to the given supplier.
+     */
+    public function get_lunas(int $supplier_id): array
+    {
+        $supplier_info = $this->get_info($supplier_id);
+
+        if (empty($supplier_info->person_id) || (int) ($supplier_info->deleted ?? 0) === DELETED) {
+            return [];
+        }
+
+        $luna = model(Luna::class);
+
+        return match ((int) ($supplier_info->category ?? 0)) {
+            LAND_OWNER_SUPPLIER => $luna->get_lunas_for_landowner($supplier_id),
+            TENANT_SUPPLIER     => $luna->get_lunas_for_tenant($supplier_id),
+            default             => [],
+        };
     }
 }

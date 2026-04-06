@@ -1,18 +1,18 @@
 <?php
 /**
- * @var bool $print_after_sale
+ * @var bool   $print_after_sale
  * @var string $transaction_time
- * @var int $receiving_id
+ * @var int    $receiving_id
  * @var string $employee
- * @var array $cart
- * @var bool $show_stock_locations
- * @var float $total
+ * @var array  $cart
+ * @var bool   $show_stock_locations
+ * @var float  $total
  * @var string $mode
  * @var string $payment_type
- * @var float $amount_tendered
- * @var float $amount_change
+ * @var float  $amount_tendered
+ * @var float  $amount_change
  * @var string $barcode
- * @var array $config
+ * @var array  $config
  */
 ?>
 
@@ -21,6 +21,7 @@
 <?php
 if (isset($error_message)) {
     echo '<div class="alert alert-dismissible alert-danger">' . esc($error_message) . '</div>';
+
     exit;
 }
 
@@ -30,12 +31,12 @@ echo view('partial/print_receipt', ['print_after_sale', $print_after_sale, 'sele
     <a href="javascript:printdoc();">
         <div class="btn btn-info btn-sm" id="show_print_button"><?= '<span class="glyphicon glyphicon-print">&nbsp;</span>' . lang('Common.print') ?></div>
     </a>
-    <?= anchor("receivings", '<span class="glyphicon glyphicon-save">&nbsp;</span>' . lang('Receivings.register'), ['class' => 'btn btn-info btn-sm', 'id' => 'show_sales_button']) ?>
+    <?= anchor('receivings', '<span class="glyphicon glyphicon-save">&nbsp;</span>' . lang('Receivings.register'), ['class' => 'btn btn-info btn-sm', 'id' => 'show_sales_button']) ?>
 </div>
 
 <div id="receipt_wrapper">
     <div id="receipt_header">
-        <?php if ($config['company_logo'] != '') { ?>
+        <?php if ($config['company_logo'] !== '') { ?>
             <div id="company_name">
                 <img id="image" src="<?= base_url('uploads/' . esc($config['company_logo'], 'url')) ?>" alt="company_logo">
             </div>
@@ -52,14 +53,28 @@ echo view('partial/print_receipt', ['print_after_sale', $print_after_sale, 'sele
     </div>
 
     <div id="receipt_general_info">
+        <?php
+        $receipt_luna_label = '';
+if (isset($selected_luna) && $selected_luna) {
+    $receipt_luna_label = $selected_luna->area_name;
+    if (! empty($selected_luna->barangay)) {
+        $receipt_luna_label .= ' (' . $selected_luna->barangay . ')';
+    }
+}
+?>
         <?php if (isset($supplier)) { ?>
-            <div id="customer"><?= lang('Suppliers.supplier') . esc(": $supplier") ?></div>
+            <div id="customer"><?= lang('Suppliers.supplier') . esc(": {$supplier}") ?></div>
         <?php } ?>
-        <div id="sale_id"><?= lang('Receivings.id') . ": $receiving_id" ?></div>
-        <?php if (!empty($reference)) { ?>
-            <div id="reference"><?= lang('Receivings.reference') . esc(": $reference") ?></div>
+        <?php if ($receipt_luna_label !== '') { ?>
+            <div id="luna"><?= lang('Suppliers.luna') . esc(": {$receipt_luna_label}") ?></div>
+            <div id="last_harvest"><?= lang('Suppliers.last_harvest') . esc(': ' . ($selected_luna->last_harvest_date ?? lang('Suppliers.no_harvest_recorded'))) ?></div>
+            <div id="next_expected_harvest"><?= lang('Suppliers.next_expected_harvest') . esc(': ' . ($selected_luna->next_expected_harvest_date ?? lang('Suppliers.no_harvest_recorded'))) ?></div>
         <?php } ?>
-        <div id="employee"><?= lang('Employees.employee') . esc(": $employee") ?></div>
+        <div id="sale_id"><?= lang('Receivings.id') . ": {$receiving_id}" ?></div>
+        <?php if (! empty($reference)) { ?>
+            <div id="reference"><?= lang('Receivings.reference') . esc(": {$reference}") ?></div>
+        <?php } ?>
+        <div id="employee"><?= lang('Employees.employee') . esc(": {$employee}") ?></div>
     </div>
 
     <table id="receipt_items">
@@ -74,7 +89,7 @@ echo view('partial/print_receipt', ['print_after_sale', $print_after_sale, 'sele
             <tr>
                 <td><?= esc($item['name'] . ' ' . $item['attribute_values']) ?></td>
                 <td><?= to_currency($item['price']) ?></td>
-                <td><?= to_quantity_decimals($item['quantity']) . ' ' . ($show_stock_locations ? ' [' . esc($item['stock_name']) . ']' : '') ?>&nbsp;&nbsp;&nbsp;x <?= $item['receiving_quantity'] != 0 ? to_quantity_decimals($item['receiving_quantity']) : 1 ?></td>
+                <td><?= to_quantity_decimals($item['quantity']) . ' ' . ($show_stock_locations ? ' [' . esc($item['stock_name']) . ']' : '') ?>&nbsp;&nbsp;&nbsp;x <?= $item['receiving_quantity'] !== 0 ? to_quantity_decimals($item['receiving_quantity']) : 1 ?></td>
                 <td><div class="total-value"><?= to_currency($item['total']) ?></div></td>
             </tr>
             <tr>
@@ -82,9 +97,9 @@ echo view('partial/print_receipt', ['print_after_sale', $print_after_sale, 'sele
             </tr>
             <?php if ($item['discount'] > 0) { ?>
                 <tr>
-                    <?php if ($item['discount_type'] == FIXED) { ?>
+                    <?php if ($item['discount_type'] === FIXED) { ?>
                         <td colspan="3" class="discount"><?= to_currency($item['discount']) . ' ' . lang('Sales.discount') ?></td>
-                    <?php } elseif ($item['discount_type'] == PERCENT) { ?>
+                    <?php } elseif ($item['discount_type'] === PERCENT) { ?>
                         <td colspan="3" class="discount"><?= to_decimals($item['discount']) . ' ' . lang('Sales.discount_included') ?></td>
                     <?php } ?>
                 </tr>
@@ -96,7 +111,7 @@ echo view('partial/print_receipt', ['print_after_sale', $print_after_sale, 'sele
                 <div class="total-value"><?= to_currency($total) ?></div>
             </td>
         </tr>
-        <?php if ($mode != 'requisition') { ?>
+        <?php if ($mode !== 'requisition') { ?>
             <tr>
                 <td colspan="3" style="text-align: right;"><?= lang('Sales.payment') ?></td>
                 <td>
@@ -105,11 +120,17 @@ echo view('partial/print_receipt', ['print_after_sale', $print_after_sale, 'sele
             </tr>
 
             <?php
-                $partner_loan_deduction = $partner_loan_deduction ?? 0;
-                $has_any_loan_deduction = (isset($loan_deduction) && $loan_deduction > 0) || $partner_loan_deduction > 0;
+        $partner_loan_deduction ??= 0;
+            $has_any_loan_deduction = (isset($loan_deduction) && $loan_deduction > 0) || $partner_loan_deduction > 0;
             ?>
             <?php if ($has_any_loan_deduction) { ?>
                 <?php if (isset($loan_deduction) && $loan_deduction > 0) { ?>
+                <?php if ($receipt_luna_label !== '') { ?>
+                <tr>
+                    <td colspan="3" style="text-align: right;"><strong><?= esc($supplier ?? '') . ' - ' . esc($receipt_luna_label) ?></strong></td>
+                    <td></td>
+                </tr>
+                <?php } ?>
                 <tr>
                     <td colspan="3" style="text-align: right;"><strong><?= lang('Sales.loan_deduction') ?></strong></td>
                     <td>
@@ -118,7 +139,7 @@ echo view('partial/print_receipt', ['print_after_sale', $print_after_sale, 'sele
                 </tr>
                 <?php if (isset($loan_balance_after)) { ?>
                     <tr>
-                        <td colspan="3" style="text-align: right;"><?= lang('Receivings.loan_balance') ?></td>
+                        <td colspan="3" style="text-align: right;"><?= $receipt_luna_label !== '' ? lang('Receivings.luna_loan_balance') : lang('Receivings.loan_balance') ?></td>
                         <td>
                             <div class="total-value"><?= to_currency($loan_balance_after) ?></div>
                         </td>
@@ -127,18 +148,25 @@ echo view('partial/print_receipt', ['print_after_sale', $print_after_sale, 'sele
                 <?php } ?>
                 <?php if ($partner_loan_deduction > 0) { ?>
                 <tr>
-                    <td colspan="3" style="text-align: right;"><strong><?= lang('Receivings.partner_supplier') ?><?= isset($partner_supplier_name) ? ': ' . esc($partner_supplier_name) : '' ?></strong></td>
+                    <td colspan="3" style="text-align: right;">
+                        <strong>
+                            <?= lang('Suppliers.tenant') ?><?= isset($partner_supplier_name) ? ': ' . esc($partner_supplier_name) : '' ?>
+                            <?php if ($receipt_luna_label !== ''): ?>
+                                <?= ' - ' . esc($receipt_luna_label) ?>
+                            <?php endif; ?>
+                        </strong>
+                    </td>
                     <td></td>
                 </tr>
                 <tr>
-                    <td colspan="3" style="text-align: right;"><?= lang('Receivings.partner_loan_deduction') ?></td>
+                    <td colspan="3" style="text-align: right;"><?= lang('Receivings.loan_deduction') ?></td>
                     <td>
                         <div class="total-value" style="color: #d9534f;"><strong>-<?= to_currency($partner_loan_deduction) ?></strong></div>
                     </td>
                 </tr>
                 <?php if (isset($partner_loan_balance_after)) { ?>
                     <tr>
-                        <td colspan="3" style="text-align: right;"><?= lang('Receivings.loan_balance_after_partner') ?></td>
+                        <td colspan="3" style="text-align: right;"><?= lang('Receivings.luna_loan_balance') ?></td>
                         <td>
                             <div class="total-value"><?= to_currency($partner_loan_balance_after) ?></div>
                         </td>
@@ -146,8 +174,8 @@ echo view('partial/print_receipt', ['print_after_sale', $print_after_sale, 'sele
                 <?php } ?>
                 <?php } ?>
                 <?php
-                    $partner_amount_tendered = $partner_amount_tendered ?? 0;
-                    $primary_cash = $amount_tendered ?? ($total - ($loan_deduction ?? 0) - $partner_loan_deduction - $partner_amount_tendered);
+                    $partner_amount_tendered ??= 0;
+                $primary_cash = $amount_tendered ?? ($total - ($loan_deduction ?? 0) - $partner_loan_deduction - $partner_amount_tendered);
                 ?>
                 <?php if ($partner_amount_tendered > 0) { ?>
                 <tr>

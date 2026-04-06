@@ -1,37 +1,916 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <testsuites>
-  <testsuite name="/app/phpunit.xml.dist" tests="29" assertions="44" errors="0" failures="0" skipped="0" time="0.029097">
-    <testsuite name="App" tests="29" assertions="44" errors="0" failures="0" skipped="0" time="0.029097">
-      <testsuite name="Tests\Libraries\Token_libTest" file="/app/tests/Libraries/Token_libTest.php" tests="29" assertions="44" errors="0" failures="0" skipped="0" time="0.029097">
-        <testcase name="testRenderReturnsInputStringWhenNoTokens" file="/app/tests/Libraries/Token_libTest.php" line="18" class="Tests\Libraries\Token_libTest" classname="Tests.Libraries.Token_libTest" assertions="1" time="0.007667"/>
-        <testcase name="testRenderHandlesStringWithPercentNotInDateFormat" file="/app/tests/Libraries/Token_libTest.php" line="25" class="Tests\Libraries\Token_libTest" classname="Tests.Libraries.Token_libTest" assertions="2" time="0.004001"/>
-        <testcase name="testRenderHandlesInvalidDateFormatPercentDashPercent" file="/app/tests/Libraries/Token_libTest.php" line="33" class="Tests\Libraries\Token_libTest" classname="Tests.Libraries.Token_libTest" assertions="2" time="0.001162"/>
-        <testcase name="testRenderHandlesInvalidDateFormatPercentYPercentQPercentBad" file="/app/tests/Libraries/Token_libTest.php" line="41" class="Tests\Libraries\Token_libTest" classname="Tests.Libraries.Token_libTest" assertions="1" time="0.000766"/>
-        <testcase name="testRenderHandlesStringWithPercentAPercent" file="/app/tests/Libraries/Token_libTest.php" line="48" class="Tests\Libraries\Token_libTest" classname="Tests.Libraries.Token_libTest" assertions="1" time="0.000613"/>
-        <testcase name="testRenderHandlesExtremelyLongString" file="/app/tests/Libraries/Token_libTest.php" line="55" class="Tests\Libraries\Token_libTest" classname="Tests.Libraries.Token_libTest" assertions="1" time="0.000513"/>
-        <testcase name="testRenderHandlesStringWithMultiplePercentSymbols" file="/app/tests/Libraries/Token_libTest.php" line="62" class="Tests\Libraries\Token_libTest" classname="Tests.Libraries.Token_libTest" assertions="2" time="0.000589"/>
-        <testcase name="testRenderHandlesStringWithOnlyPercentSymbol" file="/app/tests/Libraries/Token_libTest.php" line="70" class="Tests\Libraries\Token_libTest" classname="Tests.Libraries.Token_libTest" assertions="1" time="0.000578"/>
-        <testcase name="testRenderPreservesTextWithValidDateTokensAndNoOtherTokens" file="/app/tests/Libraries/Token_libTest.php" line="77" class="Tests\Libraries\Token_libTest" classname="Tests.Libraries.Token_libTest" assertions="1" time="0.000612"/>
-        <testcase name="testRenderHandlesEmptyString" file="/app/tests/Libraries/Token_libTest.php" line="84" class="Tests\Libraries\Token_libTest" classname="Tests.Libraries.Token_libTest" assertions="1" time="0.000503"/>
-        <testcase name="testScanExtractsTokens" file="/app/tests/Libraries/Token_libTest.php" line="91" class="Tests\Libraries\Token_libTest" classname="Tests.Libraries.Token_libTest" assertions="2" time="0.000578"/>
-        <testcase name="testScanExtractsTokensWithLength" file="/app/tests/Libraries/Token_libTest.php" line="98" class="Tests\Libraries\Token_libTest" classname="Tests.Libraries.Token_libTest" assertions="2" time="0.000501"/>
-        <testcase name="testScanReturnsEmptyArrayForNoTokens" file="/app/tests/Libraries/Token_libTest.php" line="105" class="Tests\Libraries\Token_libTest" classname="Tests.Libraries.Token_libTest" assertions="1" time="0.000513"/>
-        <testcase name="testRenderHandlesConsecutivePercentSigns" file="/app/tests/Libraries/Token_libTest.php" line="111" class="Tests\Libraries\Token_libTest" classname="Tests.Libraries.Token_libTest" assertions="2" time="0.000628"/>
-        <testcase name="testRenderHandlesEscapedPercentSigns" file="/app/tests/Libraries/Token_libTest.php" line="119" class="Tests\Libraries\Token_libTest" classname="Tests.Libraries.Token_libTest" assertions="1" time="0.000626"/>
-        <testcase name="testRenderHandlesUnclosedBraces" file="/app/tests/Libraries/Token_libTest.php" line="126" class="Tests\Libraries\Token_libTest" classname="Tests.Libraries.Token_libTest" assertions="1" time="0.000617"/>
-        <testcase name="testRenderHandlesUnopenedBraces" file="/app/tests/Libraries/Token_libTest.php" line="133" class="Tests\Libraries\Token_libTest" classname="Tests.Libraries.Token_libTest" assertions="1" time="0.000620"/>
-        <testcase name="testRenderHandlesVeryLongStringWithDate" file="/app/tests/Libraries/Token_libTest.php" line="140" class="Tests\Libraries\Token_libTest" classname="Tests.Libraries.Token_libTest" assertions="2" time="0.000599"/>
-        <testcase name="testRenderHandlesMultipleDates" file="/app/tests/Libraries/Token_libTest.php" line="148" class="Tests\Libraries\Token_libTest" classname="Tests.Libraries.Token_libTest" assertions="1" time="0.000593"/>
-        <testcase name="testRenderHandlesValidYearFormat" file="/app/tests/Libraries/Token_libTest.php" line="155" class="Tests\Libraries\Token_libTest" classname="Tests.Libraries.Token_libTest" assertions="1" time="0.000688"/>
-        <testcase name="testRenderHandlesValidMonthFormat" file="/app/tests/Libraries/Token_libTest.php" line="162" class="Tests\Libraries\Token_libTest" classname="Tests.Libraries.Token_libTest" assertions="1" time="0.000611"/>
-        <testcase name="testRenderHandlesValidDayFormat" file="/app/tests/Libraries/Token_libTest.php" line="169" class="Tests\Libraries\Token_libTest" classname="Tests.Libraries.Token_libTest" assertions="1" time="0.000627"/>
-        <testcase name="testRenderHandlesFullDateFormat" file="/app/tests/Libraries/Token_libTest.php" line="176" class="Tests\Libraries\Token_libTest" classname="Tests.Libraries.Token_libTest" assertions="1" time="0.000757"/>
-        <testcase name="testRenderHandlesPercentB" file="/app/tests/Libraries/Token_libTest.php" line="183" class="Tests\Libraries\Token_libTest" classname="Tests.Libraries.Token_libTest" assertions="3" time="0.000766"/>
-        <testcase name="testRenderHandlesPercentA" file="/app/tests/Libraries/Token_libTest.php" line="192" class="Tests\Libraries\Token_libTest" classname="Tests.Libraries.Token_libTest" assertions="3" time="0.000703"/>
-        <testcase name="testRenderHandlesComplexPercentFormat" file="/app/tests/Libraries/Token_libTest.php" line="201" class="Tests\Libraries\Token_libTest" classname="Tests.Libraries.Token_libTest" assertions="2" time="0.000669"/>
-        <testcase name="testRenderDoesNotReplaceInvalidFormatSpecifiers" file="/app/tests/Libraries/Token_libTest.php" line="209" class="Tests\Libraries\Token_libTest" classname="Tests.Libraries.Token_libTest" assertions="2" time="0.000646"/>
-        <testcase name="testRenderReplacesTimezoneFormat" file="/app/tests/Libraries/Token_libTest.php" line="217" class="Tests\Libraries\Token_libTest" classname="Tests.Libraries.Token_libTest" assertions="2" time="0.000811"/>
-        <testcase name="testScanWorksWithMixedContent" file="/app/tests/Libraries/Token_libTest.php" line="225" class="Tests\Libraries\Token_libTest" classname="Tests.Libraries.Token_libTest" assertions="2" time="0.000540"/>
+  <testsuite name="/Volumes/sourcecode/personal/ospos/phpunit.xml.dist" tests="118" assertions="85" errors="70" failures="1" skipped="0" time="0.042720">
+    <testsuite name="App" tests="118" assertions="85" errors="70" failures="1" skipped="0" time="0.042720">
+      <testsuite name="Tests\Config\AppTest" file="/Volumes/sourcecode/personal/ospos/tests/Config/AppTest.php" tests="6" assertions="10" errors="0" failures="0" skipped="0" time="0.013038">
+        <testcase name="testGetValidHostReturnsHostWhenValid" file="/Volumes/sourcecode/personal/ospos/tests/Config/AppTest.php" line="20" class="Tests\Config\AppTest" classname="Tests.Config.AppTest" assertions="2" time="0.010041"/>
+        <testcase name="testGetValidHostReturnsFallbackForInvalidHost" file="/Volumes/sourcecode/personal/ospos/tests/Config/AppTest.php" line="41" class="Tests\Config\AppTest" classname="Tests.Config.AppTest" assertions="2" time="0.000425"/>
+        <testcase name="testGetValidHostReturnsLocalhostWhenNoWhitelist" file="/Volumes/sourcecode/personal/ospos/tests/Config/AppTest.php" line="62" class="Tests\Config\AppTest" classname="Tests.Config.AppTest" assertions="2" time="0.000466"/>
+        <testcase name="testGetValidHostHandlesMissingHttpHost" file="/Volumes/sourcecode/personal/ospos/tests/Config/AppTest.php" line="83" class="Tests\Config\AppTest" classname="Tests.Config.AppTest" assertions="1" time="0.000370"/>
+        <testcase name="testBaseURLContainsValidHost" file="/Volumes/sourcecode/personal/ospos/tests/Config/AppTest.php" line="100" class="Tests\Config\AppTest" classname="Tests.Config.AppTest" assertions="1" time="0.000696"/>
+        <testcase name="testBaseURLUsesFallbackHostWhenInvalidHostProvided" file="/Volumes/sourcecode/personal/ospos/tests/Config/AppTest.php" line="113" class="Tests\Config\AppTest" classname="Tests.Config.AppTest" assertions="2" time="0.001040"/>
+      </testsuite>
+      <testsuite name="Tests\Controllers\EmployeesControllerTest" file="/Volumes/sourcecode/personal/ospos/tests/Controllers/EmployeesControllerTest.php" tests="9" assertions="0" errors="9" failures="0" skipped="0" time="0.000000">
+        <testcase name="testNonAdminCannotViewAdminAccount" file="/Volumes/sourcecode/personal/ospos/tests/Controllers/EmployeesControllerTest.php" line="71" class="Tests\Controllers\EmployeesControllerTest" classname="Tests.Controllers.EmployeesControllerTest" assertions="0" time="0.000000">
+          <error type="CodeIgniter\Database\Exceptions\DatabaseException">Tests\Controllers\EmployeesControllerTest::testNonAdminCannotViewAdminAccount
+CodeIgniter\Database\Exceptions\DatabaseException: Unable to connect to the database.
+Main connection [MySQLi]: Operation not permitted
+
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Database/BaseConnection.php:465
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:91
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:67
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/CIUnitTestCase.php:254
+/Volumes/sourcecode/personal/ospos/tests/Controllers/EmployeesControllerTest.php:24
+/Volumes/sourcecode/personal/ospos/vendor/bin/phpunit:122</error>
+        </testcase>
+        <testcase name="testNonAdminCannotModifyAdminAccount" file="/Volumes/sourcecode/personal/ospos/tests/Controllers/EmployeesControllerTest.php" line="82" class="Tests\Controllers\EmployeesControllerTest" classname="Tests.Controllers.EmployeesControllerTest" assertions="0" time="0.000000">
+          <error type="CodeIgniter\Database\Exceptions\DatabaseException">Tests\Controllers\EmployeesControllerTest::testNonAdminCannotModifyAdminAccount
+CodeIgniter\Database\Exceptions\DatabaseException: Unable to connect to the database.
+Main connection [MySQLi]: Operation not permitted
+
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Database/BaseConnection.php:465
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:91
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:67
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/CIUnitTestCase.php:254
+/Volumes/sourcecode/personal/ospos/tests/Controllers/EmployeesControllerTest.php:24
+/Volumes/sourcecode/personal/ospos/vendor/bin/phpunit:122</error>
+        </testcase>
+        <testcase name="testNonAdminCannotDeleteAdminAccount" file="/Volumes/sourcecode/personal/ospos/tests/Controllers/EmployeesControllerTest.php" line="100" class="Tests\Controllers\EmployeesControllerTest" classname="Tests.Controllers.EmployeesControllerTest" assertions="0" time="0.000000">
+          <error type="CodeIgniter\Database\Exceptions\DatabaseException">Tests\Controllers\EmployeesControllerTest::testNonAdminCannotDeleteAdminAccount
+CodeIgniter\Database\Exceptions\DatabaseException: Unable to connect to the database.
+Main connection [MySQLi]: Operation not permitted
+
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Database/BaseConnection.php:465
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:91
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:67
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/CIUnitTestCase.php:254
+/Volumes/sourcecode/personal/ospos/tests/Controllers/EmployeesControllerTest.php:24
+/Volumes/sourcecode/personal/ospos/vendor/bin/phpunit:122</error>
+        </testcase>
+        <testcase name="testNonAdminCannotGrantPermissionsTheyDontHave" file="/Volumes/sourcecode/personal/ospos/tests/Controllers/EmployeesControllerTest.php" line="115" class="Tests\Controllers\EmployeesControllerTest" classname="Tests.Controllers.EmployeesControllerTest" assertions="0" time="0.000000">
+          <error type="CodeIgniter\Database\Exceptions\DatabaseException">Tests\Controllers\EmployeesControllerTest::testNonAdminCannotGrantPermissionsTheyDontHave
+CodeIgniter\Database\Exceptions\DatabaseException: Unable to connect to the database.
+Main connection [MySQLi]: Operation not permitted
+
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Database/BaseConnection.php:465
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:91
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:67
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/CIUnitTestCase.php:254
+/Volumes/sourcecode/personal/ospos/tests/Controllers/EmployeesControllerTest.php:24
+/Volumes/sourcecode/personal/ospos/vendor/bin/phpunit:122</error>
+        </testcase>
+        <testcase name="testAdminCanModifyAnyAccount" file="/Volumes/sourcecode/personal/ospos/tests/Controllers/EmployeesControllerTest.php" line="140" class="Tests\Controllers\EmployeesControllerTest" classname="Tests.Controllers.EmployeesControllerTest" assertions="0" time="0.000000">
+          <error type="CodeIgniter\Database\Exceptions\DatabaseException">Tests\Controllers\EmployeesControllerTest::testAdminCanModifyAnyAccount
+CodeIgniter\Database\Exceptions\DatabaseException: Unable to connect to the database.
+Main connection [MySQLi]: Operation not permitted
+
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Database/BaseConnection.php:465
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:91
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:67
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/CIUnitTestCase.php:254
+/Volumes/sourcecode/personal/ospos/tests/Controllers/EmployeesControllerTest.php:24
+/Volumes/sourcecode/personal/ospos/vendor/bin/phpunit:122</error>
+        </testcase>
+        <testcase name="testAdminCanDeleteAnyAccount" file="/Volumes/sourcecode/personal/ospos/tests/Controllers/EmployeesControllerTest.php" line="157" class="Tests\Controllers\EmployeesControllerTest" classname="Tests.Controllers.EmployeesControllerTest" assertions="0" time="0.000000">
+          <error type="CodeIgniter\Database\Exceptions\DatabaseException">Tests\Controllers\EmployeesControllerTest::testAdminCanDeleteAnyAccount
+CodeIgniter\Database\Exceptions\DatabaseException: Unable to connect to the database.
+Main connection [MySQLi]: Operation not permitted
+
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Database/BaseConnection.php:465
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:91
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:67
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/CIUnitTestCase.php:254
+/Volumes/sourcecode/personal/ospos/tests/Controllers/EmployeesControllerTest.php:24
+/Volumes/sourcecode/personal/ospos/vendor/bin/phpunit:122</error>
+        </testcase>
+        <testcase name="testUserCanModifyOwnAccount" file="/Volumes/sourcecode/personal/ospos/tests/Controllers/EmployeesControllerTest.php" line="171" class="Tests\Controllers\EmployeesControllerTest" classname="Tests.Controllers.EmployeesControllerTest" assertions="0" time="0.000000">
+          <error type="CodeIgniter\Database\Exceptions\DatabaseException">Tests\Controllers\EmployeesControllerTest::testUserCanModifyOwnAccount
+CodeIgniter\Database\Exceptions\DatabaseException: Unable to connect to the database.
+Main connection [MySQLi]: Operation not permitted
+
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Database/BaseConnection.php:465
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:91
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:67
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/CIUnitTestCase.php:254
+/Volumes/sourcecode/personal/ospos/tests/Controllers/EmployeesControllerTest.php:24
+/Volumes/sourcecode/personal/ospos/vendor/bin/phpunit:122</error>
+        </testcase>
+        <testcase name="testPermissionDelegationRule" file="/Volumes/sourcecode/personal/ospos/tests/Controllers/EmployeesControllerTest.php" line="188" class="Tests\Controllers\EmployeesControllerTest" classname="Tests.Controllers.EmployeesControllerTest" assertions="0" time="0.000000">
+          <error type="CodeIgniter\Database\Exceptions\DatabaseException">Tests\Controllers\EmployeesControllerTest::testPermissionDelegationRule
+CodeIgniter\Database\Exceptions\DatabaseException: Unable to connect to the database.
+Main connection [MySQLi]: Operation not permitted
+
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Database/BaseConnection.php:465
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:91
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:67
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/CIUnitTestCase.php:254
+/Volumes/sourcecode/personal/ospos/tests/Controllers/EmployeesControllerTest.php:24
+/Volumes/sourcecode/personal/ospos/vendor/bin/phpunit:122</error>
+        </testcase>
+        <testcase name="testAdminCanGrantAnyPermission" file="/Volumes/sourcecode/personal/ospos/tests/Controllers/EmployeesControllerTest.php" line="204" class="Tests\Controllers\EmployeesControllerTest" classname="Tests.Controllers.EmployeesControllerTest" assertions="0" time="0.000000">
+          <error type="CodeIgniter\Database\Exceptions\DatabaseException">Tests\Controllers\EmployeesControllerTest::testAdminCanGrantAnyPermission
+CodeIgniter\Database\Exceptions\DatabaseException: Unable to connect to the database.
+Main connection [MySQLi]: Operation not permitted
+
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Database/BaseConnection.php:465
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:91
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:67
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/CIUnitTestCase.php:254
+/Volumes/sourcecode/personal/ospos/tests/Controllers/EmployeesControllerTest.php:24
+/Volumes/sourcecode/personal/ospos/vendor/bin/phpunit:122</error>
+        </testcase>
+      </testsuite>
+      <testsuite name="Tests\Controllers\HomeTest" file="/Volumes/sourcecode/personal/ospos/tests/Controllers/HomeTest.php" tests="15" assertions="0" errors="15" failures="0" skipped="0" time="0.000000">
+        <testcase name="testPasswordMinLength_Rejects7Characters" file="/Volumes/sourcecode/personal/ospos/tests/Controllers/HomeTest.php" line="41" class="Tests\Controllers\HomeTest" classname="Tests.Controllers.HomeTest" assertions="0" time="0.000000">
+          <error type="CodeIgniter\Database\Exceptions\DatabaseException">Tests\Controllers\HomeTest::testPasswordMinLength_Rejects7Characters
+CodeIgniter\Database\Exceptions\DatabaseException: Unable to connect to the database.
+Main connection [MySQLi]: Operation not permitted
+
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Database/BaseConnection.php:465
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:91
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:67
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/CIUnitTestCase.php:254
+/Volumes/sourcecode/personal/ospos/tests/Controllers/HomeTest.php:33
+/Volumes/sourcecode/personal/ospos/vendor/bin/phpunit:122</error>
+        </testcase>
+        <testcase name="testPasswordMinLength_Accepts8Characters" file="/Volumes/sourcecode/personal/ospos/tests/Controllers/HomeTest.php" line="71" class="Tests\Controllers\HomeTest" classname="Tests.Controllers.HomeTest" assertions="0" time="0.000000">
+          <error type="CodeIgniter\Database\Exceptions\DatabaseException">Tests\Controllers\HomeTest::testPasswordMinLength_Accepts8Characters
+CodeIgniter\Database\Exceptions\DatabaseException: Unable to connect to the database.
+Main connection [MySQLi]: Operation not permitted
+
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Database/BaseConnection.php:465
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:91
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:67
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/CIUnitTestCase.php:254
+/Volumes/sourcecode/personal/ospos/tests/Controllers/HomeTest.php:33
+/Volumes/sourcecode/personal/ospos/vendor/bin/phpunit:122</error>
+        </testcase>
+        <testcase name="testPasswordMinLength_RejectsEmptyString" file="/Volumes/sourcecode/personal/ospos/tests/Controllers/HomeTest.php" line="108" class="Tests\Controllers\HomeTest" classname="Tests.Controllers.HomeTest" assertions="0" time="0.000000">
+          <error type="CodeIgniter\Database\Exceptions\DatabaseException">Tests\Controllers\HomeTest::testPasswordMinLength_RejectsEmptyString
+CodeIgniter\Database\Exceptions\DatabaseException: Unable to connect to the database.
+Main connection [MySQLi]: Operation not permitted
+
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Database/BaseConnection.php:465
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:91
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:67
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/CIUnitTestCase.php:254
+/Volumes/sourcecode/personal/ospos/tests/Controllers/HomeTest.php:33
+/Volumes/sourcecode/personal/ospos/vendor/bin/phpunit:122</error>
+        </testcase>
+        <testcase name="testPasswordMinLength_RejectsWhitespaceOnly" file="/Volumes/sourcecode/personal/ospos/tests/Controllers/HomeTest.php" line="131" class="Tests\Controllers\HomeTest" classname="Tests.Controllers.HomeTest" assertions="0" time="0.000000">
+          <error type="CodeIgniter\Database\Exceptions\DatabaseException">Tests\Controllers\HomeTest::testPasswordMinLength_RejectsWhitespaceOnly
+CodeIgniter\Database\Exceptions\DatabaseException: Unable to connect to the database.
+Main connection [MySQLi]: Operation not permitted
+
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Database/BaseConnection.php:465
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:91
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:67
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/CIUnitTestCase.php:254
+/Volumes/sourcecode/personal/ospos/tests/Controllers/HomeTest.php:33
+/Volumes/sourcecode/personal/ospos/vendor/bin/phpunit:122</error>
+        </testcase>
+        <testcase name="testPasswordMinLength_AcceptsSpecialCharacters" file="/Volumes/sourcecode/personal/ospos/tests/Controllers/HomeTest.php" line="155" class="Tests\Controllers\HomeTest" classname="Tests.Controllers.HomeTest" assertions="0" time="0.000000">
+          <error type="CodeIgniter\Database\Exceptions\DatabaseException">Tests\Controllers\HomeTest::testPasswordMinLength_AcceptsSpecialCharacters
+CodeIgniter\Database\Exceptions\DatabaseException: Unable to connect to the database.
+Main connection [MySQLi]: Operation not permitted
+
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Database/BaseConnection.php:465
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:91
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:67
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/CIUnitTestCase.php:254
+/Volumes/sourcecode/personal/ospos/tests/Controllers/HomeTest.php:33
+/Volumes/sourcecode/personal/ospos/vendor/bin/phpunit:122</error>
+        </testcase>
+        <testcase name="testPasswordMinLength_RejectsPreviousBehavior" file="/Volumes/sourcecode/personal/ospos/tests/Controllers/HomeTest.php" line="195" class="Tests\Controllers\HomeTest" classname="Tests.Controllers.HomeTest" assertions="0" time="0.000000">
+          <error type="CodeIgniter\Database\Exceptions\DatabaseException">Tests\Controllers\HomeTest::testPasswordMinLength_RejectsPreviousBehavior
+CodeIgniter\Database\Exceptions\DatabaseException: Unable to connect to the database.
+Main connection [MySQLi]: Operation not permitted
+
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Database/BaseConnection.php:465
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:91
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:67
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/CIUnitTestCase.php:254
+/Volumes/sourcecode/personal/ospos/tests/Controllers/HomeTest.php:33
+/Volumes/sourcecode/personal/ospos/vendor/bin/phpunit:122</error>
+        </testcase>
+        <testcase name="testNonAdminCannotViewAdminPasswordForm" file="/Volumes/sourcecode/personal/ospos/tests/Controllers/HomeTest.php" line="288" class="Tests\Controllers\HomeTest" classname="Tests.Controllers.HomeTest" assertions="0" time="0.000000">
+          <error type="CodeIgniter\Database\Exceptions\DatabaseException">Tests\Controllers\HomeTest::testNonAdminCannotViewAdminPasswordForm
+CodeIgniter\Database\Exceptions\DatabaseException: Unable to connect to the database.
+Main connection [MySQLi]: Operation not permitted
+
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Database/BaseConnection.php:465
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:91
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:67
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/CIUnitTestCase.php:254
+/Volumes/sourcecode/personal/ospos/tests/Controllers/HomeTest.php:33
+/Volumes/sourcecode/personal/ospos/vendor/bin/phpunit:122</error>
+        </testcase>
+        <testcase name="testNonAdminCannotChangeAdminPassword" file="/Volumes/sourcecode/personal/ospos/tests/Controllers/HomeTest.php" line="304" class="Tests\Controllers\HomeTest" classname="Tests.Controllers.HomeTest" assertions="0" time="0.000000">
+          <error type="CodeIgniter\Database\Exceptions\DatabaseException">Tests\Controllers\HomeTest::testNonAdminCannotChangeAdminPassword
+CodeIgniter\Database\Exceptions\DatabaseException: Unable to connect to the database.
+Main connection [MySQLi]: Operation not permitted
+
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Database/BaseConnection.php:465
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:91
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:67
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/CIUnitTestCase.php:254
+/Volumes/sourcecode/personal/ospos/tests/Controllers/HomeTest.php:33
+/Volumes/sourcecode/personal/ospos/vendor/bin/phpunit:122</error>
+        </testcase>
+        <testcase name="testUserCanViewOwnPasswordForm" file="/Volumes/sourcecode/personal/ospos/tests/Controllers/HomeTest.php" line="331" class="Tests\Controllers\HomeTest" classname="Tests.Controllers.HomeTest" assertions="0" time="0.000000">
+          <error type="CodeIgniter\Database\Exceptions\DatabaseException">Tests\Controllers\HomeTest::testUserCanViewOwnPasswordForm
+CodeIgniter\Database\Exceptions\DatabaseException: Unable to connect to the database.
+Main connection [MySQLi]: Operation not permitted
+
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Database/BaseConnection.php:465
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:91
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:67
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/CIUnitTestCase.php:254
+/Volumes/sourcecode/personal/ospos/tests/Controllers/HomeTest.php:33
+/Volumes/sourcecode/personal/ospos/vendor/bin/phpunit:122</error>
+        </testcase>
+        <testcase name="testUserCanChangeOwnPassword" file="/Volumes/sourcecode/personal/ospos/tests/Controllers/HomeTest.php" line="347" class="Tests\Controllers\HomeTest" classname="Tests.Controllers.HomeTest" assertions="0" time="0.000000">
+          <error type="CodeIgniter\Database\Exceptions\DatabaseException">Tests\Controllers\HomeTest::testUserCanChangeOwnPassword
+CodeIgniter\Database\Exceptions\DatabaseException: Unable to connect to the database.
+Main connection [MySQLi]: Operation not permitted
+
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Database/BaseConnection.php:465
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:91
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:67
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/CIUnitTestCase.php:254
+/Volumes/sourcecode/personal/ospos/tests/Controllers/HomeTest.php:33
+/Volumes/sourcecode/personal/ospos/vendor/bin/phpunit:122</error>
+        </testcase>
+        <testcase name="testAdminCanViewAnyPasswordForm" file="/Volumes/sourcecode/personal/ospos/tests/Controllers/HomeTest.php" line="373" class="Tests\Controllers\HomeTest" classname="Tests.Controllers.HomeTest" assertions="0" time="0.000000">
+          <error type="CodeIgniter\Database\Exceptions\DatabaseException">Tests\Controllers\HomeTest::testAdminCanViewAnyPasswordForm
+CodeIgniter\Database\Exceptions\DatabaseException: Unable to connect to the database.
+Main connection [MySQLi]: Operation not permitted
+
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Database/BaseConnection.php:465
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:91
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:67
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/CIUnitTestCase.php:254
+/Volumes/sourcecode/personal/ospos/tests/Controllers/HomeTest.php:33
+/Volumes/sourcecode/personal/ospos/vendor/bin/phpunit:122</error>
+        </testcase>
+        <testcase name="testAdminCanChangeAnyPassword" file="/Volumes/sourcecode/personal/ospos/tests/Controllers/HomeTest.php" line="389" class="Tests\Controllers\HomeTest" classname="Tests.Controllers.HomeTest" assertions="0" time="0.000000">
+          <error type="CodeIgniter\Database\Exceptions\DatabaseException">Tests\Controllers\HomeTest::testAdminCanChangeAnyPassword
+CodeIgniter\Database\Exceptions\DatabaseException: Unable to connect to the database.
+Main connection [MySQLi]: Operation not permitted
+
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Database/BaseConnection.php:465
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:91
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:67
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/CIUnitTestCase.php:254
+/Volumes/sourcecode/personal/ospos/tests/Controllers/HomeTest.php:33
+/Volumes/sourcecode/personal/ospos/vendor/bin/phpunit:122</error>
+        </testcase>
+        <testcase name="testDefaultEmployeeIdUsesCurrentUser" file="/Volumes/sourcecode/personal/ospos/tests/Controllers/HomeTest.php" line="415" class="Tests\Controllers\HomeTest" classname="Tests.Controllers.HomeTest" assertions="0" time="0.000000">
+          <error type="CodeIgniter\Database\Exceptions\DatabaseException">Tests\Controllers\HomeTest::testDefaultEmployeeIdUsesCurrentUser
+CodeIgniter\Database\Exceptions\DatabaseException: Unable to connect to the database.
+Main connection [MySQLi]: Operation not permitted
+
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Database/BaseConnection.php:465
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:91
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:67
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/CIUnitTestCase.php:254
+/Volumes/sourcecode/personal/ospos/tests/Controllers/HomeTest.php:33
+/Volumes/sourcecode/personal/ospos/vendor/bin/phpunit:122</error>
+        </testcase>
+        <testcase name="testNonAdminCannotViewOtherNonAdminPasswordForm" file="/Volumes/sourcecode/personal/ospos/tests/Controllers/HomeTest.php" line="433" class="Tests\Controllers\HomeTest" classname="Tests.Controllers.HomeTest" assertions="0" time="0.000000">
+          <error type="CodeIgniter\Database\Exceptions\DatabaseException">Tests\Controllers\HomeTest::testNonAdminCannotViewOtherNonAdminPasswordForm
+CodeIgniter\Database\Exceptions\DatabaseException: Unable to connect to the database.
+Main connection [MySQLi]: Operation not permitted
+
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Database/BaseConnection.php:465
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:91
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:67
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/CIUnitTestCase.php:254
+/Volumes/sourcecode/personal/ospos/tests/Controllers/HomeTest.php:33
+/Volumes/sourcecode/personal/ospos/vendor/bin/phpunit:122</error>
+        </testcase>
+        <testcase name="testNonAdminCannotChangeOtherNonAdminPassword" file="/Volumes/sourcecode/personal/ospos/tests/Controllers/HomeTest.php" line="455" class="Tests\Controllers\HomeTest" classname="Tests.Controllers.HomeTest" assertions="0" time="0.000000">
+          <error type="CodeIgniter\Database\Exceptions\DatabaseException">Tests\Controllers\HomeTest::testNonAdminCannotChangeOtherNonAdminPassword
+CodeIgniter\Database\Exceptions\DatabaseException: Unable to connect to the database.
+Main connection [MySQLi]: Operation not permitted
+
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Database/BaseConnection.php:465
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:91
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:67
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/CIUnitTestCase.php:254
+/Volumes/sourcecode/personal/ospos/tests/Controllers/HomeTest.php:33
+/Volumes/sourcecode/personal/ospos/vendor/bin/phpunit:122</error>
+        </testcase>
+      </testsuite>
+      <testsuite name="Tests\Controllers\ItemsCsvImportTest" file="/Volumes/sourcecode/personal/ospos/tests/Controllers/ItemsCsvImportTest.php" tests="35" assertions="0" errors="35" failures="0" skipped="0" time="0.000000">
+        <testcase name="testGenerateCsvHeaderBasic" file="/Volumes/sourcecode/personal/ospos/tests/Controllers/ItemsCsvImportTest.php" line="52" class="Tests\Controllers\ItemsCsvImportTest" classname="Tests.Controllers.ItemsCsvImportTest" assertions="0" time="0.000000">
+          <error type="CodeIgniter\Database\Exceptions\DatabaseException">Tests\Controllers\ItemsCsvImportTest::testGenerateCsvHeaderBasic
+CodeIgniter\Database\Exceptions\DatabaseException: Unable to connect to the database.
+Main connection [MySQLi]: Operation not permitted
+
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Database/BaseConnection.php:465
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:91
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:67
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/CIUnitTestCase.php:254
+/Volumes/sourcecode/personal/ospos/tests/Controllers/ItemsCsvImportTest.php:34
+/Volumes/sourcecode/personal/ospos/vendor/bin/phpunit:122</error>
+        </testcase>
+        <testcase name="testGenerateCsvHeaderMultipleLocations" file="/Volumes/sourcecode/personal/ospos/tests/Controllers/ItemsCsvImportTest.php" line="72" class="Tests\Controllers\ItemsCsvImportTest" classname="Tests.Controllers.ItemsCsvImportTest" assertions="0" time="0.000000">
+          <error type="CodeIgniter\Database\Exceptions\DatabaseException">Tests\Controllers\ItemsCsvImportTest::testGenerateCsvHeaderMultipleLocations
+CodeIgniter\Database\Exceptions\DatabaseException: Unable to connect to the database.
+Main connection [MySQLi]: Operation not permitted
+
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Database/BaseConnection.php:465
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:91
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:67
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/CIUnitTestCase.php:254
+/Volumes/sourcecode/personal/ospos/tests/Controllers/ItemsCsvImportTest.php:34
+/Volumes/sourcecode/personal/ospos/vendor/bin/phpunit:122</error>
+        </testcase>
+        <testcase name="testGenerateCsvHeaderWithAttributes" file="/Volumes/sourcecode/personal/ospos/tests/Controllers/ItemsCsvImportTest.php" line="84" class="Tests\Controllers\ItemsCsvImportTest" classname="Tests.Controllers.ItemsCsvImportTest" assertions="0" time="0.000000">
+          <error type="CodeIgniter\Database\Exceptions\DatabaseException">Tests\Controllers\ItemsCsvImportTest::testGenerateCsvHeaderWithAttributes
+CodeIgniter\Database\Exceptions\DatabaseException: Unable to connect to the database.
+Main connection [MySQLi]: Operation not permitted
+
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Database/BaseConnection.php:465
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:91
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:67
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/CIUnitTestCase.php:254
+/Volumes/sourcecode/personal/ospos/tests/Controllers/ItemsCsvImportTest.php:34
+/Volumes/sourcecode/personal/ospos/vendor/bin/phpunit:122</error>
+        </testcase>
+        <testcase name="testGenerateStockLocationHeaders" file="/Volumes/sourcecode/personal/ospos/tests/Controllers/ItemsCsvImportTest.php" line="96" class="Tests\Controllers\ItemsCsvImportTest" classname="Tests.Controllers.ItemsCsvImportTest" assertions="0" time="0.000000">
+          <error type="CodeIgniter\Database\Exceptions\DatabaseException">Tests\Controllers\ItemsCsvImportTest::testGenerateStockLocationHeaders
+CodeIgniter\Database\Exceptions\DatabaseException: Unable to connect to the database.
+Main connection [MySQLi]: Operation not permitted
+
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Database/BaseConnection.php:465
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:91
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:67
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/CIUnitTestCase.php:254
+/Volumes/sourcecode/personal/ospos/tests/Controllers/ItemsCsvImportTest.php:34
+/Volumes/sourcecode/personal/ospos/vendor/bin/phpunit:122</error>
+        </testcase>
+        <testcase name="testGenerateAttributeHeaders" file="/Volumes/sourcecode/personal/ospos/tests/Controllers/ItemsCsvImportTest.php" line="105" class="Tests\Controllers\ItemsCsvImportTest" classname="Tests.Controllers.ItemsCsvImportTest" assertions="0" time="0.000000">
+          <error type="CodeIgniter\Database\Exceptions\DatabaseException">Tests\Controllers\ItemsCsvImportTest::testGenerateAttributeHeaders
+CodeIgniter\Database\Exceptions\DatabaseException: Unable to connect to the database.
+Main connection [MySQLi]: Operation not permitted
+
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Database/BaseConnection.php:465
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:91
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:67
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/CIUnitTestCase.php:254
+/Volumes/sourcecode/personal/ospos/tests/Controllers/ItemsCsvImportTest.php:34
+/Volumes/sourcecode/personal/ospos/vendor/bin/phpunit:122</error>
+        </testcase>
+        <testcase name="testGenerateAttributeHeadersRemovesNegativeOneIndex" file="/Volumes/sourcecode/personal/ospos/tests/Controllers/ItemsCsvImportTest.php" line="114" class="Tests\Controllers\ItemsCsvImportTest" classname="Tests.Controllers.ItemsCsvImportTest" assertions="0" time="0.000000">
+          <error type="CodeIgniter\Database\Exceptions\DatabaseException">Tests\Controllers\ItemsCsvImportTest::testGenerateAttributeHeadersRemovesNegativeOneIndex
+CodeIgniter\Database\Exceptions\DatabaseException: Unable to connect to the database.
+Main connection [MySQLi]: Operation not permitted
+
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Database/BaseConnection.php:465
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:91
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:67
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/CIUnitTestCase.php:254
+/Volumes/sourcecode/personal/ospos/tests/Controllers/ItemsCsvImportTest.php:34
+/Volumes/sourcecode/personal/ospos/vendor/bin/phpunit:122</error>
+        </testcase>
+        <testcase name="testGetCsvFileBasic" file="/Volumes/sourcecode/personal/ospos/tests/Controllers/ItemsCsvImportTest.php" line="124" class="Tests\Controllers\ItemsCsvImportTest" classname="Tests.Controllers.ItemsCsvImportTest" assertions="0" time="0.000000">
+          <error type="CodeIgniter\Database\Exceptions\DatabaseException">Tests\Controllers\ItemsCsvImportTest::testGetCsvFileBasic
+CodeIgniter\Database\Exceptions\DatabaseException: Unable to connect to the database.
+Main connection [MySQLi]: Operation not permitted
+
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Database/BaseConnection.php:465
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:91
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:67
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/CIUnitTestCase.php:254
+/Volumes/sourcecode/personal/ospos/tests/Controllers/ItemsCsvImportTest.php:34
+/Volumes/sourcecode/personal/ospos/vendor/bin/phpunit:122</error>
+        </testcase>
+        <testcase name="testGetCsvFileWithBom" file="/Volumes/sourcecode/personal/ospos/tests/Controllers/ItemsCsvImportTest.php" line="143" class="Tests\Controllers\ItemsCsvImportTest" classname="Tests.Controllers.ItemsCsvImportTest" assertions="0" time="0.000000">
+          <error type="CodeIgniter\Database\Exceptions\DatabaseException">Tests\Controllers\ItemsCsvImportTest::testGetCsvFileWithBom
+CodeIgniter\Database\Exceptions\DatabaseException: Unable to connect to the database.
+Main connection [MySQLi]: Operation not permitted
+
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Database/BaseConnection.php:465
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:91
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:67
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/CIUnitTestCase.php:254
+/Volumes/sourcecode/personal/ospos/tests/Controllers/ItemsCsvImportTest.php:34
+/Volumes/sourcecode/personal/ospos/vendor/bin/phpunit:122</error>
+        </testcase>
+        <testcase name="testGetCsvFileMultipleRows" file="/Volumes/sourcecode/personal/ospos/tests/Controllers/ItemsCsvImportTest.php" line="161" class="Tests\Controllers\ItemsCsvImportTest" classname="Tests.Controllers.ItemsCsvImportTest" assertions="0" time="0.000000">
+          <error type="CodeIgniter\Database\Exceptions\DatabaseException">Tests\Controllers\ItemsCsvImportTest::testGetCsvFileMultipleRows
+CodeIgniter\Database\Exceptions\DatabaseException: Unable to connect to the database.
+Main connection [MySQLi]: Operation not permitted
+
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Database/BaseConnection.php:465
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:91
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:67
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/CIUnitTestCase.php:254
+/Volumes/sourcecode/personal/ospos/tests/Controllers/ItemsCsvImportTest.php:34
+/Volumes/sourcecode/personal/ospos/vendor/bin/phpunit:122</error>
+        </testcase>
+        <testcase name="testBomExists" file="/Volumes/sourcecode/personal/ospos/tests/Controllers/ItemsCsvImportTest.php" line="181" class="Tests\Controllers\ItemsCsvImportTest" classname="Tests.Controllers.ItemsCsvImportTest" assertions="0" time="0.000000">
+          <error type="CodeIgniter\Database\Exceptions\DatabaseException">Tests\Controllers\ItemsCsvImportTest::testBomExists
+CodeIgniter\Database\Exceptions\DatabaseException: Unable to connect to the database.
+Main connection [MySQLi]: Operation not permitted
+
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Database/BaseConnection.php:465
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:91
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:67
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/CIUnitTestCase.php:254
+/Volumes/sourcecode/personal/ospos/tests/Controllers/ItemsCsvImportTest.php:34
+/Volumes/sourcecode/personal/ospos/vendor/bin/phpunit:122</error>
+        </testcase>
+        <testcase name="testBomNotExists" file="/Volumes/sourcecode/personal/ospos/tests/Controllers/ItemsCsvImportTest.php" line="197" class="Tests\Controllers\ItemsCsvImportTest" classname="Tests.Controllers.ItemsCsvImportTest" assertions="0" time="0.000000">
+          <error type="CodeIgniter\Database\Exceptions\DatabaseException">Tests\Controllers\ItemsCsvImportTest::testBomNotExists
+CodeIgniter\Database\Exceptions\DatabaseException: Unable to connect to the database.
+Main connection [MySQLi]: Operation not permitted
+
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Database/BaseConnection.php:465
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:91
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:67
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/CIUnitTestCase.php:254
+/Volumes/sourcecode/personal/ospos/tests/Controllers/ItemsCsvImportTest.php:34
+/Volumes/sourcecode/personal/ospos/vendor/bin/phpunit:122</error>
+        </testcase>
+        <testcase name="testImportItemBasicFields" file="/Volumes/sourcecode/personal/ospos/tests/Controllers/ItemsCsvImportTest.php" line="212" class="Tests\Controllers\ItemsCsvImportTest" classname="Tests.Controllers.ItemsCsvImportTest" assertions="0" time="0.000000">
+          <error type="CodeIgniter\Database\Exceptions\DatabaseException">Tests\Controllers\ItemsCsvImportTest::testImportItemBasicFields
+CodeIgniter\Database\Exceptions\DatabaseException: Unable to connect to the database.
+Main connection [MySQLi]: Operation not permitted
+
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Database/BaseConnection.php:465
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:91
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:67
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/CIUnitTestCase.php:254
+/Volumes/sourcecode/personal/ospos/tests/Controllers/ItemsCsvImportTest.php:34
+/Volumes/sourcecode/personal/ospos/vendor/bin/phpunit:122</error>
+        </testcase>
+        <testcase name="testImportItemWithQuantity" file="/Volumes/sourcecode/personal/ospos/tests/Controllers/ItemsCsvImportTest.php" line="242" class="Tests\Controllers\ItemsCsvImportTest" classname="Tests.Controllers.ItemsCsvImportTest" assertions="0" time="0.000000">
+          <error type="CodeIgniter\Database\Exceptions\DatabaseException">Tests\Controllers\ItemsCsvImportTest::testImportItemWithQuantity
+CodeIgniter\Database\Exceptions\DatabaseException: Unable to connect to the database.
+Main connection [MySQLi]: Operation not permitted
+
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Database/BaseConnection.php:465
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:91
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:67
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/CIUnitTestCase.php:254
+/Volumes/sourcecode/personal/ospos/tests/Controllers/ItemsCsvImportTest.php:34
+/Volumes/sourcecode/personal/ospos/vendor/bin/phpunit:122</error>
+        </testcase>
+        <testcase name="testImportItemCreatesInventoryRecord" file="/Volumes/sourcecode/personal/ospos/tests/Controllers/ItemsCsvImportTest.php" line="272" class="Tests\Controllers\ItemsCsvImportTest" classname="Tests.Controllers.ItemsCsvImportTest" assertions="0" time="0.000000">
+          <error type="CodeIgniter\Database\Exceptions\DatabaseException">Tests\Controllers\ItemsCsvImportTest::testImportItemCreatesInventoryRecord
+CodeIgniter\Database\Exceptions\DatabaseException: Unable to connect to the database.
+Main connection [MySQLi]: Operation not permitted
+
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Database/BaseConnection.php:465
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:91
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:67
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/CIUnitTestCase.php:254
+/Volumes/sourcecode/personal/ospos/tests/Controllers/ItemsCsvImportTest.php:34
+/Volumes/sourcecode/personal/ospos/vendor/bin/phpunit:122</error>
+        </testcase>
+        <testcase name="testImportItemWithTaxes" file="/Volumes/sourcecode/personal/ospos/tests/Controllers/ItemsCsvImportTest.php" line="302" class="Tests\Controllers\ItemsCsvImportTest" classname="Tests.Controllers.ItemsCsvImportTest" assertions="0" time="0.000000">
+          <error type="CodeIgniter\Database\Exceptions\DatabaseException">Tests\Controllers\ItemsCsvImportTest::testImportItemWithTaxes
+CodeIgniter\Database\Exceptions\DatabaseException: Unable to connect to the database.
+Main connection [MySQLi]: Operation not permitted
+
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Database/BaseConnection.php:465
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:91
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:67
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/CIUnitTestCase.php:254
+/Volumes/sourcecode/personal/ospos/tests/Controllers/ItemsCsvImportTest.php:34
+/Volumes/sourcecode/personal/ospos/vendor/bin/phpunit:122</error>
+        </testcase>
+        <testcase name="testImportMultipleItemsFromSimulatedCsv" file="/Volumes/sourcecode/personal/ospos/tests/Controllers/ItemsCsvImportTest.php" line="330" class="Tests\Controllers\ItemsCsvImportTest" classname="Tests.Controllers.ItemsCsvImportTest" assertions="0" time="0.000000">
+          <error type="CodeIgniter\Database\Exceptions\DatabaseException">Tests\Controllers\ItemsCsvImportTest::testImportMultipleItemsFromSimulatedCsv
+CodeIgniter\Database\Exceptions\DatabaseException: Unable to connect to the database.
+Main connection [MySQLi]: Operation not permitted
+
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Database/BaseConnection.php:465
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:91
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:67
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/CIUnitTestCase.php:254
+/Volumes/sourcecode/personal/ospos/tests/Controllers/ItemsCsvImportTest.php:34
+/Volumes/sourcecode/personal/ospos/vendor/bin/phpunit:122</error>
+        </testcase>
+        <testcase name="testImportUpdateExistingItem" file="/Volumes/sourcecode/personal/ospos/tests/Controllers/ItemsCsvImportTest.php" line="407" class="Tests\Controllers\ItemsCsvImportTest" classname="Tests.Controllers.ItemsCsvImportTest" assertions="0" time="0.000000">
+          <error type="CodeIgniter\Database\Exceptions\DatabaseException">Tests\Controllers\ItemsCsvImportTest::testImportUpdateExistingItem
+CodeIgniter\Database\Exceptions\DatabaseException: Unable to connect to the database.
+Main connection [MySQLi]: Operation not permitted
+
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Database/BaseConnection.php:465
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:91
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:67
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/CIUnitTestCase.php:254
+/Volumes/sourcecode/personal/ospos/tests/Controllers/ItemsCsvImportTest.php:34
+/Volumes/sourcecode/personal/ospos/vendor/bin/phpunit:122</error>
+        </testcase>
+        <testcase name="testImportItemWithAttributeText" file="/Volumes/sourcecode/personal/ospos/tests/Controllers/ItemsCsvImportTest.php" line="440" class="Tests\Controllers\ItemsCsvImportTest" classname="Tests.Controllers.ItemsCsvImportTest" assertions="0" time="0.000000">
+          <error type="CodeIgniter\Database\Exceptions\DatabaseException">Tests\Controllers\ItemsCsvImportTest::testImportItemWithAttributeText
+CodeIgniter\Database\Exceptions\DatabaseException: Unable to connect to the database.
+Main connection [MySQLi]: Operation not permitted
+
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Database/BaseConnection.php:465
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:91
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:67
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/CIUnitTestCase.php:254
+/Volumes/sourcecode/personal/ospos/tests/Controllers/ItemsCsvImportTest.php:34
+/Volumes/sourcecode/personal/ospos/vendor/bin/phpunit:122</error>
+        </testcase>
+        <testcase name="testImportItemWithAttributeDropdown" file="/Volumes/sourcecode/personal/ospos/tests/Controllers/ItemsCsvImportTest.php" line="476" class="Tests\Controllers\ItemsCsvImportTest" classname="Tests.Controllers.ItemsCsvImportTest" assertions="0" time="0.000000">
+          <error type="CodeIgniter\Database\Exceptions\DatabaseException">Tests\Controllers\ItemsCsvImportTest::testImportItemWithAttributeDropdown
+CodeIgniter\Database\Exceptions\DatabaseException: Unable to connect to the database.
+Main connection [MySQLi]: Operation not permitted
+
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Database/BaseConnection.php:465
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:91
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:67
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/CIUnitTestCase.php:254
+/Volumes/sourcecode/personal/ospos/tests/Controllers/ItemsCsvImportTest.php:34
+/Volumes/sourcecode/personal/ospos/vendor/bin/phpunit:122</error>
+        </testcase>
+        <testcase name="testImportItemQuantityZero" file="/Volumes/sourcecode/personal/ospos/tests/Controllers/ItemsCsvImportTest.php" line="523" class="Tests\Controllers\ItemsCsvImportTest" classname="Tests.Controllers.ItemsCsvImportTest" assertions="0" time="0.000000">
+          <error type="CodeIgniter\Database\Exceptions\DatabaseException">Tests\Controllers\ItemsCsvImportTest::testImportItemQuantityZero
+CodeIgniter\Database\Exceptions\DatabaseException: Unable to connect to the database.
+Main connection [MySQLi]: Operation not permitted
+
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Database/BaseConnection.php:465
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:91
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:67
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/CIUnitTestCase.php:254
+/Volumes/sourcecode/personal/ospos/tests/Controllers/ItemsCsvImportTest.php:34
+/Volumes/sourcecode/personal/ospos/vendor/bin/phpunit:122</error>
+        </testcase>
+        <testcase name="testImportItemWithNegativeReorderLevel" file="/Volumes/sourcecode/personal/ospos/tests/Controllers/ItemsCsvImportTest.php" line="551" class="Tests\Controllers\ItemsCsvImportTest" classname="Tests.Controllers.ItemsCsvImportTest" assertions="0" time="0.000000">
+          <error type="CodeIgniter\Database\Exceptions\DatabaseException">Tests\Controllers\ItemsCsvImportTest::testImportItemWithNegativeReorderLevel
+CodeIgniter\Database\Exceptions\DatabaseException: Unable to connect to the database.
+Main connection [MySQLi]: Operation not permitted
+
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Database/BaseConnection.php:465
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:91
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:67
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/CIUnitTestCase.php:254
+/Volumes/sourcecode/personal/ospos/tests/Controllers/ItemsCsvImportTest.php:34
+/Volumes/sourcecode/personal/ospos/vendor/bin/phpunit:122</error>
+        </testcase>
+        <testcase name="testImportItemWithHighPrecisionPrices" file="/Volumes/sourcecode/personal/ospos/tests/Controllers/ItemsCsvImportTest.php" line="569" class="Tests\Controllers\ItemsCsvImportTest" classname="Tests.Controllers.ItemsCsvImportTest" assertions="0" time="0.000000">
+          <error type="CodeIgniter\Database\Exceptions\DatabaseException">Tests\Controllers\ItemsCsvImportTest::testImportItemWithHighPrecisionPrices
+CodeIgniter\Database\Exceptions\DatabaseException: Unable to connect to the database.
+Main connection [MySQLi]: Operation not permitted
+
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Database/BaseConnection.php:465
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:91
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:67
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/CIUnitTestCase.php:254
+/Volumes/sourcecode/personal/ospos/tests/Controllers/ItemsCsvImportTest.php:34
+/Volumes/sourcecode/personal/ospos/vendor/bin/phpunit:122</error>
+        </testcase>
+        <testcase name="testImportItemWithHsnCode" file="/Volumes/sourcecode/personal/ospos/tests/Controllers/ItemsCsvImportTest.php" line="590" class="Tests\Controllers\ItemsCsvImportTest" classname="Tests.Controllers.ItemsCsvImportTest" assertions="0" time="0.000000">
+          <error type="CodeIgniter\Database\Exceptions\DatabaseException">Tests\Controllers\ItemsCsvImportTest::testImportItemWithHsnCode
+CodeIgniter\Database\Exceptions\DatabaseException: Unable to connect to the database.
+Main connection [MySQLi]: Operation not permitted
+
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Database/BaseConnection.php:465
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:91
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:67
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/CIUnitTestCase.php:254
+/Volumes/sourcecode/personal/ospos/tests/Controllers/ItemsCsvImportTest.php:34
+/Volumes/sourcecode/personal/ospos/vendor/bin/phpunit:122</error>
+        </testcase>
+        <testcase name="testImportItemQuantityMultipleLocations" file="/Volumes/sourcecode/personal/ospos/tests/Controllers/ItemsCsvImportTest.php" line="608" class="Tests\Controllers\ItemsCsvImportTest" classname="Tests.Controllers.ItemsCsvImportTest" assertions="0" time="0.000000">
+          <error type="CodeIgniter\Database\Exceptions\DatabaseException">Tests\Controllers\ItemsCsvImportTest::testImportItemQuantityMultipleLocations
+CodeIgniter\Database\Exceptions\DatabaseException: Unable to connect to the database.
+Main connection [MySQLi]: Operation not permitted
+
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Database/BaseConnection.php:465
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:91
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:67
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/CIUnitTestCase.php:254
+/Volumes/sourcecode/personal/ospos/tests/Controllers/ItemsCsvImportTest.php:34
+/Volumes/sourcecode/personal/ospos/vendor/bin/phpunit:122</error>
+        </testcase>
+        <testcase name="testCsvImportQuantityValidationNumeric" file="/Volumes/sourcecode/personal/ospos/tests/Controllers/ItemsCsvImportTest.php" line="642" class="Tests\Controllers\ItemsCsvImportTest" classname="Tests.Controllers.ItemsCsvImportTest" assertions="0" time="0.000000">
+          <error type="CodeIgniter\Database\Exceptions\DatabaseException">Tests\Controllers\ItemsCsvImportTest::testCsvImportQuantityValidationNumeric
+CodeIgniter\Database\Exceptions\DatabaseException: Unable to connect to the database.
+Main connection [MySQLi]: Operation not permitted
+
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Database/BaseConnection.php:465
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:91
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:67
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/CIUnitTestCase.php:254
+/Volumes/sourcecode/personal/ospos/tests/Controllers/ItemsCsvImportTest.php:34
+/Volumes/sourcecode/personal/ospos/vendor/bin/phpunit:122</error>
+        </testcase>
+        <testcase name="testCsvImportEmptyBarcodeAllowed" file="/Volumes/sourcecode/personal/ospos/tests/Controllers/ItemsCsvImportTest.php" line="659" class="Tests\Controllers\ItemsCsvImportTest" classname="Tests.Controllers.ItemsCsvImportTest" assertions="0" time="0.000000">
+          <error type="CodeIgniter\Database\Exceptions\DatabaseException">Tests\Controllers\ItemsCsvImportTest::testCsvImportEmptyBarcodeAllowed
+CodeIgniter\Database\Exceptions\DatabaseException: Unable to connect to the database.
+Main connection [MySQLi]: Operation not permitted
+
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Database/BaseConnection.php:465
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:91
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:67
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/CIUnitTestCase.php:254
+/Volumes/sourcecode/personal/ospos/tests/Controllers/ItemsCsvImportTest.php:34
+/Volumes/sourcecode/personal/ospos/vendor/bin/phpunit:122</error>
+        </testcase>
+        <testcase name="testCsvImportItemExistsCheck" file="/Volumes/sourcecode/personal/ospos/tests/Controllers/ItemsCsvImportTest.php" line="680" class="Tests\Controllers\ItemsCsvImportTest" classname="Tests.Controllers.ItemsCsvImportTest" assertions="0" time="0.000000">
+          <error type="CodeIgniter\Database\Exceptions\DatabaseException">Tests\Controllers\ItemsCsvImportTest::testCsvImportItemExistsCheck
+CodeIgniter\Database\Exceptions\DatabaseException: Unable to connect to the database.
+Main connection [MySQLi]: Operation not permitted
+
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Database/BaseConnection.php:465
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:91
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:67
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/CIUnitTestCase.php:254
+/Volumes/sourcecode/personal/ospos/tests/Controllers/ItemsCsvImportTest.php:34
+/Volumes/sourcecode/personal/ospos/vendor/bin/phpunit:122</error>
+        </testcase>
+        <testcase name="testFullCsvImportFlowSimulated" file="/Volumes/sourcecode/personal/ospos/tests/Controllers/ItemsCsvImportTest.php" line="700" class="Tests\Controllers\ItemsCsvImportTest" classname="Tests.Controllers.ItemsCsvImportTest" assertions="0" time="0.000000">
+          <error type="CodeIgniter\Database\Exceptions\DatabaseException">Tests\Controllers\ItemsCsvImportTest::testFullCsvImportFlowSimulated
+CodeIgniter\Database\Exceptions\DatabaseException: Unable to connect to the database.
+Main connection [MySQLi]: Operation not permitted
+
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Database/BaseConnection.php:465
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:91
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:67
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/CIUnitTestCase.php:254
+/Volumes/sourcecode/personal/ospos/tests/Controllers/ItemsCsvImportTest.php:34
+/Volumes/sourcecode/personal/ospos/vendor/bin/phpunit:122</error>
+        </testcase>
+        <testcase name="testImportCsvInvalidStockLocationColumn" file="/Volumes/sourcecode/personal/ospos/tests/Controllers/ItemsCsvImportTest.php" line="789" class="Tests\Controllers\ItemsCsvImportTest" classname="Tests.Controllers.ItemsCsvImportTest" assertions="0" time="0.000000">
+          <error type="CodeIgniter\Database\Exceptions\DatabaseException">Tests\Controllers\ItemsCsvImportTest::testImportCsvInvalidStockLocationColumn
+CodeIgniter\Database\Exceptions\DatabaseException: Unable to connect to the database.
+Main connection [MySQLi]: Operation not permitted
+
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Database/BaseConnection.php:465
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:91
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:67
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/CIUnitTestCase.php:254
+/Volumes/sourcecode/personal/ospos/tests/Controllers/ItemsCsvImportTest.php:34
+/Volumes/sourcecode/personal/ospos/vendor/bin/phpunit:122</error>
+        </testcase>
+        <testcase name="testImportCsvValidStockLocationColumn" file="/Volumes/sourcecode/personal/ospos/tests/Controllers/ItemsCsvImportTest.php" line="821" class="Tests\Controllers\ItemsCsvImportTest" classname="Tests.Controllers.ItemsCsvImportTest" assertions="0" time="0.000000">
+          <error type="CodeIgniter\Database\Exceptions\DatabaseException">Tests\Controllers\ItemsCsvImportTest::testImportCsvValidStockLocationColumn
+CodeIgniter\Database\Exceptions\DatabaseException: Unable to connect to the database.
+Main connection [MySQLi]: Operation not permitted
+
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Database/BaseConnection.php:465
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:91
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:67
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/CIUnitTestCase.php:254
+/Volumes/sourcecode/personal/ospos/tests/Controllers/ItemsCsvImportTest.php:34
+/Volumes/sourcecode/personal/ospos/vendor/bin/phpunit:122</error>
+        </testcase>
+        <testcase name="testImportCsvMixedValidAndInvalidLocations" file="/Volumes/sourcecode/personal/ospos/tests/Controllers/ItemsCsvImportTest.php" line="851" class="Tests\Controllers\ItemsCsvImportTest" classname="Tests.Controllers.ItemsCsvImportTest" assertions="0" time="0.000000">
+          <error type="CodeIgniter\Database\Exceptions\DatabaseException">Tests\Controllers\ItemsCsvImportTest::testImportCsvMixedValidAndInvalidLocations
+CodeIgniter\Database\Exceptions\DatabaseException: Unable to connect to the database.
+Main connection [MySQLi]: Operation not permitted
+
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Database/BaseConnection.php:465
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:91
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:67
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/CIUnitTestCase.php:254
+/Volumes/sourcecode/personal/ospos/tests/Controllers/ItemsCsvImportTest.php:34
+/Volumes/sourcecode/personal/ospos/vendor/bin/phpunit:122</error>
+        </testcase>
+        <testcase name="testValidateCsvStockLocations" file="/Volumes/sourcecode/personal/ospos/tests/Controllers/ItemsCsvImportTest.php" line="883" class="Tests\Controllers\ItemsCsvImportTest" classname="Tests.Controllers.ItemsCsvImportTest" assertions="0" time="0.000000">
+          <error type="CodeIgniter\Database\Exceptions\DatabaseException">Tests\Controllers\ItemsCsvImportTest::testValidateCsvStockLocations
+CodeIgniter\Database\Exceptions\DatabaseException: Unable to connect to the database.
+Main connection [MySQLi]: Operation not permitted
+
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Database/BaseConnection.php:465
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:91
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:67
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/CIUnitTestCase.php:254
+/Volumes/sourcecode/personal/ospos/tests/Controllers/ItemsCsvImportTest.php:34
+/Volumes/sourcecode/personal/ospos/vendor/bin/phpunit:122</error>
+        </testcase>
+        <testcase name="testImportItemQuantityOnlyForValidLocations" file="/Volumes/sourcecode/personal/ospos/tests/Controllers/ItemsCsvImportTest.php" line="901" class="Tests\Controllers\ItemsCsvImportTest" classname="Tests.Controllers.ItemsCsvImportTest" assertions="0" time="0.000000">
+          <error type="CodeIgniter\Database\Exceptions\DatabaseException">Tests\Controllers\ItemsCsvImportTest::testImportItemQuantityOnlyForValidLocations
+CodeIgniter\Database\Exceptions\DatabaseException: Unable to connect to the database.
+Main connection [MySQLi]: Operation not permitted
+
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Database/BaseConnection.php:465
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:91
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:67
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/CIUnitTestCase.php:254
+/Volumes/sourcecode/personal/ospos/tests/Controllers/ItemsCsvImportTest.php:34
+/Volumes/sourcecode/personal/ospos/vendor/bin/phpunit:122</error>
+        </testcase>
+        <testcase name="testDetectCsvLocationColumns" file="/Volumes/sourcecode/personal/ospos/tests/Controllers/ItemsCsvImportTest.php" line="944" class="Tests\Controllers\ItemsCsvImportTest" classname="Tests.Controllers.ItemsCsvImportTest" assertions="0" time="0.000000">
+          <error type="CodeIgniter\Database\Exceptions\DatabaseException">Tests\Controllers\ItemsCsvImportTest::testDetectCsvLocationColumns
+CodeIgniter\Database\Exceptions\DatabaseException: Unable to connect to the database.
+Main connection [MySQLi]: Operation not permitted
+
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Database/BaseConnection.php:465
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:91
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:67
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/CIUnitTestCase.php:254
+/Volumes/sourcecode/personal/ospos/tests/Controllers/ItemsCsvImportTest.php:34
+/Volumes/sourcecode/personal/ospos/vendor/bin/phpunit:122</error>
+        </testcase>
+        <testcase name="testValidateLocationNamesCaseSensitivity" file="/Volumes/sourcecode/personal/ospos/tests/Controllers/ItemsCsvImportTest.php" line="968" class="Tests\Controllers\ItemsCsvImportTest" classname="Tests.Controllers.ItemsCsvImportTest" assertions="0" time="0.000000">
+          <error type="CodeIgniter\Database\Exceptions\DatabaseException">Tests\Controllers\ItemsCsvImportTest::testValidateLocationNamesCaseSensitivity
+CodeIgniter\Database\Exceptions\DatabaseException: Unable to connect to the database.
+Main connection [MySQLi]: Operation not permitted
+
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Database/BaseConnection.php:465
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:91
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:67
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/CIUnitTestCase.php:254
+/Volumes/sourcecode/personal/ospos/tests/Controllers/ItemsCsvImportTest.php:34
+/Volumes/sourcecode/personal/ospos/vendor/bin/phpunit:122</error>
+        </testcase>
+      </testsuite>
+      <testsuite name="Tests\Controllers\ReportsControllerTest" file="/Volumes/sourcecode/personal/ospos/tests/Controllers/ReportsControllerTest.php" tests="2" assertions="6" errors="0" failures="0" skipped="0" time="0.001295">
+        <testcase name="testRedirectPatternUsesHeaderAndExit" file="/Volumes/sourcecode/personal/ospos/tests/Controllers/ReportsControllerTest.php" line="9" class="Tests\Controllers\ReportsControllerTest" classname="Tests.Controllers.ReportsControllerTest" assertions="3" time="0.000989"/>
+        <testcase name="testSubmodulePermissionCheckOccursBeforeControllerInitialization" file="/Volumes/sourcecode/personal/ospos/tests/Controllers/ReportsControllerTest.php" line="45" class="Tests\Controllers\ReportsControllerTest" classname="Tests.Controllers.ReportsControllerTest" assertions="3" time="0.000306"/>
+      </testsuite>
+      <testsuite name="Tests\Libraries\Token_libTest" file="/Volumes/sourcecode/personal/ospos/tests/Libraries/Token_libTest.php" tests="39" assertions="67" errors="0" failures="1" skipped="0" time="0.028286">
+        <testcase name="testRenderReturnsInputStringWhenNoTokens" file="/Volumes/sourcecode/personal/ospos/tests/Libraries/Token_libTest.php" line="18" class="Tests\Libraries\Token_libTest" classname="Tests.Libraries.Token_libTest" assertions="1" time="0.000746"/>
+        <testcase name="testRenderHandlesStringWithPercentNotInDateFormat" file="/Volumes/sourcecode/personal/ospos/tests/Libraries/Token_libTest.php" line="25" class="Tests\Libraries\Token_libTest" classname="Tests.Libraries.Token_libTest" assertions="2" time="0.012877"/>
+        <testcase name="testRenderHandlesInvalidDateFormatPercentDashPercent" file="/Volumes/sourcecode/personal/ospos/tests/Libraries/Token_libTest.php" line="33" class="Tests\Libraries\Token_libTest" classname="Tests.Libraries.Token_libTest" assertions="1" time="0.000706"/>
+        <testcase name="testRenderHandlesInvalidDateFormatPercentYPercentQPercentBad" file="/Volumes/sourcecode/personal/ospos/tests/Libraries/Token_libTest.php" line="40" class="Tests\Libraries\Token_libTest" classname="Tests.Libraries.Token_libTest" assertions="1" time="0.001748">
+          <failure type="PHPUnit\Framework\ExpectationFailedException">Tests\Libraries\Token_libTest::testRenderHandlesInvalidDateFormatPercentYPercentQPercentBad
+Failed asserting that '2026-%q-Aprad' matches PCRE pattern "/\d{4}-%q-%bad/".
+
+/Volumes/sourcecode/personal/ospos/tests/Libraries/Token_libTest.php:44
+/Volumes/sourcecode/personal/ospos/vendor/bin/phpunit:122</failure>
+        </testcase>
+        <testcase name="testRenderHandlesStringWithPercentAPercent" file="/Volumes/sourcecode/personal/ospos/tests/Libraries/Token_libTest.php" line="47" class="Tests\Libraries\Token_libTest" classname="Tests.Libraries.Token_libTest" assertions="1" time="0.000364"/>
+        <testcase name="testRenderHandlesExtremelyLongString" file="/Volumes/sourcecode/personal/ospos/tests/Libraries/Token_libTest.php" line="54" class="Tests\Libraries\Token_libTest" classname="Tests.Libraries.Token_libTest" assertions="1" time="0.000289"/>
+        <testcase name="testRenderHandlesStringWithMultiplePercentSymbols" file="/Volumes/sourcecode/personal/ospos/tests/Libraries/Token_libTest.php" line="61" class="Tests\Libraries\Token_libTest" classname="Tests.Libraries.Token_libTest" assertions="2" time="0.000292"/>
+        <testcase name="testRenderHandlesStringWithOnlyPercentSymbol" file="/Volumes/sourcecode/personal/ospos/tests/Libraries/Token_libTest.php" line="69" class="Tests\Libraries\Token_libTest" classname="Tests.Libraries.Token_libTest" assertions="1" time="0.000287"/>
+        <testcase name="testRenderPreservesTextWithValidDateTokensAndNoOtherTokens" file="/Volumes/sourcecode/personal/ospos/tests/Libraries/Token_libTest.php" line="76" class="Tests\Libraries\Token_libTest" classname="Tests.Libraries.Token_libTest" assertions="1" time="0.000288"/>
+        <testcase name="testRenderHandlesEmptyString" file="/Volumes/sourcecode/personal/ospos/tests/Libraries/Token_libTest.php" line="83" class="Tests\Libraries\Token_libTest" classname="Tests.Libraries.Token_libTest" assertions="1" time="0.000251"/>
+        <testcase name="testScanExtractsTokens" file="/Volumes/sourcecode/personal/ospos/tests/Libraries/Token_libTest.php" line="90" class="Tests\Libraries\Token_libTest" classname="Tests.Libraries.Token_libTest" assertions="2" time="0.000536"/>
+        <testcase name="testScanExtractsTokensWithLength" file="/Volumes/sourcecode/personal/ospos/tests/Libraries/Token_libTest.php" line="97" class="Tests\Libraries\Token_libTest" classname="Tests.Libraries.Token_libTest" assertions="2" time="0.000255"/>
+        <testcase name="testScanReturnsEmptyArrayForNoTokens" file="/Volumes/sourcecode/personal/ospos/tests/Libraries/Token_libTest.php" line="104" class="Tests\Libraries\Token_libTest" classname="Tests.Libraries.Token_libTest" assertions="1" time="0.000247"/>
+        <testcase name="testRenderHandlesConsecutivePercentSigns" file="/Volumes/sourcecode/personal/ospos/tests/Libraries/Token_libTest.php" line="110" class="Tests\Libraries\Token_libTest" classname="Tests.Libraries.Token_libTest" assertions="1" time="0.000278"/>
+        <testcase name="testRenderHandlesEscapedPercentSigns" file="/Volumes/sourcecode/personal/ospos/tests/Libraries/Token_libTest.php" line="117" class="Tests\Libraries\Token_libTest" classname="Tests.Libraries.Token_libTest" assertions="1" time="0.000268"/>
+        <testcase name="testRenderHandlesUnclosedBraces" file="/Volumes/sourcecode/personal/ospos/tests/Libraries/Token_libTest.php" line="124" class="Tests\Libraries\Token_libTest" classname="Tests.Libraries.Token_libTest" assertions="1" time="0.000284"/>
+        <testcase name="testRenderHandlesUnopenedBraces" file="/Volumes/sourcecode/personal/ospos/tests/Libraries/Token_libTest.php" line="131" class="Tests\Libraries\Token_libTest" classname="Tests.Libraries.Token_libTest" assertions="1" time="0.000278"/>
+        <testcase name="testRenderHandlesVeryLongStringWithDate" file="/Volumes/sourcecode/personal/ospos/tests/Libraries/Token_libTest.php" line="138" class="Tests\Libraries\Token_libTest" classname="Tests.Libraries.Token_libTest" assertions="1" time="0.000286"/>
+        <testcase name="testRenderHandlesMultipleDates" file="/Volumes/sourcecode/personal/ospos/tests/Libraries/Token_libTest.php" line="145" class="Tests\Libraries\Token_libTest" classname="Tests.Libraries.Token_libTest" assertions="1" time="0.000278"/>
+        <testcase name="testRenderHandlesValidYearFormat" file="/Volumes/sourcecode/personal/ospos/tests/Libraries/Token_libTest.php" line="152" class="Tests\Libraries\Token_libTest" classname="Tests.Libraries.Token_libTest" assertions="1" time="0.000270"/>
+        <testcase name="testRenderHandlesValidMonthFormat" file="/Volumes/sourcecode/personal/ospos/tests/Libraries/Token_libTest.php" line="159" class="Tests\Libraries\Token_libTest" classname="Tests.Libraries.Token_libTest" assertions="1" time="0.000269"/>
+        <testcase name="testRenderHandlesValidDayFormat" file="/Volumes/sourcecode/personal/ospos/tests/Libraries/Token_libTest.php" line="166" class="Tests\Libraries\Token_libTest" classname="Tests.Libraries.Token_libTest" assertions="1" time="0.000282"/>
+        <testcase name="testRenderHandlesFullDateFormat" file="/Volumes/sourcecode/personal/ospos/tests/Libraries/Token_libTest.php" line="173" class="Tests\Libraries\Token_libTest" classname="Tests.Libraries.Token_libTest" assertions="1" time="0.000284"/>
+        <testcase name="testRenderHandlesPercentB" file="/Volumes/sourcecode/personal/ospos/tests/Libraries/Token_libTest.php" line="180" class="Tests\Libraries\Token_libTest" classname="Tests.Libraries.Token_libTest" assertions="3" time="0.000484"/>
+        <testcase name="testRenderHandlesPercentA" file="/Volumes/sourcecode/personal/ospos/tests/Libraries/Token_libTest.php" line="189" class="Tests\Libraries\Token_libTest" classname="Tests.Libraries.Token_libTest" assertions="3" time="0.000280"/>
+        <testcase name="testRenderHandlesComplexPercentFormat" file="/Volumes/sourcecode/personal/ospos/tests/Libraries/Token_libTest.php" line="198" class="Tests\Libraries\Token_libTest" classname="Tests.Libraries.Token_libTest" assertions="2" time="0.000275"/>
+        <testcase name="testRenderDoesNotReplaceInvalidFormatSpecifiers" file="/Volumes/sourcecode/personal/ospos/tests/Libraries/Token_libTest.php" line="206" class="Tests\Libraries\Token_libTest" classname="Tests.Libraries.Token_libTest" assertions="2" time="0.000277"/>
+        <testcase name="testRenderReplacesTimezoneFormat" file="/Volumes/sourcecode/personal/ospos/tests/Libraries/Token_libTest.php" line="214" class="Tests\Libraries\Token_libTest" classname="Tests.Libraries.Token_libTest" assertions="2" time="0.002211"/>
+        <testcase name="testScanWorksWithMixedContent" file="/Volumes/sourcecode/personal/ospos/tests/Libraries/Token_libTest.php" line="222" class="Tests\Libraries\Token_libTest" classname="Tests.Libraries.Token_libTest" assertions="2" time="0.000271"/>
+        <testcase name="testRenderReplacesCompositeDirectivePercentF" file="/Volumes/sourcecode/personal/ospos/tests/Libraries/Token_libTest.php" line="229" class="Tests\Libraries\Token_libTest" classname="Tests.Libraries.Token_libTest" assertions="3" time="0.000310"/>
+        <testcase name="testRenderReplacesCompositeDirectivePercentD" file="/Volumes/sourcecode/personal/ospos/tests/Libraries/Token_libTest.php" line="238" class="Tests\Libraries\Token_libTest" classname="Tests.Libraries.Token_libTest" assertions="3" time="0.000301"/>
+        <testcase name="testRenderHandlesPercentT" file="/Volumes/sourcecode/personal/ospos/tests/Libraries/Token_libTest.php" line="247" class="Tests\Libraries\Token_libTest" classname="Tests.Libraries.Token_libTest" assertions="3" time="0.000282"/>
+        <testcase name="testRenderHandlesPercentR" file="/Volumes/sourcecode/personal/ospos/tests/Libraries/Token_libTest.php" line="256" class="Tests\Libraries\Token_libTest" classname="Tests.Libraries.Token_libTest" assertions="3" time="0.000286"/>
+        <testcase name="testRenderHandlesPercentC" file="/Volumes/sourcecode/personal/ospos/tests/Libraries/Token_libTest.php" line="265" class="Tests\Libraries\Token_libTest" classname="Tests.Libraries.Token_libTest" assertions="3" time="0.000276"/>
+        <testcase name="testRenderHandlesLowercasePercentC" file="/Volumes/sourcecode/personal/ospos/tests/Libraries/Token_libTest.php" line="274" class="Tests\Libraries\Token_libTest" classname="Tests.Libraries.Token_libTest" assertions="3" time="0.000278"/>
+        <testcase name="testRenderHandlesPercentN" file="/Volumes/sourcecode/personal/ospos/tests/Libraries/Token_libTest.php" line="283" class="Tests\Libraries\Token_libTest" classname="Tests.Libraries.Token_libTest" assertions="1" time="0.000265"/>
+        <testcase name="testRenderHandlesLowercasePercentT" file="/Volumes/sourcecode/personal/ospos/tests/Libraries/Token_libTest.php" line="290" class="Tests\Libraries\Token_libTest" classname="Tests.Libraries.Token_libTest" assertions="1" time="0.000273"/>
+        <testcase name="testRenderHandlesPercentX" file="/Volumes/sourcecode/personal/ospos/tests/Libraries/Token_libTest.php" line="297" class="Tests\Libraries\Token_libTest" classname="Tests.Libraries.Token_libTest" assertions="3" time="0.000278"/>
+        <testcase name="testRenderHandlesPercentH" file="/Volumes/sourcecode/personal/ospos/tests/Libraries/Token_libTest.php" line="306" class="Tests\Libraries\Token_libTest" classname="Tests.Libraries.Token_libTest" assertions="3" time="0.000277"/>
+      </testsuite>
+      <testsuite name="Tests\Models\EmployeeTest" file="/Volumes/sourcecode/personal/ospos/tests/Models/EmployeeTest.php" tests="11" assertions="0" errors="11" failures="0" skipped="0" time="0.000000">
+        <testcase name="testIsAdminReturnsTrueForPersonId1" file="/Volumes/sourcecode/personal/ospos/tests/Models/EmployeeTest.php" line="23" class="Tests\Models\EmployeeTest" classname="Tests.Models.EmployeeTest" assertions="0" time="0.000000">
+          <error type="CodeIgniter\Database\Exceptions\DatabaseException">Tests\Models\EmployeeTest::testIsAdminReturnsTrueForPersonId1
+CodeIgniter\Database\Exceptions\DatabaseException: Unable to connect to the database.
+Main connection [MySQLi]: Operation not permitted
+
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Database/BaseConnection.php:465
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:91
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:67
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/CIUnitTestCase.php:254
+/Volumes/sourcecode/personal/ospos/tests/Models/EmployeeTest.php:20
+/Volumes/sourcecode/personal/ospos/vendor/bin/phpunit:122</error>
+        </testcase>
+        <testcase name="testIsAdminReturnsTrueForEmployeeWithAllPermissions" file="/Volumes/sourcecode/personal/ospos/tests/Models/EmployeeTest.php" line="32" class="Tests\Models\EmployeeTest" classname="Tests.Models.EmployeeTest" assertions="0" time="0.000000">
+          <error type="CodeIgniter\Database\Exceptions\DatabaseException">Tests\Models\EmployeeTest::testIsAdminReturnsTrueForEmployeeWithAllPermissions
+CodeIgniter\Database\Exceptions\DatabaseException: Unable to connect to the database.
+Main connection [MySQLi]: Operation not permitted
+
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Database/BaseConnection.php:465
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:91
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:67
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/CIUnitTestCase.php:254
+/Volumes/sourcecode/personal/ospos/tests/Models/EmployeeTest.php:20
+/Volumes/sourcecode/personal/ospos/vendor/bin/phpunit:122</error>
+        </testcase>
+        <testcase name="testIsAdminReturnsFalseWhenMissingPermissions" file="/Volumes/sourcecode/personal/ospos/tests/Models/EmployeeTest.php" line="46" class="Tests\Models\EmployeeTest" classname="Tests.Models.EmployeeTest" assertions="0" time="0.000000">
+          <error type="CodeIgniter\Database\Exceptions\DatabaseException">Tests\Models\EmployeeTest::testIsAdminReturnsFalseWhenMissingPermissions
+CodeIgniter\Database\Exceptions\DatabaseException: Unable to connect to the database.
+Main connection [MySQLi]: Operation not permitted
+
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Database/BaseConnection.php:465
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:91
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:67
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/CIUnitTestCase.php:254
+/Volumes/sourcecode/personal/ospos/tests/Models/EmployeeTest.php:20
+/Volumes/sourcecode/personal/ospos/vendor/bin/phpunit:122</error>
+        </testcase>
+        <testcase name="testCanModifyEmployeeReturnsTrueForOwnAccount" file="/Volumes/sourcecode/personal/ospos/tests/Models/EmployeeTest.php" line="62" class="Tests\Models\EmployeeTest" classname="Tests.Models.EmployeeTest" assertions="0" time="0.000000">
+          <error type="CodeIgniter\Database\Exceptions\DatabaseException">Tests\Models\EmployeeTest::testCanModifyEmployeeReturnsTrueForOwnAccount
+CodeIgniter\Database\Exceptions\DatabaseException: Unable to connect to the database.
+Main connection [MySQLi]: Operation not permitted
+
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Database/BaseConnection.php:465
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:91
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:67
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/CIUnitTestCase.php:254
+/Volumes/sourcecode/personal/ospos/tests/Models/EmployeeTest.php:20
+/Volumes/sourcecode/personal/ospos/vendor/bin/phpunit:122</error>
+        </testcase>
+        <testcase name="testCanModifyEmployeeReturnsTrueForOwnAdminAccount" file="/Volumes/sourcecode/personal/ospos/tests/Models/EmployeeTest.php" line="76" class="Tests\Models\EmployeeTest" classname="Tests.Models.EmployeeTest" assertions="0" time="0.000000">
+          <error type="CodeIgniter\Database\Exceptions\DatabaseException">Tests\Models\EmployeeTest::testCanModifyEmployeeReturnsTrueForOwnAdminAccount
+CodeIgniter\Database\Exceptions\DatabaseException: Unable to connect to the database.
+Main connection [MySQLi]: Operation not permitted
+
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Database/BaseConnection.php:465
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:91
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:67
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/CIUnitTestCase.php:254
+/Volumes/sourcecode/personal/ospos/tests/Models/EmployeeTest.php:20
+/Volumes/sourcecode/personal/ospos/vendor/bin/phpunit:122</error>
+        </testcase>
+        <testcase name="testCanModifyEmployeeReturnsFalseWhenNonAdminModifiesAdmin" file="/Volumes/sourcecode/personal/ospos/tests/Models/EmployeeTest.php" line="90" class="Tests\Models\EmployeeTest" classname="Tests.Models.EmployeeTest" assertions="0" time="0.000000">
+          <error type="CodeIgniter\Database\Exceptions\DatabaseException">Tests\Models\EmployeeTest::testCanModifyEmployeeReturnsFalseWhenNonAdminModifiesAdmin
+CodeIgniter\Database\Exceptions\DatabaseException: Unable to connect to the database.
+Main connection [MySQLi]: Operation not permitted
+
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Database/BaseConnection.php:465
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:91
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:67
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/CIUnitTestCase.php:254
+/Volumes/sourcecode/personal/ospos/tests/Models/EmployeeTest.php:20
+/Volumes/sourcecode/personal/ospos/vendor/bin/phpunit:122</error>
+        </testcase>
+        <testcase name="testCanModifyEmployeeReturnsTrueWhenAdminModifiesNonAdmin" file="/Volumes/sourcecode/personal/ospos/tests/Models/EmployeeTest.php" line="106" class="Tests\Models\EmployeeTest" classname="Tests.Models.EmployeeTest" assertions="0" time="0.000000">
+          <error type="CodeIgniter\Database\Exceptions\DatabaseException">Tests\Models\EmployeeTest::testCanModifyEmployeeReturnsTrueWhenAdminModifiesNonAdmin
+CodeIgniter\Database\Exceptions\DatabaseException: Unable to connect to the database.
+Main connection [MySQLi]: Operation not permitted
+
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Database/BaseConnection.php:465
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:91
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:67
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/CIUnitTestCase.php:254
+/Volumes/sourcecode/personal/ospos/tests/Models/EmployeeTest.php:20
+/Volumes/sourcecode/personal/ospos/vendor/bin/phpunit:122</error>
+        </testcase>
+        <testcase name="testCanModifyEmployeeReturnsTrueWhenNonAdminModifiesNonAdmin" file="/Volumes/sourcecode/personal/ospos/tests/Models/EmployeeTest.php" line="122" class="Tests\Models\EmployeeTest" classname="Tests.Models.EmployeeTest" assertions="0" time="0.000000">
+          <error type="CodeIgniter\Database\Exceptions\DatabaseException">Tests\Models\EmployeeTest::testCanModifyEmployeeReturnsTrueWhenNonAdminModifiesNonAdmin
+CodeIgniter\Database\Exceptions\DatabaseException: Unable to connect to the database.
+Main connection [MySQLi]: Operation not permitted
+
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Database/BaseConnection.php:465
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:91
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:67
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/CIUnitTestCase.php:254
+/Volumes/sourcecode/personal/ospos/tests/Models/EmployeeTest.php:20
+/Volumes/sourcecode/personal/ospos/vendor/bin/phpunit:122</error>
+        </testcase>
+        <testcase name="testCanModifyEmployeeReturnsFalseForNonAdminEditingAdmin" file="/Volumes/sourcecode/personal/ospos/tests/Models/EmployeeTest.php" line="136" class="Tests\Models\EmployeeTest" classname="Tests.Models.EmployeeTest" assertions="0" time="0.000000">
+          <error type="CodeIgniter\Database\Exceptions\DatabaseException">Tests\Models\EmployeeTest::testCanModifyEmployeeReturnsFalseForNonAdminEditingAdmin
+CodeIgniter\Database\Exceptions\DatabaseException: Unable to connect to the database.
+Main connection [MySQLi]: Operation not permitted
+
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Database/BaseConnection.php:465
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:91
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:67
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/CIUnitTestCase.php:254
+/Volumes/sourcecode/personal/ospos/tests/Models/EmployeeTest.php:20
+/Volumes/sourcecode/personal/ospos/vendor/bin/phpunit:122</error>
+        </testcase>
+        <testcase name="testHasGrantReturnsTrueForActualGrant" file="/Volumes/sourcecode/personal/ospos/tests/Models/EmployeeTest.php" line="152" class="Tests\Models\EmployeeTest" classname="Tests.Models.EmployeeTest" assertions="0" time="0.000000">
+          <error type="CodeIgniter\Database\Exceptions\DatabaseException">Tests\Models\EmployeeTest::testHasGrantReturnsTrueForActualGrant
+CodeIgniter\Database\Exceptions\DatabaseException: Unable to connect to the database.
+Main connection [MySQLi]: Operation not permitted
+
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Database/BaseConnection.php:465
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:91
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:67
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/CIUnitTestCase.php:254
+/Volumes/sourcecode/personal/ospos/tests/Models/EmployeeTest.php:20
+/Volumes/sourcecode/personal/ospos/vendor/bin/phpunit:122</error>
+        </testcase>
+        <testcase name="testHasGrantReturnsFalseForMissingGrant" file="/Volumes/sourcecode/personal/ospos/tests/Models/EmployeeTest.php" line="161" class="Tests\Models\EmployeeTest" classname="Tests.Models.EmployeeTest" assertions="0" time="0.000000">
+          <error type="CodeIgniter\Database\Exceptions\DatabaseException">Tests\Models\EmployeeTest::testHasGrantReturnsFalseForMissingGrant
+CodeIgniter\Database\Exceptions\DatabaseException: Unable to connect to the database.
+Main connection [MySQLi]: Operation not permitted
+
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Database/BaseConnection.php:465
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:91
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php:67
+/Volumes/sourcecode/personal/ospos/vendor/codeigniter4/framework/system/Test/CIUnitTestCase.php:254
+/Volumes/sourcecode/personal/ospos/tests/Models/EmployeeTest.php:20
+/Volumes/sourcecode/personal/ospos/vendor/bin/phpunit:122</error>
+        </testcase>
+      </testsuite>
+      <testsuite name="UrlHelperTest" file="/Volumes/sourcecode/personal/ospos/tests/helpers/UrlHelperTest.php" tests="1" assertions="2" errors="0" failures="0" skipped="0" time="0.000101">
+        <testcase name="testBase64urlEncode" file="/Volumes/sourcecode/personal/ospos/tests/helpers/UrlHelperTest.php" line="13" class="UrlHelperTest" classname="UrlHelperTest" assertions="2" time="0.000101"/>
       </testsuite>
     </testsuite>
   </testsuite>

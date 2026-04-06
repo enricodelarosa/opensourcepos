@@ -1,14 +1,15 @@
 <?php
 
 use App\Models\Attribute;
+use App\Models\Customer;
 use App\Models\Customer_loan;
 use App\Models\Employee;
 use App\Models\Item_taxes;
+use App\Models\Supplier;
 use App\Models\Tax_category;
 use CodeIgniter\Database\ResultInterface;
-use CodeIgniter\Session\Session;
+use CodeIgniter\HTTP\IncomingRequest;
 use Config\OSPOS;
-use Config\Services;
 
 /**
  * Tabular views helper
@@ -22,7 +23,7 @@ function transform_headers_readonly(array $headers): string
     $result = [];
 
     foreach ($headers as $key => $value) {
-        $result[] = ['field' => $key, 'title' => $value, 'sortable' => $value != '', 'switchable' => !preg_match('(^$|&nbsp)', $value)];
+        $result[] = ['field' => $key, 'title' => $value, 'sortable' => $value !== '', 'switchable' => ! preg_match('(^$|&nbsp)', $value)];
     }
 
     return json_encode($result);
@@ -35,7 +36,7 @@ function transform_headers(array $headers, bool $readonly = false, bool $editabl
 {
     $result = [];
 
-    if (!$readonly) {
+    if (! $readonly) {
         $headers = array_merge([['checkbox' => 'select', 'sortable' => false]], $headers);
     }
 
@@ -48,29 +49,28 @@ function transform_headers(array $headers, bool $readonly = false, bool $editabl
         $result[] = [
             'field'      => key($element),
             'title'      => current($element),
-            'switchable' => $element['switchable'] ?? !preg_match('(^$|&nbsp)', current($element)),
-            'escape'     => !preg_match("/(edit|email|messages|item_pic)/", key($element)) && !(isset($element['escape']) && !$element['escape']),
-            'sortable'   => $element['sortable'] ?? current($element) != '',
+            'switchable' => $element['switchable'] ?? ! preg_match('(^$|&nbsp)', current($element)),
+            'escape'     => ! preg_match('/(edit|email|messages|item_pic)/', key($element)) && ! (isset($element['escape']) && ! $element['escape']),
+            'sortable'   => $element['sortable'] ?? current($element) !== '',
             'checkbox'   => $element['checkbox'] ?? false,
             'class'      => isset($element['checkbox']) || preg_match('(^$|&nbsp)', current($element)) ? 'print_hide' : '',
-            'sorter'     => $element['sorter'] ?? ''
+            'sorter'     => $element['sorter'] ?? '',
         ];
     }
 
     return json_encode($result);
 }
 
-
 function sales_headers(): array
 {
     return [
-        ['sale_id'         => lang('Common.id')],
+        ['sale_id' => lang('Common.id')],
         ['sale_time'       => lang('Sales.sale_time')],
         ['customer_name'   => lang('Customers.customer')],
         ['amount_due'      => lang('Sales.amount_due')],
         ['amount_tendered' => lang('Sales.amount_tendered')],
         ['change_due'      => lang('Sales.change_due')],
-        ['payment_type'    => lang('Sales.payment_type')]
+        ['payment_type'    => lang('Sales.payment_type')],
     ];
 }
 
@@ -80,7 +80,7 @@ function sales_headers(): array
 function get_sales_manage_table_headers(): string
 {
     $headers = sales_headers();
-    $config = config(OSPOS::class)->settings;
+    $config  = config(OSPOS::class)->settings;
 
     if ($config['invoice_enable']) {
         $headers[] = ['invoice_number' => lang('Sales.invoice_number')];
@@ -97,7 +97,7 @@ function get_sales_manage_table_headers(): string
  */
 function get_sale_data_row(object $sale): array
 {
-    $uri = current_url(true);
+    $uri        = current_url(true);
     $controller = $uri->getSegment(1);
 
     $row = [
@@ -107,36 +107,36 @@ function get_sale_data_row(object $sale): array
         'amount_due'      => to_currency($sale->amount_due),
         'amount_tendered' => to_currency($sale->amount_tendered),
         'change_due'      => to_currency($sale->change_due),
-        'payment_type'    => $sale->payment_type
+        'payment_type'    => $sale->payment_type,
     ];
 
     $config = config(OSPOS::class)->settings;
 
     if ($config['invoice_enable']) {
         $row['invoice_number'] = $sale->invoice_number;
-        $row['invoice'] = empty($sale->invoice_number)
+        $row['invoice']        = empty($sale->invoice_number)
             ? '-'
             : anchor(
-                "$controller/invoice/$sale->sale_id",
+                "{$controller}/invoice/{$sale->sale_id}",
                 '<span class="glyphicon glyphicon-list-alt"></span>',
-                ['title' => lang('Sales.show_invoice')]
+                ['title' => lang('Sales.show_invoice')],
             );
     }
 
     $row['receipt'] = anchor(
-        "$controller/receipt/$sale->sale_id",
+        "{$controller}/receipt/{$sale->sale_id}",
         '<span class="glyphicon glyphicon-usd"></span>',
-        ['title' => lang('Sales.show_receipt')]
+        ['title' => lang('Sales.show_receipt')],
     );
     $row['edit'] = anchor(
-        "$controller/edit/$sale->sale_id",
+        "{$controller}/edit/{$sale->sale_id}",
         '<span class="glyphicon glyphicon-edit"></span>',
         [
             'class'           => 'modal-dlg print_hide',
             'data-btn-delete' => lang('Common.delete'),
             'data-btn-submit' => lang('Common.submit'),
-            'title'           => lang(ucfirst($controller) . ".update")
-        ]
+            'title'           => lang(ucfirst($controller) . '.update'),
+        ],
     );
 
     return $row;
@@ -147,9 +147,9 @@ function get_sale_data_row(object $sale): array
  */
 function get_sale_data_last_row(ResultInterface $sales): array
 {
-    $sum_amount_due = 0;
+    $sum_amount_due      = 0;
     $sum_amount_tendered = 0;
-    $sum_change_due = 0;
+    $sum_change_due      = 0;
 
     foreach ($sales->getResult() as $key => $sale) {
         $sum_amount_due += $sale->amount_due;
@@ -162,7 +162,7 @@ function get_sale_data_last_row(ResultInterface $sales): array
         'sale_time'       => lang('Sales.total'),
         'amount_due'      => to_currency($sum_amount_due),
         'amount_tendered' => to_currency($sum_amount_tendered),
-        'change_due'      => to_currency($sum_change_due)
+        'change_due'      => to_currency($sum_change_due),
     ];
 }
 
@@ -176,7 +176,7 @@ function get_sales_manage_payments_summary(array $payments): string
 
     foreach ($payments as $key => $payment) {
         $amount = $payment['payment_amount'];
-        $total = bcadd($total, $amount);
+        $total  = bcadd($total, $amount);
         $table .= '<div class="summary_row">' . $payment['payment_type'] . ': ' . to_currency($amount) . '</div>';
     }
 
@@ -190,13 +190,12 @@ function person_headers(): array
 {
     return [
         ['people.person_id' => lang('Common.id')],
-        ['last_name'        => lang('Common.last_name')],
-        ['first_name'       => lang('Common.first_name')],
-        ['email'            => lang('Common.email')],
-        ['phone_number'     => lang('Common.phone_number')]
+        ['last_name'    => lang('Common.last_name')],
+        ['first_name'   => lang('Common.first_name')],
+        ['email'        => lang('Common.email')],
+        ['phone_number' => lang('Common.phone_number')],
     ];
 }
-
 
 /**
  * Get the header for the people tabular view
@@ -206,7 +205,7 @@ function get_people_manage_table_headers(): string
     $headers = person_headers();
 
     $employee = model(Employee::class);
-    $session = session();
+    $session  = session();
 
     if ($employee->has_grant('messages', $session->get('person_id'))) {
         $headers[] = ['messages' => '', 'sortable' => false];
@@ -231,37 +230,36 @@ function get_person_data_row(object $person): array
         'messages'         => empty($person->phone_number)
             ? ''
             : anchor(
-                "Messages/view/$person->person_id",
+                "Messages/view/{$person->person_id}",
                 '<span class="glyphicon glyphicon-phone"></span>',
                 [
                     'class'           => 'modal-dlg',
                     'data-btn-submit' => lang('Common.submit'),
-                    'title'           => lang('Messages.sms_send')
-                ]
+                    'title'           => lang('Messages.sms_send'),
+                ],
             ),
-        'edit'             => anchor(
-            "$controller/view/$person->person_id",
+        'edit' => anchor(
+            "{$controller}/view/{$person->person_id}",
             '<span class="glyphicon glyphicon-edit"></span>',
             [
                 'class'           => 'modal-dlg',
                 'data-btn-submit' => lang('Common.submit'),
-                'title'           => lang(ucfirst($controller) . '.update')    // TODO: String interpolation
-            ]
-        )
+                'title'           => lang(ucfirst($controller) . '.update'),    // TODO: String interpolation
+            ],
+        ),
     ];
 }
-
 
 function customer_headers(): array
 {
     return [
         ['people.person_id' => lang('Common.id')],
-        ['last_name'        => lang('Common.last_name')],
-        ['first_name'       => lang('Common.first_name')],
-        ['email'            => lang('Common.email')],
-        ['phone_number'     => lang('Common.phone_number')],
-        ['total'            => lang('Common.total_spent'), 'sortable' => false],
-        ['loan_balance'     => lang('Customers.loan_balance'), 'sortable' => false, 'escape' => false]
+        ['last_name'    => lang('Common.last_name')],
+        ['first_name'   => lang('Common.first_name')],
+        ['email'        => lang('Common.email')],
+        ['phone_number' => lang('Common.phone_number')],
+        ['total'        => lang('Common.total_spent'), 'sortable' => false],
+        ['loan_balance' => lang('Customers.loan_balance'), 'sortable' => false, 'escape' => false],
     ];
 }
 
@@ -273,7 +271,7 @@ function get_customer_manage_table_headers(): string
     $headers = customer_headers();
 
     $employee = model(Employee::class);
-    $session = session();
+    $session  = session();
 
     if ($employee->has_grant('messages', $session->get('person_id'))) {
         $headers[] = ['messages' => '', 'sortable' => false];
@@ -287,9 +285,9 @@ function get_customer_manage_table_headers(): string
  */
 function get_customer_data_row(object $person, object $stats): array
 {
-    $controller = get_controller();
+    $controller    = get_controller();
     $customer_loan = model(Customer_loan::class);
-    $loan_balance = $customer_loan->get_loan_balance($person->person_id);
+    $loan_balance  = $customer_loan->get_loan_balance($person->person_id);
 
     return [
         'people.person_id' => $person->person_id,
@@ -302,23 +300,23 @@ function get_customer_data_row(object $person, object $stats): array
         'messages'         => empty($person->phone_number)
             ? ''
             : anchor(
-                "Messages/view/$person->person_id",
+                "Messages/view/{$person->person_id}",
                 '<span class="glyphicon glyphicon-phone"></span>',
                 [
                     'class'           => 'modal-dlg',
                     'data-btn-submit' => lang('Common.submit'),
-                    'title'           => lang('Messages.sms_send')
-                ]
+                    'title'           => lang('Messages.sms_send'),
+                ],
             ),
-        'edit'             => anchor(
-            "$controller/view/$person->person_id",
+        'edit' => anchor(
+            "{$controller}/view/{$person->person_id}",
             '<span class="glyphicon glyphicon-edit"></span>',
             [
                 'class'           => 'modal-dlg',
                 'data-btn-submit' => lang('Common.submit'),
-                'title'           => lang(ucfirst($controller) . ".update")
-            ]
-        )
+                'title'           => lang(ucfirst($controller) . '.update'),
+            ],
+        ),
     ];
 }
 
@@ -326,16 +324,16 @@ function supplier_headers(): array
 {
     return [
         ['people.person_id' => lang('Common.id')],
-        ['company_name'     => lang('Suppliers.company_name')],
-        ['agency_name'      => lang('Suppliers.agency_name')],
-        ['category'         => lang('Suppliers.category')],
-        ['last_name'        => lang('Common.last_name')],
-        ['first_name'       => lang('Common.first_name')],
-        ['email'            => lang('Common.email')],
-        ['phone_number'     => lang('Common.phone_number')],
-        ['linked_customer'  => lang('Suppliers.linked_customer'), 'sortable' => false, 'escape' => false],
-        ['loan_balance'     => lang('Customers.loan_balance'), 'sortable' => false, 'escape' => false],
-        ['partner_supplier' => lang('Suppliers.partner_supplier'), 'sortable' => false]
+        ['company_name'    => lang('Suppliers.company_name')],
+        ['agency_name'     => lang('Suppliers.agency_name')],
+        ['category'        => lang('Suppliers.category')],
+        ['last_name'       => lang('Common.last_name')],
+        ['first_name'      => lang('Common.first_name')],
+        ['email'           => lang('Common.email')],
+        ['phone_number'    => lang('Common.phone_number')],
+        ['linked_customer' => lang('Suppliers.linked_customer'), 'sortable' => false, 'escape' => false],
+        ['loan_balance'    => lang('Customers.loan_balance'), 'sortable' => false, 'escape' => false],
+        ['lunas'           => lang('Suppliers.lunas'), 'sortable' => false],
     ];
 }
 
@@ -347,7 +345,7 @@ function get_suppliers_manage_table_headers(): string
     $headers = supplier_headers();
 
     $employee = model(Employee::class);
-    $session = session();
+    $session  = session();
 
     if ($employee->has_grant('messages', $session->get('person_id'))) {
         $headers[] = ['messages' => ''];
@@ -366,29 +364,41 @@ function get_supplier_data_row(object $supplier): array
     // Get linked customer info and loan balance
     $linked_customer_name = '';
     $loan_balance_display = to_currency(0);
-    if (!empty($supplier->customer_id)) {
-        $customer_model = model(\App\Models\Customer::class);
-        $customer_info = $customer_model->get_info($supplier->customer_id);
+    if (! empty($supplier->customer_id)) {
+        $customer_model = model(Customer::class);
+        $customer_info  = $customer_model->get_info($supplier->customer_id);
         if ($customer_info->person_id) {
             $linked_customer_name = $customer_info->first_name . ' ' . $customer_info->last_name;
         }
-        $customer_loan = model(Customer_loan::class);
-        $balance = $customer_loan->get_loan_balance($supplier->customer_id);
-        if ($balance > 0) {
-            $loan_balance_display = '<span style="color:#d9534f;font-weight:bold;">' . to_currency($balance) . '</span>';
-        }
+        $customer_loan   = model(Customer_loan::class);
+        $balance         = $customer_loan->get_loan_balance($supplier->customer_id);
+        $balance_display = $balance > 0
+            ? '<span style="color:#d9534f;font-weight:bold;">' . to_currency($balance) . '</span>'
+            : to_currency(0);
+        $loan_balance_display = anchor(
+            "suppliers/loanDetails/{$supplier->person_id}",
+            $balance_display,
+            [
+                'class' => 'modal-dlg modal-dlg-wide',
+                'title' => lang('Suppliers.loan_details'),
+            ],
+        );
     }
 
-    // Get partner supplier name (checks both directions)
-    $partner_supplier = '';
-    $supplier_model = model(\App\Models\Supplier::class);
-    $partner_id = $supplier_model->get_partner_supplier_id((int) $supplier->person_id);
-    if ($partner_id) {
-        $partner_info = $supplier_model->get_info($partner_id);
-        $partner_supplier = trim($partner_info->first_name . ' ' . $partner_info->last_name);
-        if (!empty($partner_info->company_name)) {
-            $partner_supplier .= ' [' . $partner_info->company_name . ']';
-        }
+    $luna_summary   = '';
+    $supplier_model = model(Supplier::class);
+    if (in_array((int) $supplier->category, [LAND_OWNER_SUPPLIER, TENANT_SUPPLIER], true)) {
+        $lunas      = $supplier_model->get_lunas((int) $supplier->person_id);
+        $area_names = array_filter(array_map(static function (array $luna) use ($supplier): string {
+            $label = trim((string) ($luna['area_name'] ?? ''));
+
+            if ((int) $supplier->category === TENANT_SUPPLIER && ! empty($luna['landowner_name'])) {
+                $label .= ' [' . trim((string) $luna['landowner_name']) . ']';
+            }
+
+            return $label;
+        }, $lunas));
+        $luna_summary = empty($area_names) ? lang('Suppliers.no_lunas') : implode(', ', $area_names);
     }
 
     return [
@@ -402,27 +412,27 @@ function get_supplier_data_row(object $supplier): array
         'phone_number'     => $supplier->phone_number,
         'linked_customer'  => $linked_customer_name,
         'loan_balance'     => $loan_balance_display,
-        'partner_supplier' => $partner_supplier,
+        'lunas'            => $luna_summary,
         'messages'         => empty($supplier->phone_number)
             ? ''
             : anchor(
-                "Messages/view/$supplier->person_id",
+                "Messages/view/{$supplier->person_id}",
                 '<span class="glyphicon glyphicon-phone"></span>',
                 [
-                    'class'           => "modal-dlg",
+                    'class'           => 'modal-dlg',
                     'data-btn-submit' => lang('Common.submit'),
-                    'title'           => lang('Messages.sms_send')
-                ]
+                    'title'           => lang('Messages.sms_send'),
+                ],
             ),
-        'edit'             => anchor(
-            "$controller/view/$supplier->person_id",
+        'edit' => anchor(
+            "{$controller}/view/{$supplier->person_id}",
             '<span class="glyphicon glyphicon-edit"></span>',
             [
-                'class'           => "modal-dlg",
+                'class'           => 'modal-dlg modal-dlg-wide',
                 'data-btn-submit' => lang('Common.submit'),
-                'title'           => lang(ucfirst($controller) . ".update")
-            ]
-        )
+                'title'           => lang(ucfirst($controller) . '.update'),
+            ],
+        ),
     ];
 }
 
@@ -430,13 +440,13 @@ function item_headers(): array
 {
     return [
         ['items.item_id' => lang('Common.id')],
-        ['item_number'   => lang('Items.item_number')],
-        ['name'          => lang('Items.name')],
-        ['category'      => lang('Items.category')],
-        ['company_name'  => lang('Suppliers.company_name')],
-        ['cost_price'    => lang('Items.cost_price')],
-        ['unit_price'    => lang('Items.unit_price')],
-        ['quantity'      => lang('Items.quantity')]
+        ['item_number'  => lang('Items.item_number')],
+        ['name'         => lang('Items.name')],
+        ['category'     => lang('Items.category')],
+        ['company_name' => lang('Suppliers.company_name')],
+        ['cost_price'   => lang('Items.cost_price')],
+        ['unit_price'   => lang('Items.unit_price')],
+        ['quantity'     => lang('Items.quantity')],
     ];
 }
 
@@ -445,8 +455,8 @@ function item_headers(): array
  */
 function get_items_manage_table_headers(): string
 {
-    $attribute = model(Attribute::class);
-    $config = config(OSPOS::class)->settings;
+    $attribute            = model(Attribute::class);
+    $config               = config(OSPOS::class)->settings;
     $definitionsWithTypes = $attribute->get_definitions_by_flags($attribute::SHOW_IN_ITEMS, true);
 
     $headers = item_headers();
@@ -474,41 +484,42 @@ function get_items_manage_table_headers(): string
  */
 function get_item_data_row(object $item): array
 {
-    $attribute = model(Attribute::class);
-    $item_taxes = model(Item_taxes::class);
+    $attribute    = model(Attribute::class);
+    $item_taxes   = model(Item_taxes::class);
     $tax_category = model(Tax_category::class);
-    $config = config(OSPOS::class)->settings;
+    $config       = config(OSPOS::class)->settings;
 
     if ($config['use_destination_based_tax']) {
-        if ($item->tax_category_id == null) {    // TODO: === ?
+        if ($item->tax_category_id === null) {    // TODO: === ?
             $tax_percents = '-';
         } else {
             $tax_category_info = $tax_category->get_info($item->tax_category_id);
-            $tax_percents = $tax_category_info->tax_category;
+            $tax_percents      = $tax_category_info->tax_category;
         }
     } else {
         $item_tax_info = $item_taxes->get_info($item->item_id);
-        $tax_percents = '';
+        $tax_percents  = '';
+
         foreach ($item_tax_info as $tax_info) {
             $tax_percents .= to_tax_decimals($tax_info['percent']) . '%, ';
         }
 
         // Remove ', ' from last item
         $tax_percents = substr($tax_percents, 0, -2);
-        $tax_percents = !$tax_percents ? '-' : $tax_percents;
+        $tax_percents = ! $tax_percents ? '-' : $tax_percents;
     }
 
     $controller = get_controller();
 
     $image = null;
-    if (!empty($item->pic_filename)) {
+    if (! empty($item->pic_filename)) {
         $ext = pathinfo($item->pic_filename, PATHINFO_EXTENSION);
 
-        $images = $ext == ''
-            ? glob("./uploads/item_pics/$item->pic_filename.*")
-            : glob("./uploads/item_pics/$item->pic_filename");
+        $images = $ext === ''
+            ? glob("./uploads/item_pics/{$item->pic_filename}.*")
+            : glob("./uploads/item_pics/{$item->pic_filename}");
 
-        if (sizeof($images) > 0) {
+        if (count($images) > 0) {
             $image_path = ltrim($images[0], './');
             $image .= '<a class="rollover" href="' . base_url(implode('/', array_map('rawurlencode', explode('/', $image_path)))) . '"><img alt="Image thumbnail" src="' . site_url('items/PicThumb/' . rawurlencode(pathinfo($images[0], PATHINFO_BASENAME))) . '"></a>';
         }
@@ -529,37 +540,37 @@ function get_item_data_row(object $item): array
         'cost_price'    => to_currency($item->cost_price),
         'unit_price'    => to_currency($item->unit_price),
         'quantity'      => to_quantity_decimals($item->quantity),
-        'tax_percents'  => !$tax_percents ? '-' : $tax_percents,
-        'item_pic'      => $image
+        'tax_percents'  => ! $tax_percents ? '-' : $tax_percents,
+        'item_pic'      => $image,
     ];
 
     $icons = [
         'inventory' => anchor(
-            "$controller/inventory/$item->item_id",
+            "{$controller}/inventory/{$item->item_id}",
             '<span class="glyphicon glyphicon-pushpin"></span>',
             [
                 'class'           => 'modal-dlg',
                 'data-btn-submit' => lang('Common.submit'),
-                'title'           => lang(ucfirst($controller) . ".count")
-            ]
+                'title'           => lang(ucfirst($controller) . '.count'),
+            ],
         ),
-        'stock'     => anchor(
-            "$controller/countDetails/$item->item_id",
+        'stock' => anchor(
+            "{$controller}/countDetails/{$item->item_id}",
             '<span class="glyphicon glyphicon-list-alt"></span>',
             [
                 'class' => 'modal-dlg',
-                'title' => lang(ucfirst($controller) . ".details_count")
-            ]
+                'title' => lang(ucfirst($controller) . '.details_count'),
+            ],
         ),
-        'edit'      => anchor(
-            "$controller/view/$item->item_id",
+        'edit' => anchor(
+            "{$controller}/view/{$item->item_id}",
             '<span class="glyphicon glyphicon-edit"></span>',
             [
                 'class'           => 'modal-dlg',
                 'data-btn-submit' => lang('Common.submit'),
-                'title'           => lang(ucfirst($controller) . ".update")
-            ]
-        )
+                'title'           => lang(ucfirst($controller) . '.update'),
+            ],
+        ),
     ];
 
     return $columns + expand_attribute_values($definition_names, (array) $item) + $icons;
@@ -568,11 +579,11 @@ function get_item_data_row(object $item): array
 function giftcard_headers(): array
 {
     return [
-        ['giftcard_id'     => lang('Common.id')],
+        ['giftcard_id' => lang('Common.id')],
         ['last_name'       => lang('Common.last_name')],
         ['first_name'      => lang('Common.first_name')],
         ['giftcard_number' => lang('Giftcards.giftcard_number')],
-        ['value'           => lang('Giftcards.card_value')]
+        ['value'           => lang('Giftcards.card_value')],
     ];
 }
 
@@ -598,26 +609,26 @@ function get_giftcard_data_row(object $giftcard): array
         'giftcard_number' => $giftcard->giftcard_number,
         'value'           => to_currency($giftcard->value),
         'edit'            => anchor(
-            "$controller/view/$giftcard->giftcard_id",
+            "{$controller}/view/{$giftcard->giftcard_id}",
             '<span class="glyphicon glyphicon-edit"></span>',
             [
                 'class'           => 'modal-dlg',
                 'data-btn-submit' => lang('Common.submit'),
-                'title'           => lang(ucfirst($controller) . ".update")
-            ]
-        )
+                'title'           => lang(ucfirst($controller) . '.update'),
+            ],
+        ),
     ];
 }
 
 function item_kit_headers(): array
 {
     return [
-        ['item_kit_id'      => lang('Item_kits.kit')],
+        ['item_kit_id' => lang('Item_kits.kit')],
         ['item_kit_number'  => lang('Item_kits.item_kit_number')],
         ['name'             => lang('Item_kits.name')],
         ['description'      => lang('Item_kits.description')],
-        ['total_cost_price' => lang('Items.cost_price'), 'sortable' => FALSE],
-        ['total_unit_price' => lang('Items.unit_price'), 'sortable' => FALSE]
+        ['total_cost_price' => lang('Items.cost_price'), 'sortable' => false],
+        ['total_unit_price' => lang('Items.unit_price'), 'sortable' => false],
     ];
 }
 
@@ -644,64 +655,61 @@ function get_item_kit_data_row(object $item_kit): array
         'total_cost_price' => to_currency($item_kit->total_cost_price),
         'total_unit_price' => to_currency($item_kit->total_unit_price),
         'edit'             => anchor(
-            "$controller/view/$item_kit->item_kit_id",
+            "{$controller}/view/{$item_kit->item_kit_id}",
             '<span class="glyphicon glyphicon-edit"></span>',
             [
                 'class'           => 'modal-dlg',
                 'data-btn-submit' => lang('Common.submit'),
-                'title'           => lang(ucfirst($controller) . ".update")
-            ]
-        )
+                'title'           => lang(ucfirst($controller) . '.update'),
+            ],
+        ),
     ];
 }
 
-/**
- * @param array $columns
- * @param array $row
- * @return array
- */
 function parse_attribute_values(array $columns, array $row): array
 {
     $attribute_values = [];
+
     foreach ($columns as $column) {
         if (array_key_exists($column, $row)) {
-            $attribute_value = explode('|', $row[$column]);
+            $attribute_value  = explode('|', $row[$column]);
             $attribute_values = array_merge($attribute_values, $attribute_value);
         }
     }
+
     return $attribute_values;
 }
 
 /**
  * @param array $definition_names Array of definition_id => ['name' => name, 'type' => type] or definition_id => name
- * @param array $row
- * @return array
  */
 function expand_attribute_values(array $definition_names, array $row): array
 {
     $values = parse_attribute_values(['attribute_values', 'attribute_dtvalues', 'attribute_dvalues'], $row);
 
     $indexed_values = [];
+
     foreach ($values as $attribute_value) {
         $exploded_value = explode('_', $attribute_value);
-        if (sizeof($exploded_value) > 1) {
+        if (count($exploded_value) > 1) {
             $indexed_values[$exploded_value[0]] = $exploded_value[1];
         }
     }
 
     $attribute_values = [];
+
     foreach ($definition_names as $definition_id => $definitionInfo) {
         if (isset($indexed_values[$definition_id])) {
             $raw_value = $indexed_values[$definition_id];
-            
+
             // Format DECIMAL attributes according to locale
             if (is_array($definitionInfo) && isset($definitionInfo['type']) && $definitionInfo['type'] === DECIMAL) {
-                $attribute_values["$definition_id"] = to_decimals($raw_value);
+                $attribute_values["{$definition_id}"] = to_decimals($raw_value);
             } else {
-                $attribute_values["$definition_id"] = $raw_value;
+                $attribute_values["{$definition_id}"] = $raw_value;
             }
         } else {
-            $attribute_values["$definition_id"] = "";
+            $attribute_values["{$definition_id}"] = '';
         }
     }
 
@@ -711,7 +719,7 @@ function expand_attribute_values(array $definition_names, array $row): array
 function attribute_definition_headers(): array
 {
     return [
-        ['definition_id'    => lang('Attributes.definition_id')],
+        ['definition_id' => lang('Attributes.definition_id')],
         ['definition_name'  => lang('Attributes.definition_name')],
         ['definition_type'  => lang('Attributes.definition_type')],
         ['definition_flags' => lang('Attributes.definition_flags')],
@@ -719,28 +727,20 @@ function attribute_definition_headers(): array
     ];
 }
 
-/**
- * @return string
- */
 function get_attribute_definition_manage_table_headers(): string
 {
     return transform_headers(attribute_definition_headers());
 }
 
-/**
- * @param object $attribute_row
- * @return array
- */
 function get_attribute_definition_data_row(object $attribute_row): array
 {
-
-    $attribute = model(Attribute::class);
+    $attribute  = model(Attribute::class);
     $controller = get_controller();
 
-    if (count($attribute->get_definition_flags()) == 0) {
+    if (count($attribute->get_definition_flags()) === 0) {
         $definition_flags = lang('Common.none_selected_text');
-    } elseif ($attribute->definition_type == GROUP) {
-        $definition_flags = "-";
+    } elseif ($attribute->definition_type === GROUP) {
+        $definition_flags = '-';
     } else {
         $definition_flags = implode(', ', $attribute_row->definition_flags);
     }
@@ -752,23 +752,23 @@ function get_attribute_definition_data_row(object $attribute_row): array
         'definition_group' => $attribute_row->definition_group,
         'definition_flags' => $definition_flags,
         'edit'             => anchor(
-            "$controller/view/$attribute_row->definition_id",
+            "{$controller}/view/{$attribute_row->definition_id}",
             '<span class="glyphicon glyphicon-edit"></span>',
             [
                 'class'           => 'modal-dlg',
                 'data-btn-submit' => lang('Common.submit'),
-                'title'           => lang(ucfirst($controller) . ".update")
-            ]
-        )
+                'title'           => lang(ucfirst($controller) . '.update'),
+            ],
+        ),
     ];
 }
 
 function expense_category_headers(): array
 {
     return [
-        ['expense_category_id'  => lang('Expenses_categories.category_id')],
+        ['expense_category_id' => lang('Expenses_categories.category_id')],
         ['category_name'        => lang('Expenses_categories.name')],
-        ['category_description' => lang('Expenses_categories.description')]
+        ['category_description' => lang('Expenses_categories.description')],
     ];
 }
 
@@ -792,21 +792,21 @@ function get_expense_category_data_row(object $expense_category): array
         'category_name'        => $expense_category->category_name,
         'category_description' => $expense_category->category_description,
         'edit'                 => anchor(
-            "$controller/view/$expense_category->expense_category_id",
+            "{$controller}/view/{$expense_category->expense_category_id}",
             '<span class="glyphicon glyphicon-edit"></span>',
             [
                 'class'           => 'modal-dlg',
                 'data-btn-submit' => lang('Common.submit'),
-                'title'           => lang(ucfirst($controller) . ".update")
-            ]
-        )
+                'title'           => lang(ucfirst($controller) . '.update'),
+            ],
+        ),
     ];
 }
 
 function expense_headers(): array
 {
     return [
-        ['expense_id'        => lang('Expenses.expense_id')],
+        ['expense_id' => lang('Expenses.expense_id')],
         ['date'              => lang('Expenses.date')],
         ['supplier_name'     => lang('Expenses.supplier_name')],
         ['supplier_tax_code' => lang('Expenses.supplier_tax_code')],
@@ -815,7 +815,7 @@ function expense_headers(): array
         ['payment_type'      => lang('Expenses.payment')],
         ['category_name'     => lang('Expenses_categories.name')],
         ['description'       => lang('Expenses.description')],
-        ['created_by'        => lang('Expenses.employee')]
+        ['created_by'        => lang('Expenses.employee')],
     ];
 }
 
@@ -846,14 +846,14 @@ function get_expenses_data_row(object $expense): array
         'description'       => $expense->description,
         'created_by'        => $expense->first_name . ' ' . $expense->last_name,
         'edit'              => anchor(
-            "$controller/view/$expense->expense_id",
+            "{$controller}/view/{$expense->expense_id}",
             '<span class="glyphicon glyphicon-edit"></span>',
             [
                 'class'           => 'modal-dlg',
                 'data-btn-submit' => lang('Common.submit'),
-                'title'           => lang(ucfirst($controller) . ".update")
-            ]
-        )
+                'title'           => lang(ucfirst($controller) . '.update'),
+            ],
+        ),
     ];
 }
 
@@ -862,8 +862,8 @@ function get_expenses_data_row(object $expense): array
  */
 function get_expenses_data_last_row(object $expense): array
 {
-    $table_data_rows = '';    // TODO: This variable is never used
-    $sum_amount_expense = 0;
+    $table_data_rows        = '';    // TODO: This variable is never used
+    $sum_amount_expense     = 0;
     $sum_tax_amount_expense = 0;
 
     foreach ($expense->getResult() as $key => $expense) {
@@ -875,7 +875,7 @@ function get_expenses_data_last_row(object $expense): array
         'expense_id' => '-',
         'date'       => lang('Sales.total'),
         'amount'     => to_currency($sum_amount_expense),
-        'tax_amount' => to_currency($sum_tax_amount_expense)
+        'tax_amount' => to_currency($sum_tax_amount_expense),
     ];
 }
 
@@ -902,13 +902,14 @@ function get_expenses_manage_payments_summary(array $payments, ResultInterface $
 function loan_adjustment_headers(): array
 {
     return [
-        ['adjustment_id'   => lang('Loan_adjustments.adjustment_id')],
+        ['adjustment_id' => lang('Loan_adjustments.adjustment_id')],
         ['adjustment_time' => lang('Loan_adjustments.date_col')],
         ['supplier_name'   => lang('Loan_adjustments.supplier_col')],
+        ['luna_name'       => lang('Loan_adjustments.luna_col')],
         ['type'            => lang('Loan_adjustments.type_col')],
         ['loan_amount'     => lang('Loan_adjustments.amount_col')],
         ['comment'         => lang('Loan_adjustments.comment_col')],
-        ['employee_name'   => lang('Loan_adjustments.employee_col')]
+        ['employee_name'   => lang('Loan_adjustments.employee_col')],
     ];
 }
 
@@ -917,7 +918,7 @@ function loan_adjustment_headers(): array
  */
 function get_loan_adjustments_manage_table_headers(): string
 {
-    return transform_headers(loan_adjustment_headers());
+    return transform_headers(loan_adjustment_headers(), false, false);
 }
 
 /**
@@ -925,39 +926,43 @@ function get_loan_adjustments_manage_table_headers(): string
  */
 function get_loan_adjustment_data_row(object $adjustment): array
 {
-    $controller = get_controller();
     $is_increase = $adjustment->loan_amount >= 0;
+    $lunaLabel   = lang('Loan_adjustments.general_advance');
+
+    if (! empty($adjustment->luna_id)) {
+        $lunaLabel = trim((string) ($adjustment->area_name ?? ''));
+
+        if ($lunaLabel === '') {
+            $lunaLabel = 'Luna #' . (int) $adjustment->luna_id;
+        }
+
+        if (! empty($adjustment->barangay)) {
+            $lunaLabel .= ' (' . trim((string) $adjustment->barangay) . ')';
+        }
+    }
 
     return [
         'adjustment_id'   => $adjustment->adjustment_id,
         'adjustment_time' => to_datetime(strtotime($adjustment->adjustment_time)),
         'supplier_name'   => $adjustment->supplier_first_name . ' ' . $adjustment->supplier_last_name,
+        'luna_name'       => $lunaLabel,
         'type'            => $is_increase ? lang('Loan_adjustments.type_increase') : lang('Loan_adjustments.type_decrease'),
         'loan_amount'     => to_currency(abs($adjustment->loan_amount)),
         'comment'         => $adjustment->comment,
         'employee_name'   => $adjustment->employee_first_name . ' ' . $adjustment->employee_last_name,
-        'edit'            => anchor(
-            "$controller/view/$adjustment->adjustment_id",
-            '<span class="glyphicon glyphicon-edit"></span>',
-            [
-                'class'           => 'modal-dlg',
-                'data-btn-submit' => lang('Common.submit'),
-                'title'           => lang(ucfirst($controller) . '.new')
-            ]
-        )
     ];
 }
 
 function cash_summary_headers(): array
 {
     return [
-        ['session'        => lang('Cash_summary.session_col'),        'sortable' => false],
+        ['session' => lang('Cash_summary.session_col'), 'sortable' => false],
         ['cash_beginning' => lang('Cash_summary.cash_beginning_col'), 'sortable' => false],
-        ['cash_sales'     => lang('Cash_summary.cash_sales_col'),     'sortable' => false],
-        ['cash_advance'   => lang('Cash_summary.cash_advance_col'),   'sortable' => false],
+        ['cash_sales'     => lang('Cash_summary.cash_sales_col'), 'sortable' => false],
+        ['cash_advance'   => lang('Cash_summary.cash_advance_col'), 'sortable' => false],
         ['copra_purchase' => lang('Cash_summary.copra_purchase_col'), 'sortable' => false],
-        ['expenses'       => lang('Cash_summary.expenses_col'),       'sortable' => false],
-        ['cash_ending'    => lang('Cash_summary.cash_ending_col'),    'sortable' => false],
+        ['expenses'       => lang('Cash_summary.expenses_col'), 'sortable' => false],
+        ['cash_ending'    => lang('Cash_summary.cash_ending_col'), 'sortable' => false],
     ];
 }
 
@@ -968,8 +973,8 @@ function get_cash_summary_manage_table_headers(): string
 
 function get_cash_summary_data_row(object $cashup, float $cash_sales, float $cash_advance, float $copra_purchase, float $expenses): array
 {
-    $label       = (!empty($cashup->description) ? esc($cashup->description) . ' — ' : '') . to_date(strtotime($cashup->open_date));
-    $cash_ending = floatval($cashup->open_amount_cash) + $cash_sales - $cash_advance - $copra_purchase - $expenses;
+    $label       = (! empty($cashup->description) ? esc($cashup->description) . ' — ' : '') . to_date(strtotime($cashup->open_date));
+    $cash_ending = (float) ($cashup->open_amount_cash) + $cash_sales - $cash_advance - $copra_purchase - $expenses;
 
     return [
         'session'        => $label,
@@ -985,7 +990,7 @@ function get_cash_summary_data_row(object $cashup, float $cash_sales, float $cas
 function cashup_headers(): array
 {
     return [
-        ['cashup_id'            => lang('Cashups.id')],
+        ['cashup_id' => lang('Cashups.id')],
         ['open_date'            => lang('Cashups.opened_date')],
         ['open_employee_id'     => lang('Cashups.open_employee')],
         ['open_amount_cash'     => lang('Cashups.open_amount_cash')],
@@ -997,10 +1002,9 @@ function cashup_headers(): array
         ['closed_amount_due'    => lang('Cashups.closed_amount_due')],
         ['closed_amount_card'   => lang('Cashups.closed_amount_card')],
         ['closed_amount_check'  => lang('Cashups.closed_amount_check')],
-        ['closed_amount_total'  => lang('Cashups.closed_amount_total')]
+        ['closed_amount_total'  => lang('Cashups.closed_amount_total')],
     ];
 }
-
 
 /**
  * Get the header for the cashup tabular view
@@ -1034,46 +1038,45 @@ function get_cash_up_data_row(object $cash_up): array
         'closed_amount_check'  => to_currency($cash_up->closed_amount_check),
         'closed_amount_total'  => to_currency($cash_up->closed_amount_total),
         'edit'                 => anchor(
-            "$controller/view/$cash_up->cashup_id",
+            "{$controller}/view/{$cash_up->cashup_id}",
             '<span class="glyphicon glyphicon-edit"></span>',
             [
                 'class'           => 'modal-dlg',
                 'data-btn-submit' => lang('Common.submit'),
-                'title'           => lang(ucfirst($controller) . ".update")
-            ]
-        )
+                'title'           => lang(ucfirst($controller) . '.update'),
+            ],
+        ),
     ];
 }
 
 /**
  * Returns the right-most part of the controller name
- * @return string
  */
 function get_controller(): string
 {
-    $router = service('router');
-    $controller_name = strtolower($router->controllerName());
+    $router                = service('router');
+    $controller_name       = strtolower($router->controllerName());
     $controller_name_parts = explode('\\', $controller_name);
+
     return end($controller_name_parts);
 }
 
 /**
  * Restores filter values from URL query string.
- * 
- * @param CodeIgniter\HTTP\IncomingRequest $request The request object
+ *
+ * @param IncomingRequest $request The request object
+ *
  * @return array Array with 'start_date', 'end_date', and 'selected_filters' keys
  */
 function restoreTableFilters($request): array
 {
-    $startDate = $request->getGet('start_date', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
-    $endDate = $request->getGet('end_date', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+    $startDate  = $request->getGet('start_date', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+    $endDate    = $request->getGet('end_date', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
     $urlFilters = $request->getGet('filters', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
-    
+
     return array_filter([
-        'start_date' => $startDate ?: null,
-        'end_date' => $endDate ?: null,
-        'selected_filters' => $urlFilters ?? []
-    ], function($value) {
-        return $value !== null && $value !== [];
-    });
+        'start_date'       => $startDate ?: null,
+        'end_date'         => $endDate ?: null,
+        'selected_filters' => $urlFilters ?? [],
+    ], static fn ($value) => $value !== null && $value !== []);
 }

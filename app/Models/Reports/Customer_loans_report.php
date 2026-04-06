@@ -2,62 +2,78 @@
 
 namespace App\Models\Reports;
 
+use App\Models\Customer_loan;
+use Config\OSPOS;
+
 class Customer_loans_report extends Report
 {
     public function getDataColumns(): array
     {
         return [
-            ['transaction_time' => lang('Reports.date'),                  'sortable' => false],
+            ['transaction_time' => lang('Reports.date'), 'sortable' => false],
             ['transaction_type' => lang('Reports.loan_transaction_type')],
             ['reference'        => lang('Reports.loan_reference')],
-            ['loan_amount'      => lang('Reports.loan_amount'),           'sorter' => 'number_sorter'],
-            ['running_balance'  => lang('Reports.loan_balance'),          'sorter' => 'number_sorter'],
+            ['luna_label'       => lang('Reports.luna')],
+            ['loan_amount'      => lang('Reports.loan_amount'), 'sorter' => 'number_sorter'],
+            ['running_balance'  => lang('Reports.loan_balance'), 'sorter' => 'number_sorter'],
             ['comment'          => lang('Reports.comments')],
         ];
     }
 
     public function getData(array $inputs): array
     {
-        $builder = $this->db->table('customer_loans');
-        $builder->select('loan_id, transaction_time, sale_id, receiving_id, loan_amount, comment');
-        $builder->where('customer_id', $inputs['customer_id']);
-        $builder->where('transaction_time >=', rawurldecode($inputs['start_date']));
-        $builder->where('transaction_time <=', rawurldecode($inputs['end_date']));
-        $builder->orderBy('transaction_time', 'ASC');
-
-        return $builder->get()->getResultArray();
+        return model(Customer_loan::class)->get_history(
+            (int) $inputs['customer_id'],
+            $this->normalizeBoundary((string) $inputs['start_date']),
+            $this->normalizeBoundary((string) $inputs['end_date'], true),
+            0,
+            0,
+            'asc',
+        );
     }
 
     public function getSummaryData(array $inputs): array
     {
-        // Total new debt (sales on loan) within the period
-        $builder = $this->db->table('customer_loans');
-        $builder->selectSum('loan_amount', 'total');
-        $builder->where('customer_id', $inputs['customer_id']);
-        $builder->where('transaction_time >=', rawurldecode($inputs['start_date']));
-        $builder->where('transaction_time <=', rawurldecode($inputs['end_date']));
-        $builder->where('loan_amount >', 0);
-        $total_debt = (float)($builder->get()->getRow()->total ?? 0);
+        $history_rows   = $this->getData($inputs);
+        $total_debt     = 0.0;
+        $total_payments = 0.0;
 
-        // Total payments (supplier purchase deductions) within the period
-        $builder = $this->db->table('customer_loans');
-        $builder->selectSum('loan_amount', 'total');
-        $builder->where('customer_id', $inputs['customer_id']);
-        $builder->where('transaction_time >=', rawurldecode($inputs['start_date']));
-        $builder->where('transaction_time <=', rawurldecode($inputs['end_date']));
-        $builder->where('loan_amount <', 0);
-        $total_payments = (float)($builder->get()->getRow()->total ?? 0);
+        foreach ($history_rows as $row) {
+            $loan_amount = (float) $row['loan_amount'];
 
-        // Outstanding balance across ALL time (not filtered by date)
-        $builder = $this->db->table('customer_loans');
-        $builder->selectSum('loan_amount', 'total');
-        $builder->where('customer_id', $inputs['customer_id']);
-        $outstanding = (float)($builder->get()->getRow()->total ?? 0);
+            if ($loan_amount > 0) {
+                $total_debt += $loan_amount;
+            } elseif ($loan_amount < 0) {
+                $total_payments += abs($loan_amount);
+            }
+        }
+
+        $outstanding = (float) model(Customer_loan::class)->get_loan_balance((int) $inputs['customer_id']);
 
         return [
             'loan_total_debt'     => $total_debt,
-            'loan_total_payments' => abs($total_payments),
+            'loan_total_payments' => $total_payments,
             'loan_balance'        => $outstanding,
         ];
+    }
+
+    public function getOpeningBalance(array $inputs): float
+    {
+        return model(Customer_loan::class)->get_balance_before_datetime(
+            (int) $inputs['customer_id'],
+            $this->normalizeBoundary((string) $inputs['start_date']),
+        );
+    }
+
+    private function normalizeBoundary(string $value, bool $is_end = false): string
+    {
+        $decoded = rawurldecode($value);
+        $config  = config(OSPOS::class)->settings;
+
+        if (empty($config['date_or_time_format']) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $decoded) === 1) {
+            return $decoded . ($is_end ? ' 23:59:59' : ' 00:00:00');
+        }
+
+        return $decoded;
     }
 }
