@@ -32,6 +32,8 @@ This document provides guidance for AI agents working on the Open Source Point o
 - Database migrations in `app/Database/Migrations/`
 - Use CodeIgniter 4 framework patterns and helpers
 - Sanitize user input; escape output using `esc()` helper
+- This fork should use `PHP` as the currency code and `₱` as the currency symbol
+- After rebuilding the database from `app/Database/database.sql`, reapply the currency settings because the fresh-install default still uses `$`
 
 ## Feature History
 

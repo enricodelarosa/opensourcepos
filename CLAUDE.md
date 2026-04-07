@@ -71,6 +71,8 @@ Tests use real database connections (integration testing), not mocks. Test confi
 - All schema changes must have a migration file in `app/Database/Migrations/`
 - Companion SQL scripts go in `app/Database/Migrations/sqlscripts/`
 - Naming: `YYYYMMDDHHMMSS_DescriptiveName.php`
+- This fork should use `PHP` as the currency code and `₱` as the currency symbol
+- After rebuilding the database from `app/Database/database.sql`, reapply the currency settings because the fresh-install default still uses `$`
 
 ### CI/CD
 GitHub Actions runs PHPUnit across PHP 8.1–8.4 with MariaDB, PHP syntax linting, and CodeQL security scanning on every push.
