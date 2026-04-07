@@ -473,7 +473,7 @@ if (isset($success)) {
                                 </tr>
                                 <?php
                                     $show_partner_loan = $has_partner_supplier && $partner_customer_id && $partner_loan_balance > 0;
-                    $show_any_loan                     = ($has_linked_customer && $loan_balance > 0) || $show_partner_loan;
+                    $show_any_loan                     = $has_linked_customer || $show_partner_loan;
                     ?>
                                 <?php if ($show_any_loan) { ?>
                                     <!-- Primary supplier loan section -->
@@ -541,26 +541,54 @@ if (isset($success)) {
                                     </tr>
                                 <?php } ?>
                                 <?php if ($has_partner_supplier) { ?>
+                                <?php if ($has_linked_customer && $selected_luna_id > 0) { ?>
                                 <tr>
-                                    <td><?= lang('Receivings.cash_to_supplier') ?>: <strong><?= esc($supplier) ?></strong></td>
+                                    <td colspan="2">
+                                        <label for="store_negative_loan" style="display: block; font-weight: normal; margin-bottom: 0;">
+                                            <?= form_checkbox([
+                                                'name'    => 'store_negative_loan',
+                                                'id'      => 'store_negative_loan',
+                                                'value'   => 1,
+                                                'checked' => ! empty($store_negative_loan),
+                                            ]) ?>
+                                            <span style="font-weight: 600;"><?= esc(lang('Receivings.store_cash_to_negative_loan_balance_for')) ?></span>
+                                            <div style="padding-left: 22px; color: #666; font-size: 12px;"><?= esc(lang('Reports.landowner')) ?><?= ! empty($supplier) ? ' - ' . esc($supplier) : '' ?></div>
+                                        </label>
+                                    </td>
+                                </tr>
+                                <?php } ?>
+                                <tr>
+                                    <td>
+                                        <div id="primary_payment_label" style="font-weight: 600;"><?= esc(lang('Receivings.cash_to_landowner')) ?></div>
+                                        <div style="color: #666; font-size: 12px;"><?= ! empty($supplier) ? esc($supplier) : esc(lang('Reports.landowner')) ?></div>
+                                    </td>
                                     <td>
                                         <?= form_input([
                                             'name'        => 'amount_tendered',
                                             'id'          => 'amount_tendered',
-                                            'value'       => '',
+                                            'value'       => $amount_tendered ?? '',
                                             'class'       => 'form-control input-sm',
                                             'size'        => '5',
                                             'placeholder' => '0.00',
                                         ]) ?>
                                     </td>
                                 </tr>
+                                <?php if ($has_linked_customer && $selected_luna_id > 0) { ?>
+                                <tr id="negative_loan_row"<?= empty($store_negative_loan) || (float) ($negative_loan_amount ?? 0) <= 0 ? ' style="display:none;"' : '' ?>>
+                                    <td><strong><?= lang('Receivings.remaining_as_landowner_negative_loan') ?></strong></td>
+                                    <td><strong id="negative_loan_amount" style="color: #5cb85c;"><?= to_currency((float) ($negative_loan_amount ?? 0)) ?></strong></td>
+                                </tr>
+                                <?php } ?>
                                 <tr>
-                                    <td><?= lang('Receivings.cash_to_partner') ?>: <strong><?= esc($partner_supplier_name) ?></strong></td>
+                                    <td>
+                                        <div style="font-weight: 600;"><?= esc(lang('Receivings.cash_to_tenant')) ?></div>
+                                        <div style="color: #666; font-size: 12px;"><?= ! empty($partner_supplier_name) ? esc($partner_supplier_name) : esc(lang('Reports.tenant')) ?></div>
+                                    </td>
                                     <td>
                                         <?= form_input([
                                             'name'        => 'partner_amount_tendered',
                                             'id'          => 'partner_amount_tendered',
-                                            'value'       => '',
+                                            'value'       => $partner_amount_tendered ?? '',
                                             'class'       => 'form-control input-sm',
                                             'size'        => '5',
                                             'placeholder' => '0.00',
@@ -568,18 +596,47 @@ if (isset($success)) {
                                     </td>
                                 </tr>
                                 <?php } else { ?>
+                                <?php if ($selected_luna_id > 0 && $has_linked_customer) { ?>
                                 <tr>
-                                    <td><?= lang('Sales.amount_tendered') ?></td>
+                                    <td colspan="2">
+                                        <label for="store_negative_loan" style="display: block; font-weight: normal; margin-bottom: 0;">
+                                            <?= form_checkbox([
+                                                'name'    => 'store_negative_loan',
+                                                'id'      => 'store_negative_loan',
+                                                'value'   => 1,
+                                                'checked' => ! empty($store_negative_loan),
+                                            ]) ?>
+                                            <span style="font-weight: 600;"><?= esc(lang('Receivings.store_cash_to_negative_loan_balance_for')) ?></span>
+                                            <div style="padding-left: 22px; color: #666; font-size: 12px;"><?= esc(lang('Reports.landowner')) ?><?= ! empty($supplier) ? ' - ' . esc($supplier) : '' ?></div>
+                                        </label>
+                                    </td>
+                                </tr>
+                                <?php } ?>
+                                <tr>
+                                    <td>
+                                        <?php if ($selected_luna_id > 0) { ?>
+                                            <div id="primary_payment_label" style="font-weight: 600;"><?= esc(lang('Receivings.cash_to_landowner')) ?></div>
+                                            <div style="color: #666; font-size: 12px;"><?= ! empty($supplier) ? esc($supplier) : esc(lang('Reports.landowner')) ?></div>
+                                        <?php } else { ?>
+                                            <?= lang('Sales.amount_tendered') ?>
+                                        <?php } ?>
+                                    </td>
                                     <td>
                                         <?= form_input([
                                             'name'  => 'amount_tendered',
                                             'id'    => 'amount_tendered',
-                                            'value' => '',
+                                            'value' => $amount_tendered ?? '',
                                             'class' => 'form-control input-sm',
                                             'size'  => '5',
                                         ]) ?>
                                     </td>
                                 </tr>
+                                <?php if ($has_linked_customer && $selected_luna_id > 0) { ?>
+                                <tr id="negative_loan_row"<?= empty($store_negative_loan) || (float) ($negative_loan_amount ?? 0) <= 0 ? ' style="display:none;"' : '' ?>>
+                                    <td><strong><?= lang('Receivings.remaining_as_landowner_negative_loan') ?></strong></td>
+                                    <td><strong id="negative_loan_amount" style="color: #5cb85c;"><?= to_currency((float) ($negative_loan_amount ?? 0)) ?></strong></td>
+                                </tr>
+                                <?php } ?>
                                 <?php } ?>
                             </table>
                         </div>
@@ -712,11 +769,60 @@ if (isset($success)) {
             $('#cart_' + $(this).attr('data-line')).submit();
         });
 
-        <?php if (($has_linked_customer && $loan_balance > 0) || ($partner_customer_id && $partner_loan_balance > 0) || $has_partner_supplier) { ?>
+        <?php if ($has_linked_customer || ($partner_customer_id && $partner_loan_balance > 0) || $has_partner_supplier) { ?>
         // Auto-calculate remaining cash to pay when loan deductions change
         var receivingTotal = <?= json_encode((float) $total) ?>;
-        var maxLoanDeduction = Math.min(<?= json_encode((float) ($loan_balance ?? 0)) ?>, receivingTotal);
-        var maxPartnerDeduction = Math.min(<?= json_encode((float) ($partner_loan_balance ?? 0)) ?>, receivingTotal);
+        var maxLoanDeduction = Math.max(0, Math.min(<?= json_encode((float) ($loan_balance ?? 0)) ?>, receivingTotal));
+        var maxPartnerDeduction = Math.max(0, Math.min(<?= json_encode((float) ($partner_loan_balance ?? 0)) ?>, receivingTotal));
+        var currencySymbol = <?= json_encode($config['currency_symbol']) ?>;
+
+        function getCashInputsTotal() {
+            var supplierCash = parseFloat($('#amount_tendered').val()) || 0;
+            var partnerCash = parseFloat($('#partner_amount_tendered').val()) || 0;
+
+            if (supplierCash < 0) supplierCash = 0;
+            if (partnerCash < 0) partnerCash = 0;
+
+            return supplierCash + partnerCash;
+        }
+
+        function updatePrimaryPaymentMode(cashToPay) {
+            if (!$('#store_negative_loan').length || !$('#amount_tendered').length) {
+                return;
+            }
+
+            if ($('#store_negative_loan').is(':checked')) {
+                $('#amount_tendered').val('0.00');
+                $('#amount_tendered').prop('readonly', true).addClass('disabled');
+
+                if ($('#partner_amount_tendered').length) {
+                    var partnerCash = parseFloat($('#partner_amount_tendered').val()) || 0;
+                    if (partnerCash > cashToPay) {
+                        $('#partner_amount_tendered').val(cashToPay.toFixed(2));
+                    }
+                }
+            } else {
+                $('#amount_tendered').prop('readonly', false).removeClass('disabled');
+            }
+        }
+
+        function updateNegativeLoanSummary(cashToPay) {
+            if (!$('#store_negative_loan').length) {
+                return;
+            }
+
+            var negativeLoan = 0;
+            if ($('#store_negative_loan').is(':checked')) {
+                negativeLoan = Math.max(0, cashToPay - getCashInputsTotal());
+            }
+
+            $('#negative_loan_amount').text(currencySymbol + negativeLoan.toFixed(2));
+            if ($('#store_negative_loan').is(':checked') && negativeLoan > 0) {
+                $('#negative_loan_row').show();
+            } else {
+                $('#negative_loan_row').hide();
+            }
+        }
 
         function updateCashToPay() {
             var deduction = parseFloat($('#loan_deduction').val()) || 0;
@@ -733,7 +839,9 @@ if (isset($success)) {
             }
 
             var cashToPay = receivingTotal - deduction - partnerDeduction;
-            $('#cash_to_pay').text('<?= $config['currency_symbol'] ?>' + cashToPay.toFixed(2));
+            $('#cash_to_pay').text(currencySymbol + cashToPay.toFixed(2));
+            updatePrimaryPaymentMode(cashToPay);
+            updateNegativeLoanSummary(cashToPay);
 
             if (cashToPay <= 0) {
                 $('#cash_payment_row, #amount_tendered_row').hide();
@@ -743,24 +851,40 @@ if (isset($success)) {
 
             <?php if ($has_partner_supplier) { ?>
             // Auto-fill supplier cash; partner cash gets the remainder
-            var supplierCash = parseFloat($('#amount_tendered').val()) || 0;
-            if (supplierCash > cashToPay) supplierCash = cashToPay;
-            $('#partner_amount_tendered').val((cashToPay - supplierCash).toFixed(2));
+            if (!$('#store_negative_loan').is(':checked')) {
+                var supplierCash = parseFloat($('#amount_tendered').val()) || 0;
+                if (supplierCash > cashToPay) supplierCash = cashToPay;
+                $('#partner_amount_tendered').val((cashToPay - supplierCash).toFixed(2));
+            }
             <?php } ?>
         }
 
         $('#loan_deduction, #partner_loan_deduction').on('input change', updateCashToPay);
+        $('#store_negative_loan').on('change', updateCashToPay);
 
         <?php if ($has_partner_supplier) { ?>
         // When supplier cash changes, partner cash auto-fills the remainder
         $('#amount_tendered').on('input change', function() {
+            if ($('#store_negative_loan').is(':checked')) {
+                $(this).val('0.00');
+                return;
+            }
+
             var cashToPay = parseFloat($('#cash_to_pay').text().replace(/[^0-9.-]/g, '')) || 0;
             var supplierCash = parseFloat($(this).val()) || 0;
             if (supplierCash < 0) supplierCash = 0;
             if (supplierCash > cashToPay) supplierCash = cashToPay;
             $('#partner_amount_tendered').val((cashToPay - supplierCash).toFixed(2));
+            updateNegativeLoanSummary(cashToPay);
         });
         <?php } ?>
+
+        $('#amount_tendered, #partner_amount_tendered').on('input change', function() {
+            var cashToPay = parseFloat($('#cash_to_pay').text().replace(/[^0-9.-]/g, '')) || 0;
+            updateNegativeLoanSummary(cashToPay);
+        });
+
+        updateCashToPay();
         <?php } ?>
 
     });

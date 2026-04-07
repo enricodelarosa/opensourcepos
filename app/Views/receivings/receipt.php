@@ -120,23 +120,34 @@ if (isset($selected_luna) && $selected_luna) {
             </tr>
 
             <?php
-        $partner_loan_deduction ??= 0;
-            $has_any_loan_deduction = (isset($loan_deduction) && $loan_deduction > 0) || $partner_loan_deduction > 0;
+            $partner_loan_deduction ??= 0;
+            $negative_loan_amount ??= 0;
+            $has_any_loan_activity = (isset($loan_deduction) && $loan_deduction > 0) || $partner_loan_deduction > 0 || $negative_loan_amount > 0;
             ?>
-            <?php if ($has_any_loan_deduction) { ?>
-                <?php if (isset($loan_deduction) && $loan_deduction > 0) { ?>
+            <?php if ($has_any_loan_activity) { ?>
+                <?php if ((isset($loan_deduction) && $loan_deduction > 0) || $negative_loan_amount > 0) { ?>
                 <?php if ($receipt_luna_label !== '') { ?>
                 <tr>
                     <td colspan="3" style="text-align: right;"><strong><?= esc($supplier ?? '') . ' - ' . esc($receipt_luna_label) ?></strong></td>
                     <td></td>
                 </tr>
                 <?php } ?>
+                <?php if (isset($loan_deduction) && $loan_deduction > 0) { ?>
                 <tr>
                     <td colspan="3" style="text-align: right;"><strong><?= lang('Sales.loan_deduction') ?></strong></td>
                     <td>
                         <div class="total-value" style="color: #d9534f;"><strong>-<?= to_currency($loan_deduction) ?></strong></div>
                     </td>
                 </tr>
+                <?php } ?>
+                <?php if ($negative_loan_amount > 0) { ?>
+                <tr>
+                    <td colspan="3" style="text-align: right;"><strong><?= lang('Receivings.remaining_as_landowner_negative_loan') ?><?= ! empty($supplier) ? ' - ' . esc($supplier) : '' ?></strong></td>
+                    <td>
+                        <div class="total-value" style="color: #5cb85c;"><strong>-<?= to_currency($negative_loan_amount) ?></strong></div>
+                    </td>
+                </tr>
+                <?php } ?>
                 <?php if (isset($loan_balance_after)) { ?>
                     <tr>
                         <td colspan="3" style="text-align: right;"><?= $receipt_luna_label !== '' ? lang('Receivings.luna_loan_balance') : lang('Receivings.loan_balance') ?></td>
@@ -175,24 +186,27 @@ if (isset($selected_luna) && $selected_luna) {
                 <?php } ?>
                 <?php
                     $partner_amount_tendered ??= 0;
-                $primary_cash = $amount_tendered ?? ($total - ($loan_deduction ?? 0) - $partner_loan_deduction - $partner_amount_tendered);
+                $primary_cash = (float) ($amount_tendered ?? 0);
                 ?>
-                <?php if ($partner_amount_tendered > 0) { ?>
+                <?php if ($primary_cash > 0) { ?>
                 <tr>
-                    <td colspan="3" style="text-align: right;"><?= lang('Receivings.cash_to_supplier') ?> <?= esc($supplier ?? '') ?></td>
+                    <td colspan="3" style="text-align: right;"><?= lang('Receivings.cash_to_landowner') ?><?= ! empty($supplier) ? ' - ' . esc($supplier) : '' ?></td>
                     <td>
                         <div class="total-value"><?= to_currency($primary_cash) ?></div>
                     </td>
                 </tr>
+                <?php } ?>
+                <?php if ($partner_amount_tendered > 0) { ?>
                 <tr>
-                    <td colspan="3" style="text-align: right;"><?= lang('Receivings.cash_to_partner') ?> <?= esc($partner_supplier_name ?? '') ?></td>
+                    <td colspan="3" style="text-align: right;"><?= lang('Receivings.cash_to_tenant') ?><?= ! empty($partner_supplier_name) ? ' - ' . esc($partner_supplier_name) : '' ?></td>
                     <td>
                         <div class="total-value"><?= to_currency($partner_amount_tendered) ?></div>
                     </td>
                 </tr>
-                <?php } else { ?>
+                <?php } ?>
+                <?php if ($partner_amount_tendered <= 0 && $primary_cash <= 0) { ?>
                 <tr>
-                    <td colspan="3" style="text-align: right;"><?= lang('Sales.amount_tendered') ?></td>
+                    <td colspan="3" style="text-align: right;"><?= ! empty($selected_luna) ? lang('Receivings.cash_to_landowner') . (! empty($supplier) ? ' - ' . esc($supplier) : '') : lang('Sales.amount_tendered') ?></td>
                     <td>
                         <div class="total-value"><?= to_currency($primary_cash) ?></div>
                     </td>

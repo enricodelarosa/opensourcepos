@@ -424,6 +424,9 @@ class Receivings extends Secure_Controller
             $partner_balance = (float) $customer_loan->get_loan_balance_for_luna($partner_customer_id, $selected_luna_id);
         }
 
+        $store_negative_loan         = $selected_luna_id > 0 && $this->request->getPost('store_negative_loan') !== null;
+        $data['store_negative_loan'] = $store_negative_loan;
+
         // Handle loan deduction if provided
         $loan_deduction = 0;
         if ($this->request->getPost('loan_deduction') !== null && $this->request->getPost('loan_deduction') !== '') {
@@ -470,29 +473,67 @@ class Receivings extends Secure_Controller
         // Calculate amounts after loan deductions
         $cash_amount = $data['total'] - $loan_deduction - $partner_loan_deduction;
 
+        $data['amount_tendered'] = 0;
+        if (
+            ! $store_negative_loan
+            && $this->request->getPost('amount_tendered') !== null
+            && $this->request->getPost('amount_tendered') !== ''
+        ) {
+            $data['amount_tendered'] = parse_decimals($this->request->getPost('amount_tendered'));
+        }
+
         $partner_amount_tendered = 0;
         if ($this->request->getPost('partner_amount_tendered') !== null && $this->request->getPost('partner_amount_tendered') !== '') {
             $partner_amount_tendered = parse_decimals($this->request->getPost('partner_amount_tendered'));
         }
         $data['partner_amount_tendered'] = $partner_amount_tendered;
+        $data['negative_loan_amount']    = 0.0;
+
+        if ($store_negative_loan && ! $linked_customer_id) {
+            $data['error'] = lang('Receivings.negative_loan_requires_linked_customer');
+
+            return $this->_reload($data);
+        }
+
+        if ($data['amount_tendered'] < 0 || $partner_amount_tendered < 0) {
+            $data['error'] = lang('Receivings.cash_amounts_mismatch');
+
+            return $this->_reload($data);
+        }
+
+        $total_tendered = $data['amount_tendered'] + $partner_amount_tendered;
+
+        if ($total_tendered > ($cash_amount + 0.01)) {
+            $data['error'] = lang('Receivings.cash_amounts_mismatch');
+
+            return $this->_reload($data);
+        }
 
         if (($loan_deduction + $partner_loan_deduction) > 0 && $cash_amount <= 0) {
             // Fully paid by loan deduction — no cash payment needed
             $data['payment_type']    = lang('Sales.loan_deduction');
             $data['amount_tendered'] = 0;
             $data['amount_change']   = to_currency(0);
-        } elseif ($this->request->getPost('amount_tendered') !== null && $this->request->getPost('amount_tendered') !== '') {
-            $data['amount_tendered'] = parse_decimals($this->request->getPost('amount_tendered'));
-            $total_tendered          = $data['amount_tendered'] + $partner_amount_tendered;
-
-            // Validate split amounts sum to cash_amount when partner is involved
-            if ($partner_amount_tendered > 0 && abs($total_tendered - $cash_amount) > 0.01) {
+        } else {
+            if (! $store_negative_loan && abs($total_tendered - $cash_amount) > 0.01) {
                 $data['error'] = lang('Receivings.cash_amounts_mismatch');
 
                 return $this->_reload($data);
             }
 
-            $data['amount_change'] = to_currency($total_tendered - $cash_amount);
+            $data['negative_loan_amount'] = $store_negative_loan
+                ? max(0.0, $cash_amount - $partner_amount_tendered)
+                : 0.0;
+            $data['amount_change'] = to_currency(0);
+
+            if ($data['negative_loan_amount'] > 0) {
+                $negative_loan_label = lang('Receivings.negative_loan');
+                if ($data['payment_type'] === '' || $data['payment_type'] === null) {
+                    $data['payment_type'] = $negative_loan_label;
+                } elseif (! str_contains($data['payment_type'], $negative_loan_label)) {
+                    $data['payment_type'] .= ' + ' . $negative_loan_label;
+                }
+            }
         }
 
         // SAVE receiving to database
@@ -515,9 +556,10 @@ class Receivings extends Secure_Controller
                 $data['selected_luna'] = $this->luna->get_info($selected_luna_id);
             }
 
-            $data['barcode']       = $this->barcode_lib->generate_receipt_barcode($data['receiving_id']);
-            $primary_loan_recorded = $loan_deduction <= 0;
-            $partner_loan_recorded = $partner_loan_deduction <= 0;
+            $data['barcode']                = $this->barcode_lib->generate_receipt_barcode($data['receiving_id']);
+            $primary_loan_recorded          = $loan_deduction <= 0;
+            $primary_negative_loan_recorded = $data['negative_loan_amount'] <= 0;
+            $partner_loan_recorded          = $partner_loan_deduction <= 0;
 
             // Record primary loan deduction if applicable
             if ($loan_deduction > 0 && $supplier_id !== -1) {
@@ -531,6 +573,25 @@ class Receivings extends Secure_Controller
                         null,
                         $receiving_id_num,
                         $loan_comment,
+                        $selected_luna_id > 0 ? $selected_luna_id : null,
+                    );
+                    $data['loan_balance_after'] = $selected_luna_id > 0
+                        ? $customer_loan->get_loan_balance_for_luna($linked_customer_id, $selected_luna_id)
+                        : $customer_loan->get_loan_balance($linked_customer_id);
+                }
+            }
+
+            if ($data['negative_loan_amount'] > 0 && $supplier_id !== -1) {
+                if ($linked_customer_id) {
+                    $negative_loan_comment = $selected_luna_id > 0
+                        ? 'Luna negative loan from receiving RECV ' . $receiving_id_num
+                        : 'Negative loan from receiving RECV ' . $receiving_id_num;
+                    $primary_negative_loan_recorded = $customer_loan->record_loan(
+                        $linked_customer_id,
+                        -$data['negative_loan_amount'],
+                        null,
+                        $receiving_id_num,
+                        $negative_loan_comment,
                         $selected_luna_id > 0 ? $selected_luna_id : null,
                     );
                     $data['loan_balance_after'] = $selected_luna_id > 0
@@ -554,15 +615,17 @@ class Receivings extends Secure_Controller
                 }
             }
 
-            if ($linked_customer_id && $current_balance !== null && $primary_loan_recorded) {
+            $primary_loan_change = $loan_deduction + (float) $data['negative_loan_amount'];
+
+            if ($linked_customer_id && $current_balance !== null && $primary_loan_recorded && $primary_negative_loan_recorded) {
                 $this->receiving_loan_snapshot->record_snapshot(
                     $receiving_id_num,
                     $supplier_id,
                     $linked_customer_id,
                     $selected_luna_id > 0 ? $selected_luna_id : null,
                     $current_balance,
-                    $loan_deduction,
-                    $current_balance - $loan_deduction,
+                    $primary_loan_change,
+                    $current_balance - $primary_loan_change,
                 );
             }
 
@@ -579,7 +642,7 @@ class Receivings extends Secure_Controller
             }
 
             // Record per-supplier cash payments for cash summary reporting
-            if ($cash_amount > 0 && $supplier_id !== -1) {
+            if ($total_tendered > 0 && $supplier_id !== -1) {
                 if ($partner_supplier_id && ($data['amount_tendered'] > 0 || $partner_amount_tendered > 0)) {
                     // Split cash: record separately for each party
                     if (($data['amount_tendered'] ?? 0) > 0) {
@@ -588,9 +651,9 @@ class Receivings extends Secure_Controller
                     if ($partner_amount_tendered > 0) {
                         $this->receiving->record_payment($receiving_id_num, $partner_supplier_id, $partner_amount_tendered);
                     }
-                } else {
-                    // Single supplier — record full cash amount
-                    $this->receiving->record_payment($receiving_id_num, $supplier_id, $cash_amount);
+                } elseif (($data['amount_tendered'] ?? 0) > 0) {
+                    // Single supplier — record only the actual cash paid
+                    $this->receiving->record_payment($receiving_id_num, $supplier_id, (float) $data['amount_tendered']);
                 }
             }
         }
@@ -712,6 +775,12 @@ class Receivings extends Secure_Controller
         $data['partner_supplier_name'] = '';
         $data['partner_loan_balance']  = '0.00';
         $data['partner_customer_id']   = null;
+        $data['loan_deduction'] ??= '';
+        $data['partner_loan_deduction'] ??= '';
+        $data['amount_tendered'] ??= '';
+        $data['partner_amount_tendered'] ??= '';
+        $data['store_negative_loan']  = (bool) ($data['store_negative_loan'] ?? false);
+        $data['negative_loan_amount'] = (float) ($data['negative_loan_amount'] ?? 0);
 
         if ($supplier_id !== -1) {    // TODO: Duplicated Code... replace -1 with a constant
             $supplier_info            = $this->supplier->get_info($supplier_id);
