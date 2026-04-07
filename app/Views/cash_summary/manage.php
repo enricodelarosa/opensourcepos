@@ -1,8 +1,8 @@
 <?php
 /**
  * @var string $date
- * @var array $sessions
- * @var array $config
+ * @var array  $sessions
+ * @var array  $config
  */
 ?>
 
@@ -18,6 +18,7 @@
 .ledger-table tr.totals td { font-weight: bold; border-top: 2px solid #333; background: #f0f0f0; }
 .ledger-table tr.cash-ending td { font-weight: bold; }
 .session-title { font-size: 1.2em; font-weight: bold; margin: 15px 0 8px; text-align: center; text-transform: uppercase; }
+.session-times { margin-bottom: 8px; text-align: center; color: #666; }
 .no-sessions { color: #999; text-align: center; padding: 30px; }
 </style>
 
@@ -40,7 +41,7 @@
             'id'    => 'date-picker',
             'type'  => 'date',
             'value' => esc($date),
-            'class' => 'form-control input-sm'
+            'class' => 'form-control input-sm',
         ]) ?>
     </div>
 </div>
@@ -55,6 +56,11 @@
     <?php foreach ($sessions as $session): ?>
     <div class="ledger-section">
         <div class="session-title"><?= esc($session['label']) ?></div>
+        <div class="session-times">
+            <?= esc(lang('Cashups.open_date')) ?>: <?= esc($session['open_display']) ?>
+            |
+            <?= esc(lang('Cashups.close_date')) ?>: <?= esc($session['close_display']) ?>
+        </div>
         <table class="ledger-table">
             <thead>
                 <tr>

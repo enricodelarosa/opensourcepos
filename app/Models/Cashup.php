@@ -13,15 +13,15 @@ use stdClass;
  */
 class Cashup extends Model
 {
-    protected $table = 'cash_up';
-    protected $primaryKey = 'cashup_id';
+    protected $table            = 'cash_up';
+    protected $primaryKey       = 'cashup_id';
     protected $useAutoIncrement = true;
-    protected $useSoftDeletes = false;
-    protected $allowedFields = [
+    protected $useSoftDeletes   = false;
+    protected $allowedFields    = [
         'open_date',
         'close_date',
-        'open_cash_amount',
-        'transfer_cash_amount',
+        'open_amount_cash',
+        'transfer_amount_cash',
         'note',
         'closed_amount_cash',
         'closed_amount_card',
@@ -31,7 +31,7 @@ class Cashup extends Model
         'open_employee_id',
         'close_employee_id',
         'deleted',
-        'closed_amount_due'
+        'closed_amount_due',
     ];
 
     /**
@@ -42,7 +42,7 @@ class Cashup extends Model
         $builder = $this->db->table('cash_up');
         $builder->where('cashup_id', $cashup_id);
 
-        return ($builder->get()->getNumRows() == 1);    // TODO: ===
+        return $builder->get()->getNumRows() === 1;    // TODO: ===
     }
 
     /**
@@ -58,10 +58,6 @@ class Cashup extends Model
         return $employee->get_info($builder->get()->getRow()->employee_id);
     }
 
-    /**
-     * @param string $cashup_ids
-     * @return ResultInterface
-     */
     public function get_multiple_info(string $cashup_ids): ResultInterface
     {
         $builder = $this->db->table('cash_up');
@@ -76,22 +72,32 @@ class Cashup extends Model
      */
     public function get_found_rows(string $search, array $filters): int
     {
-        return $this->search($search, $filters, 0, 0, 'cashup_id', 'asc', true);
+        return $this->search($search, $filters, 0, 0, 'close_date', 'desc', true);
     }
 
     /**
      * Searches cashups
      */
-    public function search(string $search, array $filters, ?int $rows = 0, ?int $limit_from = 0, ?string $sort = 'cashup_id', ?string $order = 'asc', ?bool $count_only = false)
+    public function search(string $search, array $filters, ?int $rows = 0, ?int $limit_from = 0, ?string $sort = 'close_date', ?string $order = 'desc', ?bool $count_only = false)
     {
         // Set default values
-        if ($rows == null) $rows = 0;
-        if ($limit_from == null) $limit_from = 0;
-        if ($sort == null) $sort = 'cashup_id';
-        if ($order == null) $order = 'asc';
-        if ($count_only == null) $count_only = false;
+        if ($rows === null) {
+            $rows = 0;
+        }
+        if ($limit_from === null) {
+            $limit_from = 0;
+        }
+        if ($sort === null) {
+            $sort = 'close_date';
+        }
+        if ($order === null) {
+            $order = 'desc';
+        }
+        if ($count_only === null) {
+            $count_only = false;
+        }
 
-        $config = config(OSPOS::class)->settings;
+        $config  = config(OSPOS::class)->settings;
         $builder = $this->db->table('cash_up AS cash_up');
 
         // get_found_rows case
@@ -137,17 +143,18 @@ class Cashup extends Model
         $builder->where('cash_up.deleted', $filters['is_deleted']);
 
         if (empty($config['date_or_time_format'])) {    // TODO: convert this to ternary notation.
-            $builder->where('DATE_FORMAT(cash_up.open_date, "%Y-%m-%d") BETWEEN ' . $this->db->escape($filters['start_date']) . ' AND ' . $this->db->escape($filters['end_date']));
+            $builder->where('DATE_FORMAT(cash_up.open_date, "%Y-%m-%d") <= ' . $this->db->escape($filters['end_date']));
+            $builder->where('DATE_FORMAT(cash_up.close_date, "%Y-%m-%d") >= ' . $this->db->escape($filters['start_date']));
         } else {
-            $builder->where('cash_up.open_date BETWEEN ' . $this->db->escape(rawurldecode($filters['start_date'])) . ' AND ' . $this->db->escape(rawurldecode($filters['end_date'])));
+            $builder->where('cash_up.open_date <= ' . $this->db->escape(rawurldecode($filters['end_date'])));
+            $builder->where('cash_up.close_date >= ' . $this->db->escape(rawurldecode($filters['start_date'])));
         }
 
         // get_found_rows case
         if ($count_only) {
             return $builder->get()->getRow()->count;
-        } else {
-            $builder->groupBy('cashup_id');
         }
+        $builder->groupBy('cashup_id');
 
         $builder->orderBy($sort, $order);
 
@@ -190,17 +197,15 @@ class Cashup extends Model
         $builder->where('cashup_id', $cashup_id);
 
         $query = $builder->get();
-        if ($query->getNumRows() == 1) {    // TODO: ===
+        if ($query->getNumRows() === 1) {    // TODO: ===
             return $query->getRow();
-        } else {
-            return $this->getEmptyObject('cash_up');
         }
+
+        return $this->getEmptyObject('cash_up');
     }
 
     /**
      * Initializes an empty object based on database definitions
-     * @param string $table_name
-     * @return object
      */
     private function getEmptyObject(string $table_name): object
     {
@@ -211,23 +216,24 @@ class Cashup extends Model
         foreach ($this->db->getFieldData($table_name) as $field) {
             $field_name = $field->name;
 
-            if (in_array($field->type, ['int', 'tinyint', 'decimal'])) {
-                $empty_obj->$field_name = ($field->primary_key == 1) ? NEW_ENTRY : 0;
+            if (in_array($field->type, ['int', 'tinyint', 'decimal'], true)) {
+                $empty_obj->{$field_name} = ($field->primary_key === 1) ? NEW_ENTRY : 0;
             } else {
-                $empty_obj->$field_name = null;
+                $empty_obj->{$field_name} = null;
             }
         }
 
         return $empty_obj;
     }
 
-
     /**
      * Inserts or updates a cashup
+     *
+     * @param mixed $cashup_id
      */
     public function save_value(array &$cash_up_data, $cashup_id = NEW_ENTRY): bool
     {
-        if (!$cashup_id == NEW_ENTRY || !$this->exists($cashup_id)) {
+        if ($cashup_id === NEW_ENTRY || ! $this->exists((int) $cashup_id)) {
             $builder = $this->db->table('cash_up');
             if ($builder->insert($cash_up_data)) {
                 $cash_up_data['cashup_id'] = $this->db->insertID();
