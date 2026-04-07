@@ -574,11 +574,17 @@ if (isset($success)) {
                                     </td>
                                 </tr>
                                 <?php if ($has_linked_customer && $selected_luna_id > 0) { ?>
+                                <tr id="negative_loan_divider"<?= empty($store_negative_loan) || (float) ($negative_loan_amount ?? 0) <= 0 ? ' style="display:none;"' : '' ?>>
+                                    <td colspan="2"><hr style="margin: 10px 0; border-color: #ddd;"></td>
+                                </tr>
                                 <tr id="negative_loan_row"<?= empty($store_negative_loan) || (float) ($negative_loan_amount ?? 0) <= 0 ? ' style="display:none;"' : '' ?>>
                                     <td><strong><?= lang('Receivings.remaining_as_landowner_negative_loan') ?></strong></td>
                                     <td><strong id="negative_loan_amount" style="color: #5cb85c;"><?= to_currency((float) ($negative_loan_amount ?? 0)) ?></strong></td>
                                 </tr>
                                 <?php } ?>
+                                <tr>
+                                    <td colspan="2"><hr style="margin: 10px 0; border-color: #ddd;"></td>
+                                </tr>
                                 <tr>
                                     <td>
                                         <div style="font-weight: 600;"><?= esc(lang('Receivings.cash_to_tenant')) ?></div>
@@ -632,6 +638,9 @@ if (isset($success)) {
                                     </td>
                                 </tr>
                                 <?php if ($has_linked_customer && $selected_luna_id > 0) { ?>
+                                <tr id="negative_loan_divider"<?= empty($store_negative_loan) || (float) ($negative_loan_amount ?? 0) <= 0 ? ' style="display:none;"' : '' ?>>
+                                    <td colspan="2"><hr style="margin: 10px 0; border-color: #ddd;"></td>
+                                </tr>
                                 <tr id="negative_loan_row"<?= empty($store_negative_loan) || (float) ($negative_loan_amount ?? 0) <= 0 ? ' style="display:none;"' : '' ?>>
                                     <td><strong><?= lang('Receivings.remaining_as_landowner_negative_loan') ?></strong></td>
                                     <td><strong id="negative_loan_amount" style="color: #5cb85c;"><?= to_currency((float) ($negative_loan_amount ?? 0)) ?></strong></td>
@@ -818,8 +827,10 @@ if (isset($success)) {
 
             $('#negative_loan_amount').text(currencySymbol + negativeLoan.toFixed(2));
             if ($('#store_negative_loan').is(':checked') && negativeLoan > 0) {
+                $('#negative_loan_divider').show();
                 $('#negative_loan_row').show();
             } else {
+                $('#negative_loan_divider').hide();
                 $('#negative_loan_row').hide();
             }
         }
