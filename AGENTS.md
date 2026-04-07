@@ -33,6 +33,20 @@ This document provides guidance for AI agents working on the Open Source Point o
 - Use CodeIgniter 4 framework patterns and helpers
 - Sanitize user input; escape output using `esc()` helper
 
+## Feature History
+
+- `4b6835e4d` (`2026-03-25`) added the `loan_adjustments` module and mirrors adjustment entries into `customer_loans`.
+- `166098161` (`2026-04-04`) added supplier partnership and split receivings for landowner and tenant flows.
+- `e8fc213e2` (`2026-04-07`) added `lunas`, luna-aware loan balances, receiving loan snapshots, and supplier loan detail views.
+- `5daf5c321` (`2026-04-07`) fixed loan adjustment autocomplete so duplicate supplier names remain distinguishable as `Name - Land Owner` or `Name - Tenant`.
+
+## Copra Workflow Notes
+
+- For luna receivings, the selected supplier is expected to be the landowner. The tenant is derived from the selected `luna` and treated as the partner supplier.
+- Receivings validates the selected luna against `landowner_id`. Sales and loan adjustments can validate against either landowner or tenant depending on the supplier role.
+- Do not assume `suppliers/suggest` is role-aware. If duplicate supplier names exist across landowner and tenant records, use a workflow-specific autocomplete endpoint when disambiguation matters.
+- Loan changes now exist in both general and luna-specific contexts. Check `customer_loans.luna_id`, `Loan_adjustments`, and `Receiving_loan_snapshot` before changing balance logic or reports.
+
 ## Security
 
 - Never commit secrets, credentials, or `.env` files

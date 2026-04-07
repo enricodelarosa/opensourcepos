@@ -94,3 +94,18 @@ Without these, changing the date range or toggling filters will not refresh the 
 
 ## Fork Additions
 This ospos fork was specifically adapted for copra dealer. So the business is selling goods like rice, equipment etc but these are purchased via loans. These loans are then paid when the customers (which are now suppliers) sell copra to the business, and the business buys the copra using the loan balance that they had, plus cash if the loan is lower than the copra being soled to the business.
+
+## Copra Feature History
+
+- `4b6835e4d` (`2026-03-25`): added the `loan_adjustments` module. This feature creates manual cash-in or cash-out loan balance changes for a supplier and mirrors them into `customer_loans` so balances and cashups stay aligned.
+- `166098161` (`2026-04-04`): added supplier partnership and split receivings. This introduced the landowner and tenant supplier relationship plus split cash handling in receivings and receipts.
+- `e8fc213e2` (`2026-04-07`): added `lunas` and connected them to landowners and tenants. This made loan balances and receivings luna-aware, added receiving loan snapshots for reports, and added supplier loan detail screens.
+- `5daf5c321` (`2026-04-07`): fixed loan adjustment autocomplete for duplicate names where the same real person exists as separate supplier records for landowner and tenant roles. Loan adjustments now use role-aware labels like `Name - Land Owner` and `Name - Tenant`.
+
+## Current Workflow Rules
+
+- In receivings, the selected supplier is still the primary supplier record. For luna-based receivings, that primary supplier is expected to be the landowner.
+- In receivings, the tenant is derived from the selected `luna` as the partner supplier. Do not treat the tenant as the main supplier selector for luna purchases.
+- `luna` validation is not uniform across all modules. Receivings validates `luna.landowner_id === selected supplier`. Sales and loan adjustments allow access based on the selected supplier role for that luna.
+- Generic `suppliers/suggest` autocomplete is not role-aware. If a workflow must distinguish duplicate supplier names across landowner and tenant records, use or add a feature-specific suggestion endpoint instead of assuming the generic endpoint is sufficient.
+- Loan balances can be general or luna-specific. Receivings, reports, and loan adjustments now rely on `customer_loans.luna_id` and `receiving_loan_snapshots` for accurate before, deduction, and after values.
