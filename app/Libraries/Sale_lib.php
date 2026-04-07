@@ -984,7 +984,7 @@ class Sale_lib
         $items = $this->get_cart();
         if (isset($items[$line])) {
             $line = &$items[$line];
-            if ($discounted_total !== null && $discounted_total !== $line['discounted_total']) {
+            if ($discounted_total !== null && $discounted_total !== '' && $discounted_total !== $line['discounted_total']) {
                 // Note when entered the "discounted_total" is expected to be entered without a discount
                 $quantity = $this->get_quantity_sold($discounted_total, $price);
             }

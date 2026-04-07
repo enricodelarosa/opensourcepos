@@ -628,10 +628,17 @@ class Sales extends Secure_Controller
                 ? parse_quantity($this->request->getPost('discount'))
                 : parse_decimals($this->request->getPost('discount'));
 
-            $item_location    = $this->request->getPost('location', FILTER_SANITIZE_NUMBER_INT);
-            $discounted_total = $this->request->getPost('discounted_total') !== ''
-                ? parse_decimals($this->request->getPost('discounted_total') ?? '')
-                : null;
+            $item_location          = $this->request->getPost('location', FILTER_SANITIZE_NUMBER_INT);
+            $discounted_total       = null;
+            $discounted_total_input = $this->request->getPost('discounted_total');
+
+            if ($discounted_total_input !== null && $discounted_total_input !== '') {
+                $parsed_discounted_total = parse_decimals($discounted_total_input);
+
+                if ($parsed_discounted_total !== false) {
+                    $discounted_total = $parsed_discounted_total;
+                }
+            }
 
             $this->sale_lib->edit_item($line, $description, $serialnumber, $quantity, $discount, $discount_type, $price, $discounted_total);
 
