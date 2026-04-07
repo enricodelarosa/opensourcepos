@@ -370,11 +370,15 @@ function get_supplier_data_row(object $supplier): array
         if ($customer_info->person_id) {
             $linked_customer_name = $customer_info->first_name . ' ' . $customer_info->last_name;
         }
-        $customer_loan   = model(Customer_loan::class);
-        $balance         = $customer_loan->get_loan_balance($supplier->customer_id);
-        $balance_display = $balance > 0
-            ? '<span style="color:#d9534f;font-weight:bold;">' . to_currency($balance) . '</span>'
-            : to_currency(0);
+        $customer_loan = model(Customer_loan::class);
+        $balance       = $customer_loan->get_loan_balance($supplier->customer_id);
+        if ($balance > 0) {
+            $balance_display = '<span style="color:#d9534f;font-weight:bold;">' . to_currency($balance) . '</span>';
+        } elseif ($balance < 0) {
+            $balance_display = '<span style="color:#5cb85c;font-weight:bold;">' . to_currency($balance) . '</span>';
+        } else {
+            $balance_display = to_currency(0);
+        }
         $loan_balance_display = anchor(
             "suppliers/loanDetails/{$supplier->person_id}",
             $balance_display,

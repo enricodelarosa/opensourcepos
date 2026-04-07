@@ -168,6 +168,7 @@ if ($employee->has_grant('reports_sales', session('person_id'))) {
                 foreach (array_reverse($cart, true) as $line => $item) {
                     ?>
                     <?= form_open("{$controller_name}/editItem/{$line}", ['class' => 'form-horizontal', 'id' => "cart_{$line}"]) ?>
+                        <?= form_input(['type' => 'hidden', 'name' => 'luna_id', 'value' => $selected_luna_id > 0 ? (string) $selected_luna_id : '', 'class' => 'sale-luna-id']) ?>
                         <tr>
                             <td>
                                 <?= anchor("{$controller_name}/deleteItem/{$line}", '<span class="glyphicon glyphicon-trash"></span>');
@@ -460,6 +461,7 @@ if ($employee->has_grant('reports_sales', session('person_id'))) {
                                 <td><span id="amount_tendered_label"><?= lang(ucfirst($controller_name) . '.amount_tendered') ?></span></td>
                                 <td>
                                     <?= form_input(['name' => 'amount_tendered', 'id' => 'amount_tendered', 'class' => 'form-control input-sm disabled', 'disabled' => 'disabled', 'value' => '0', 'size' => '5', 'tabindex' => ++$tabindex, 'onClick' => 'this.select();']) ?>
+                                    <?= form_input(['type' => 'hidden', 'name' => 'luna_id', 'value' => $selected_luna_id > 0 ? (string) $selected_luna_id : '', 'class' => 'sale-luna-id']) ?>
                                 </td>
                             </tr>
                         </table>
@@ -501,6 +503,7 @@ if ($employee->has_grant('reports_sales', session('person_id'))) {
                                 <td>
                                     <?= form_input(['name' => 'amount_tendered', 'id' => 'amount_tendered', 'class' => 'form-control input-sm non-giftcard-input', 'value' => to_currency_no_money($amount_due), 'size' => '5', 'tabindex' => ++$tabindex, 'onClick' => 'this.select();']) ?>
                                     <?= form_input(['name' => 'amount_tendered', 'id' => 'amount_tendered', 'class' => 'form-control input-sm giftcard-input', 'disabled' => true, 'value' => to_currency_no_money($amount_due), 'size' => '5', 'tabindex' => ++$tabindex]) ?>
+                                    <?= form_input(['type' => 'hidden', 'name' => 'luna_id', 'value' => $selected_luna_id > 0 ? (string) $selected_luna_id : '', 'class' => 'sale-luna-id']) ?>
                                 </td>
                             </tr>
                         </table>
@@ -535,6 +538,7 @@ if ($employee->has_grant('reports_sales', session('person_id'))) {
             </div>
 
             <?= form_open("{$controller_name}/cancel", ['id' => 'buttons_form']) ?>
+            <?= form_input(['type' => 'hidden', 'name' => 'luna_id', 'value' => $selected_luna_id > 0 ? (string) $selected_luna_id : '', 'class' => 'sale-luna-id']) ?>
             <div class="form-group" id="buttons_sale">
                 <div class="btn btn-sm btn-default pull-left" id="suspend_sale_button"><span class="glyphicon glyphicon-align-justify">&nbsp;</span><?= lang(ucfirst($controller_name) . '.suspend_sale') ?></div>
                 <?php if (! $pos_mode && isset($customer)) { // Only show this part if the payment covers the total?>
@@ -701,6 +705,13 @@ if ($employee->has_grant('reports_sales', session('person_id'))) {
             }
         };
 
+        var syncLunaSelection = function() {
+            var selectedLunaId = $('#luna_id_selector').length ? ($('#luna_id_selector').val() || '') : '';
+            $('.sale-luna-id').val(selectedLunaId);
+        };
+
+        syncLunaSelection();
+
         $('#item, #customer').click(clear_fields).dblclick(function(event) {
             $(this).autocomplete('search');
         });
@@ -728,6 +739,7 @@ if ($employee->has_grant('reports_sales', session('person_id'))) {
         });
 
         $('#luna_id_selector').change(function() {
+            syncLunaSelection();
             $('#select_luna_form').submit();
         });
 
@@ -776,16 +788,19 @@ if ($employee->has_grant('reports_sales', session('person_id'))) {
         });
 
         $('#finish_sale_button').click(function() {
+            syncLunaSelection();
             $('#buttons_form').attr('action', "<?= "{$controller_name}/complete" ?>");
             $('#buttons_form').submit();
         });
 
         $('#finish_invoice_quote_button').click(function() {
+            syncLunaSelection();
             $('#buttons_form').attr('action', "<?= "{$controller_name}/complete" ?>");
             $('#buttons_form').submit();
         });
 
         $('#suspend_sale_button').click(function() {
+            syncLunaSelection();
             $('#buttons_form').attr('action', "<?= site_url("{$controller_name}/suspend") ?>");
             $('#buttons_form').submit();
         });
@@ -798,6 +813,7 @@ if ($employee->has_grant('reports_sales', session('person_id'))) {
         });
 
         $('#add_payment_button').click(function() {
+            syncLunaSelection();
             $('#add_payment_form').submit();
         });
 
@@ -805,12 +821,14 @@ if ($employee->has_grant('reports_sales', session('person_id'))) {
 
         $('#cart_contents input').keypress(function(event) {
             if (event.which == 13) {
+                syncLunaSelection();
                 $(this).parents('tr').prevAll('form:first').submit();
             }
         });
 
         $('#amount_tendered').keypress(function(event) {
             if (event.which == 13) {
+                syncLunaSelection();
                 $('#add_payment_form').submit();
             }
         });
@@ -848,10 +866,12 @@ if ($employee->has_grant('reports_sales', session('person_id'))) {
         }
 
         $('[name="price"],[name="quantity"],[name="discount"],[name="description"],[name="serialnumber"],[name="discounted_total"]').change(function() {
+            syncLunaSelection();
             $(this).parents('tr').prevAll('form:first').submit()
         });
 
         $('[name="discount_toggle"]').change(function() {
+            syncLunaSelection();
             var input = $('<input>').attr('type', 'hidden').attr('name', 'discount_type').val(($(this).prop('checked')) ? 1 : 0);
             $('#cart_' + $(this).attr('data-line')).append($(input));
             $('#cart_' + $(this).attr('data-line')).submit();

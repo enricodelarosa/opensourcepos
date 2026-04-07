@@ -282,6 +282,9 @@
             $.each(rows, function(index, row) {
                 var areaName = row.luna_id ? (row.area_name || '') : <?= json_encode(lang('Loan_adjustments.general_advance')) ?>;
                 var barangay = row.luna_id ? (row.barangay || '') : '';
+                if (row.luna_id && row.landowner_name) {
+                    areaName += ' - ' + row.landowner_name;
+                }
                 var balance = parseFloat(row.balance || 0).toFixed(2);
 
                 html.push('<tr>');

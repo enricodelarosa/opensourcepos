@@ -63,7 +63,8 @@ class Customer_loan extends Model
      */
     public function get_loan_balance_breakdown(int $customer_id): array
     {
-        $builder = $this->db->table('customer_loans AS customer_loans');
+        $supplier = model(Supplier::class)->get_info_by_customer_id($customer_id);
+        $builder  = $this->db->table('customer_loans AS customer_loans');
         $builder->select([
             'customer_loans.luna_id',
             'lunas.area_name',
@@ -74,11 +75,57 @@ class Customer_loan extends Model
         $builder->where('customer_loans.customer_id', $customer_id);
         $builder->where('customer_loans.luna_id IS NOT NULL', null, false);
         $builder->groupBy('customer_loans.luna_id, lunas.area_name, lunas.barangay');
-        $builder->having('balance <>', 0);
         $builder->orderBy('lunas.area_name', 'asc');
         $builder->orderBy('lunas.barangay', 'asc');
 
-        $breakdown = $builder->get()->getResultArray();
+        $breakdown_by_luna = [];
+
+        foreach ($builder->get()->getResultArray() as $row) {
+            $breakdown_by_luna[(int) $row['luna_id']] = [
+                'luna_id'        => (int) $row['luna_id'],
+                'area_name'      => $row['area_name'],
+                'barangay'       => $row['barangay'],
+                'landowner_name' => null,
+                'balance'        => $row['balance'] ?? '0.00',
+            ];
+        }
+
+        if ($supplier !== null) {
+            $luna_model     = model(Luna::class);
+            $supplier_lunas = match ((int) ($supplier->category ?? 0)) {
+                LAND_OWNER_SUPPLIER => $luna_model->get_lunas_for_landowner((int) $supplier->person_id),
+                TENANT_SUPPLIER     => $luna_model->get_lunas_for_tenant((int) $supplier->person_id),
+                default             => [],
+            };
+
+            foreach ($supplier_lunas as $luna_row) {
+                $luna_id = (int) ($luna_row['luna_id'] ?? 0);
+
+                if ($luna_id <= 0 || isset($breakdown_by_luna[$luna_id])) {
+                    if (
+                        $luna_id > 0
+                        && isset($breakdown_by_luna[$luna_id])
+                        && (int) ($supplier->category ?? 0) === TENANT_SUPPLIER
+                    ) {
+                        $breakdown_by_luna[$luna_id]['landowner_name'] = $luna_row['landowner_name'] ?? null;
+                    }
+
+                    continue;
+                }
+
+                $breakdown_by_luna[$luna_id] = [
+                    'luna_id'        => $luna_id,
+                    'area_name'      => $luna_row['area_name'] ?? null,
+                    'barangay'       => $luna_row['barangay'] ?? null,
+                    'landowner_name' => (int) ($supplier->category ?? 0) === TENANT_SUPPLIER ? ($luna_row['landowner_name'] ?? null) : null,
+                    'balance'        => '0.00',
+                ];
+            }
+        }
+
+        $breakdown = array_values($breakdown_by_luna);
+
+        usort($breakdown, static fn (array $left, array $right): int => [$left['area_name'] ?? '', $left['barangay'] ?? ''] <=> [$right['area_name'] ?? '', $right['barangay'] ?? '']);
 
         $general_builder = $this->db->table('customer_loans');
         $general_builder->selectSum('loan_amount', 'balance');
@@ -88,10 +135,11 @@ class Customer_loan extends Model
         $general_row = $general_builder->get()->getRowArray();
         if (! empty($general_row) && (float) ($general_row['balance'] ?? 0) !== 0.0) {
             $breakdown[] = [
-                'luna_id'   => null,
-                'area_name' => null,
-                'barangay'  => null,
-                'balance'   => $general_row['balance'],
+                'luna_id'        => null,
+                'area_name'      => null,
+                'barangay'       => null,
+                'landowner_name' => null,
+                'balance'        => $general_row['balance'],
             ];
         }
 

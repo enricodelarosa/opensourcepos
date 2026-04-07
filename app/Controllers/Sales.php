@@ -503,6 +503,8 @@ class Sales extends Secure_Controller
             }
         }
 
+        $this->restorePostedLunaSelection();
+
         return $this->_reload($data);
     }
 
@@ -649,6 +651,8 @@ class Sales extends Secure_Controller
             $data['error'] = lang('Sales.error_editing_item');
         }
 
+        $this->restorePostedLunaSelection();
+
         return $this->_reload($data);
     }
 
@@ -696,6 +700,8 @@ class Sales extends Secure_Controller
      */
     public function postComplete(): string    // TODO: this function is huge.  Probably should be refactored.
     {
+        $this->restorePostedLunaSelection();
+
         $sale_id              = $this->sale_lib->get_sale_id();
         $data                 = [];
         $data['dinner_table'] = $this->sale_lib->get_dinner_table();
@@ -980,6 +986,22 @@ class Sales extends Secure_Controller
         };
     }
 
+    private function restorePostedLunaSelection(): void
+    {
+        $customer_id = $this->sale_lib->get_customer();
+        $luna_id     = (int) $this->request->getPost('luna_id', FILTER_SANITIZE_NUMBER_INT);
+
+        if ($customer_id === NEW_ENTRY || $luna_id <= 0) {
+            return;
+        }
+
+        $selected_luna = $this->_get_valid_sale_luna($customer_id, $luna_id);
+
+        if ($selected_luna !== null) {
+            $this->sale_lib->set_luna_id((int) $selected_luna->luna_id);
+        }
+    }
+
     private function _record_store_account_loan(int $customer_id, int $sale_id, array $payments): void
     {
         if ($customer_id === NEW_ENTRY) {
@@ -990,11 +1012,13 @@ class Sales extends Secure_Controller
         if (isset($payments[$store_account_key])) {
             $loan_amount = $payments[$store_account_key]['payment_amount'];
             if ($loan_amount > 0) {
-                $customer_loan = model(Customer_loan::class);
-                $customer_info = $this->customer->get_info($customer_id);
-                $customer_name = $customer_info->first_name . ' ' . $customer_info->last_name;
-                $selected_luna = $this->_get_valid_sale_luna($customer_id, $this->sale_lib->get_luna_id());
-                $luna_label    = '';
+                $customer_loan  = model(Customer_loan::class);
+                $customer_info  = $this->customer->get_info($customer_id);
+                $customer_name  = $customer_info->first_name . ' ' . $customer_info->last_name;
+                $posted_luna_id = (int) $this->request->getPost('luna_id', FILTER_SANITIZE_NUMBER_INT);
+                $active_luna_id = $posted_luna_id > 0 ? $posted_luna_id : $this->sale_lib->get_luna_id();
+                $selected_luna  = $this->_get_valid_sale_luna($customer_id, $active_luna_id);
+                $luna_label     = '';
                 if ($selected_luna !== null) {
                     $luna_label = $selected_luna->area_name;
                     if (! empty($selected_luna->barangay)) {

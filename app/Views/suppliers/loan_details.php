@@ -7,11 +7,18 @@
  */
 ?>
 
+<?php
+$total_balance       = (float) $loan_balance;
+$total_balance_style = $total_balance > 0
+    ? 'color:#d9534f; font-weight:bold;'
+    : ($total_balance < 0 ? 'color:#5cb85c; font-weight:bold;' : '');
+?>
+
 <div class="container-fluid">
     <div class="row" style="margin-bottom: 15px;">
         <div class="col-xs-12">
             <h4 style="margin-top: 0; margin-bottom: 5px;"><?= esc(trim(($supplier_info->first_name ?? '') . ' ' . ($supplier_info->last_name ?? ''))) ?></h4>
-            <div><strong><?= esc(lang('Customers.loan_balance')) ?>:</strong> <span style="color:#d9534f; font-weight:bold;"><?= to_currency((float) $loan_balance) ?></span></div>
+            <div><strong><?= esc(lang('Customers.loan_balance')) ?>:</strong> <span<?= $total_balance_style !== '' ? ' style="' . esc($total_balance_style) . '"' : '' ?>><?= to_currency($total_balance) ?></span></div>
         </div>
     </div>
 
@@ -37,17 +44,24 @@
                             <?php } else { ?>
                                 <?php foreach ($breakdown as $row) { ?>
                                     <?php
-                                    $label = lang('Reports.general_advance');
+                                    $label         = lang('Reports.general_advance');
+                                    $balance       = (float) ($row['balance'] ?? 0);
+                                    $balance_style = $balance > 0
+                                        ? 'color:#d9534f; font-weight:bold;'
+                                        : ($balance < 0 ? 'color:#5cb85c; font-weight:bold;' : '');
                                     if (! empty($row['luna_id'])) {
                                         $label = trim((string) ($row['area_name'] ?? ''));
                                         if (! empty($row['barangay'])) {
                                             $label .= ' (' . trim((string) $row['barangay']) . ')';
                                         }
+                                        if (! empty($row['landowner_name'])) {
+                                            $label .= ' - ' . trim((string) $row['landowner_name']);
+                                        }
                                     }
                                     ?>
                                     <tr>
                                         <td><?= esc($label) ?></td>
-                                        <td style="text-align: right;"><?= to_currency((float) ($row['balance'] ?? 0)) ?></td>
+                                        <td style="text-align: right;<?= $balance_style !== '' ? ' ' . esc($balance_style) : '' ?>"><?= to_currency($balance) ?></td>
                                     </tr>
                                 <?php } ?>
                             <?php } ?>
