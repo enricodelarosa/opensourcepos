@@ -160,7 +160,7 @@
         });
 
         $('#supplier_name').autocomplete({
-            source: '<?= 'suppliers/suggest' ?>',
+            source: '<?= 'loan_adjustments/supplierSuggest' ?>',
             minChars: 0,
             delay: 10,
             select: function(event, ui) {

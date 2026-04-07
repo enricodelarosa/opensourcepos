@@ -240,6 +240,66 @@ class Supplier extends Person
     }
 
     /**
+     * Returns a supplier name formatted for UI display.
+     */
+    public function getDisplayName(object $supplier, bool $includeRole = false): string
+    {
+        $name = trim((string) ($supplier->first_name ?? '') . ' ' . (string) ($supplier->last_name ?? ''));
+
+        if ($name === '') {
+            $name = trim((string) ($supplier->company_name ?? ''));
+        }
+
+        if ($name === '') {
+            $name = trim((string) ($supplier->agency_name ?? ''));
+        }
+
+        if (! $includeRole || ! in_array((int) ($supplier->category ?? 0), [LAND_OWNER_SUPPLIER, TENANT_SUPPLIER], true)) {
+            return $name;
+        }
+
+        $roleLabel = $this->get_category_name((int) $supplier->category);
+
+        return $name === '' ? $roleLabel : $name . ' - ' . $roleLabel;
+    }
+
+    /**
+     * Returns role-aware supplier autocomplete suggestions for loan adjustments.
+     */
+    public function getLoanAdjustmentSuggestions(string $search, int $limit = 25): array
+    {
+        $suggestions = [];
+        $seen        = [];
+        $fetchLimit  = max($limit * 4, 50);
+
+        foreach ($this->get_search_suggestions($search, $fetchLimit, true) as $suggestion) {
+            $supplier_id = (int) ($suggestion['value'] ?? 0);
+
+            if ($supplier_id <= 0 || isset($seen[$supplier_id])) {
+                continue;
+            }
+
+            $supplier_info = $this->get_info($supplier_id);
+
+            if (empty($supplier_info->person_id) || (int) ($supplier_info->deleted ?? 0) === DELETED) {
+                continue;
+            }
+
+            $suggestions[] = [
+                'value' => $supplier_id,
+                'label' => $this->getDisplayName($supplier_info, true),
+            ];
+            $seen[$supplier_id] = true;
+
+            if (count($suggestions) >= $limit) {
+                break;
+            }
+        }
+
+        return $suggestions;
+    }
+
+    /**
      * Gets rows
      */
     public function get_found_rows(string $search): int

@@ -74,6 +74,13 @@ class Loan_adjustments extends Secure_Controller
         return $this->response->setJSON(['total' => $total_rows, 'rows' => $data_rows]);
     }
 
+    public function getSupplierSuggest(): ResponseInterface
+    {
+        $search = (string) $this->request->getGet('term', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+
+        return $this->response->setJSON($this->supplier->getLoanAdjustmentSuggestions($search));
+    }
+
     public function getView(int $adjustment_id = NEW_ENTRY): string
     {
         if ($adjustment_id !== NEW_ENTRY) {
@@ -111,7 +118,7 @@ class Loan_adjustments extends Secure_Controller
         $data['selected_supplier_name'] = '';
         if (! empty($adjustment_info->supplier_id)) {
             $supplier_info                  = $this->supplier->get_info($adjustment_info->supplier_id);
-            $data['selected_supplier_name'] = $supplier_info->first_name . ' ' . $supplier_info->last_name;
+            $data['selected_supplier_name'] = $this->supplier->getDisplayName($supplier_info, true);
         }
 
         $data['selected_luna_id'] = '';

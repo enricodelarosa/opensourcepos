@@ -40,7 +40,8 @@ class Loan_adjustment extends Model
     public function get_info(int $adjustment_id): object
     {
         $builder = $this->db->table('loan_adjustments AS loan_adjustments');
-        $builder->select('loan_adjustments.*, customer_loans.luna_id, lunas.area_name, lunas.barangay, sup_people.first_name AS supplier_first_name, sup_people.last_name AS supplier_last_name, emp_people.first_name AS employee_first_name, emp_people.last_name AS employee_last_name');
+        $builder->select('loan_adjustments.*, suppliers.category AS supplier_category, customer_loans.luna_id, lunas.area_name, lunas.barangay, sup_people.first_name AS supplier_first_name, sup_people.last_name AS supplier_last_name, emp_people.first_name AS employee_first_name, emp_people.last_name AS employee_last_name');
+        $builder->join('suppliers AS suppliers', 'suppliers.person_id = loan_adjustments.supplier_id', 'LEFT');
         $builder->join('people AS sup_people', 'sup_people.person_id = loan_adjustments.supplier_id', 'LEFT');
         $builder->join('people AS emp_people', 'emp_people.person_id = loan_adjustments.employee_id', 'LEFT');
         $builder->join('customer_loans AS customer_loans', 'customer_loans.loan_id = loan_adjustments.loan_id', 'LEFT');
@@ -79,6 +80,7 @@ class Loan_adjustment extends Model
         $config = config(OSPOS::class)->settings;
 
         $builder = $this->db->table('loan_adjustments AS loan_adjustments');
+        $builder->join('suppliers AS suppliers', 'suppliers.person_id = loan_adjustments.supplier_id', 'LEFT');
         $builder->join('people AS sup_people', 'sup_people.person_id = loan_adjustments.supplier_id', 'LEFT');
         $builder->join('people AS emp_people', 'emp_people.person_id = loan_adjustments.employee_id', 'LEFT');
         $builder->join('customer_loans AS customer_loans', 'customer_loans.loan_id = loan_adjustments.loan_id', 'LEFT');
@@ -96,6 +98,7 @@ class Loan_adjustment extends Model
                 loan_adjustments.comment,
                 loan_adjustments.employee_id,
                 loan_adjustments.deleted,
+                suppliers.category AS supplier_category,
                 customer_loans.luna_id,
                 lunas.area_name,
                 lunas.barangay,

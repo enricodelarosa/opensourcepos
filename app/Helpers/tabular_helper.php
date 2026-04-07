@@ -926,8 +926,14 @@ function get_loan_adjustments_manage_table_headers(): string
  */
 function get_loan_adjustment_data_row(object $adjustment): array
 {
-    $is_increase = $adjustment->loan_amount >= 0;
-    $lunaLabel   = lang('Loan_adjustments.general_advance');
+    $is_increase    = $adjustment->loan_amount >= 0;
+    $lunaLabel      = lang('Loan_adjustments.general_advance');
+    $supplier_model = model(Supplier::class);
+    $supplierLabel  = $supplier_model->getDisplayName((object) [
+        'first_name' => $adjustment->supplier_first_name ?? '',
+        'last_name'  => $adjustment->supplier_last_name ?? '',
+        'category'   => $adjustment->supplier_category ?? GOODS_SUPPLIER,
+    ], true);
 
     if (! empty($adjustment->luna_id)) {
         $lunaLabel = trim((string) ($adjustment->area_name ?? ''));
@@ -944,7 +950,7 @@ function get_loan_adjustment_data_row(object $adjustment): array
     return [
         'adjustment_id'   => $adjustment->adjustment_id,
         'adjustment_time' => to_datetime(strtotime($adjustment->adjustment_time)),
-        'supplier_name'   => $adjustment->supplier_first_name . ' ' . $adjustment->supplier_last_name,
+        'supplier_name'   => $supplierLabel,
         'luna_name'       => $lunaLabel,
         'type'            => $is_increase ? lang('Loan_adjustments.type_increase') : lang('Loan_adjustments.type_decrease'),
         'loan_amount'     => to_currency(abs($adjustment->loan_amount)),
