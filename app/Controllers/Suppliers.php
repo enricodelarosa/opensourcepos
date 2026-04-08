@@ -119,9 +119,26 @@ class Suppliers extends Persons
         $data['show_linked_customer_controls'] = ! $this->isAutoLinkedCustomerCategory((int) $info->category);
 
         $tenants_list = ['' => lang('Suppliers.no_tenant_assigned')];
+        $tenants      = $this->supplier->get_all(0, 0, TENANT_SUPPLIER)->getResult();
 
-        foreach ($this->supplier->get_all(0, 0, TENANT_SUPPLIER)->getResult() as $tenant) {
-            $tenants_list[$tenant->person_id] = $tenant->first_name . ' ' . $tenant->last_name
+        usort($tenants, static function (object $left, object $right): int {
+            $last_name_comparison = strcasecmp(trim((string) $left->last_name), trim((string) $right->last_name));
+            if ($last_name_comparison !== 0) {
+                return $last_name_comparison;
+            }
+
+            $first_name_comparison = strcasecmp(trim((string) $left->first_name), trim((string) $right->first_name));
+            if ($first_name_comparison !== 0) {
+                return $first_name_comparison;
+            }
+
+            return (int) $left->person_id <=> (int) $right->person_id;
+        });
+
+        foreach ($tenants as $tenant) {
+            $tenant_label = trim($tenant->last_name . ', ' . $tenant->first_name, ', ');
+
+            $tenants_list[$tenant->person_id] = $tenant_label
                 . (! empty($tenant->company_name) ? ' [' . $tenant->company_name . ']' : '');
         }
         $luna_panel_mode = '';

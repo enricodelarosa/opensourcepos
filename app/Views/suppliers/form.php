@@ -149,7 +149,14 @@
                         <div class="luna-form-field">
                             <div>
                                 <?= form_label(lang('Suppliers.tenant'), 'luna_tenant_id') ?>
-                                <?= form_dropdown('luna_tenant_id', $tenants_list, '', ['class' => 'form-control input-sm', 'id' => 'luna_tenant_id']) ?>
+                                <?= form_dropdown('luna_tenant_id', $tenants_list, '', [
+                                    'class'            => 'selectpicker',
+                                    'id'               => 'luna_tenant_id',
+                                    'data-live-search' => 'true',
+                                    'data-size'        => '10',
+                                    'data-width'       => '100%',
+                                    'data-style'       => 'form-control input-sm',
+                                ]) ?>
                             </div>
                         </div>
 
@@ -219,6 +226,37 @@
 
     #luna_panel .row .luna-form-field {
         margin-top: 0;
+    }
+
+    #luna_panel .bootstrap-select {
+        width: 100% !important;
+    }
+
+    #luna_panel .bootstrap-select > .dropdown-toggle {
+        background: #fff;
+        border: 1px solid #ccc;
+        color: #555;
+        box-shadow: none;
+    }
+
+    #luna_panel .bootstrap-select > .dropdown-toggle:hover,
+    #luna_panel .bootstrap-select > .dropdown-toggle:focus,
+    #luna_panel .bootstrap-select.open > .dropdown-toggle,
+    #luna_panel .bootstrap-select.show > .dropdown-toggle {
+        background: #fff;
+        border-color: #66afe9;
+        color: #555;
+        outline: 0 !important;
+    }
+
+    #luna_panel .bootstrap-select .dropdown-menu li.selected > a,
+    #luna_panel .bootstrap-select .dropdown-menu li.selected > a:hover,
+    #luna_panel .bootstrap-select .dropdown-menu li.selected > a:focus,
+    #luna_panel .bootstrap-select .dropdown-menu li.active > a,
+    #luna_panel .bootstrap-select .dropdown-menu li.active > a:hover,
+    #luna_panel .bootstrap-select .dropdown-menu li.active > a:focus {
+        background: #f5f5f5;
+        color: #333;
     }
 </style>
 
@@ -415,6 +453,11 @@
         toggleLinkedCustomerControls();
         toggleSupplierBusinessFields();
         arrangeSupplierSections();
+
+        $('.selectpicker').each(function() {
+            var $selectpicker = $(this);
+            $.fn.selectpicker.call($selectpicker, $selectpicker.data());
+        });
 
         <?php if (! empty($person_info->person_id)): ?>
         $('#add_luna_button').on('click', function() {
