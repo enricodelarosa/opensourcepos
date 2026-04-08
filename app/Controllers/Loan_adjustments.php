@@ -139,6 +139,11 @@ class Loan_adjustments extends Secure_Controller
         $can_select_luna = ! empty($supplier_info->person_id)
             && in_array((int) ($supplier_info->category ?? 0), [LAND_OWNER_SUPPLIER, TENANT_SUPPLIER], true);
         $lunas = $can_select_luna ? $this->supplier->get_lunas($supplier_id) : [];
+        $no_luna_message = match ((int) ($supplier_info->category ?? 0)) {
+            LAND_OWNER_SUPPLIER => lang('Loan_adjustments.no_luna_added'),
+            TENANT_SUPPLIER     => lang('Loan_adjustments.no_luna_assigned'),
+            default             => lang('Suppliers.no_lunas'),
+        };
 
         if (empty($supplier_info->customer_id)) {
             $linked_customer_id = $this->supplier->ensure_auto_linked_customer($supplier_id);
@@ -154,6 +159,7 @@ class Loan_adjustments extends Secure_Controller
                 'breakdown'       => [],
                 'lunas'           => $lunas,
                 'can_select_luna' => $can_select_luna,
+                'no_luna_message' => $no_luna_message,
             ]);
         }
 
@@ -166,6 +172,7 @@ class Loan_adjustments extends Secure_Controller
             'breakdown'       => $breakdown,
             'lunas'           => $lunas,
             'can_select_luna' => $can_select_luna,
+            'no_luna_message' => $no_luna_message,
         ]);
     }
 
@@ -225,18 +232,20 @@ class Loan_adjustments extends Secure_Controller
             return $this->response->setJSON(['success' => false, 'message' => lang('Loan_adjustments.amount_positive'), 'id' => NEW_ENTRY]);
         }
 
-        if ($selected_luna_id !== null) {
-            $selected_luna = $this->luna->get_info($selected_luna_id);
-            if ($selected_luna === null) {
-                return $this->response->setJSON(['success' => false, 'message' => lang('Loan_adjustments.error_invalid_luna'), 'id' => NEW_ENTRY]);
-            }
+        if ($selected_luna_id === null) {
+            return $this->response->setJSON(['success' => false, 'message' => lang('Loan_adjustments.luna_required'), 'id' => NEW_ENTRY]);
+        }
 
-            $luna_belongs_to_supplier = ((int) $supplier_info->category === LAND_OWNER_SUPPLIER && (int) $selected_luna->landowner_id === $supplier_id)
-                || ((int) $supplier_info->category === TENANT_SUPPLIER && (int) ($selected_luna->tenant_id ?? 0) === $supplier_id);
+        $selected_luna = $this->luna->get_info($selected_luna_id);
+        if ($selected_luna === null) {
+            return $this->response->setJSON(['success' => false, 'message' => lang('Loan_adjustments.error_invalid_luna'), 'id' => NEW_ENTRY]);
+        }
 
-            if (! $luna_belongs_to_supplier) {
-                return $this->response->setJSON(['success' => false, 'message' => lang('Loan_adjustments.error_invalid_luna'), 'id' => NEW_ENTRY]);
-            }
+        $luna_belongs_to_supplier = ((int) $supplier_info->category === LAND_OWNER_SUPPLIER && (int) $selected_luna->landowner_id === $supplier_id)
+            || ((int) $supplier_info->category === TENANT_SUPPLIER && (int) ($selected_luna->tenant_id ?? 0) === $supplier_id);
+
+        if (! $luna_belongs_to_supplier) {
+            return $this->response->setJSON(['success' => false, 'message' => lang('Loan_adjustments.error_invalid_luna'), 'id' => NEW_ENTRY]);
         }
 
         $customer_id = $supplier_info->customer_id;

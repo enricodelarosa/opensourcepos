@@ -70,9 +70,9 @@
         </div>
 
         <div class="form-group form-group-sm" id="luna_row" style="display: none;">
-            <?= form_label(lang('Loan_adjustments.select_luna'), 'luna_id', ['class' => 'control-label col-xs-3']) ?>
+            <?= form_label(lang('Loan_adjustments.select_luna'), 'luna_id', ['class' => 'required control-label col-xs-3']) ?>
             <div class="col-xs-6">
-                <?= form_dropdown('luna_id', ['' => lang('Loan_adjustments.no_luna')], $selected_luna_id, ['class' => 'form-control', 'id' => 'luna_id']) ?>
+                <?= form_dropdown('luna_id', ['' => lang('Loan_adjustments.select_luna_placeholder')], $selected_luna_id, ['class' => 'form-control', 'id' => 'luna_id']) ?>
                 <p class="help-block" id="luna_help_text" style="display:none; margin-bottom:0;"><?= lang('Suppliers.no_lunas') ?></p>
             </div>
         </div>
@@ -168,8 +168,7 @@
                 $(this).val(ui.item.label);
                 $(this).attr('readonly', 'readonly');
                 $('#remove_supplier_button').css('display', 'inline-block');
-                loadSupplierLunas(ui.item.value, '');
-                loadLoanBalance(ui.item.value);
+                loadLoanBalance(ui.item.value, '');
                 return false;
             }
         });
@@ -188,34 +187,29 @@
             $('#loan_balance_row').hide();
             $('#loan_breakdown_row').hide();
             $('#loan_breakdown_display').empty();
-            resetLunaOptions();
+            resetLunaOptions(false);
         });
 
         // Pre-fill on edit
         <?php if (! empty($adjustment_info->supplier_id)): ?>
             $('#supplier_name').val('<?= esc($selected_supplier_name, 'js') ?>').attr('readonly', 'readonly');
             $('#remove_supplier_button').css('display', 'inline-block');
-            loadSupplierLunas(<?= (int) $adjustment_info->supplier_id ?>, initialLunaId);
-            loadLoanBalance(<?= (int) $adjustment_info->supplier_id ?>);
+            loadLoanBalance(<?= (int) $adjustment_info->supplier_id ?>, initialLunaId);
         <?php endif; ?>
 
-        function loadSupplierLunas(supplierId, selectedLunaId) {
+        function loadLoanBalance(supplierId, selectedLunaId) {
             if (!supplierId) {
-                resetLunaOptions();
-                return;
-            }
-
-            $.getJSON('<?= 'suppliers/getLunas/' ?>' + supplierId, function(rows) {
-                renderLunaOptions(rows || [], selectedLunaId || '');
-            });
-        }
-
-        function loadLoanBalance(supplierId) {
-            if (!supplierId) {
+                resetLunaOptions(false);
                 return;
             }
 
             $.getJSON('<?= 'loan_adjustments/balance/' ?>' + supplierId, function(data) {
+                if (data.can_select_luna) {
+                    renderLunaOptions(data.lunas || [], selectedLunaId || '', data.no_luna_message || '<?= esc(lang('Suppliers.no_lunas'), 'js') ?>');
+                } else {
+                    resetLunaOptions(false);
+                }
+
                 if (data.customer_id) {
                     $('#customer_id').val(data.customer_id);
                     $('#loan_balance_display').text('<?= esc($config['currency_symbol']) ?>' + parseFloat(data.balance).toFixed(2));
@@ -229,19 +223,26 @@
             });
         }
 
-        function resetLunaOptions() {
-            $('#luna_id').html('<option value=""><?= esc(lang('Loan_adjustments.no_luna'), 'js') ?></option>').val('');
+        function resetLunaOptions(showRow, helpText) {
+            $('#luna_id').html('<option value=""><?= esc(lang('Loan_adjustments.select_luna_placeholder'), 'js') ?></option>').val('');
+
+            if (showRow) {
+                $('#luna_help_text').text(helpText || '<?= esc(lang('Suppliers.no_lunas'), 'js') ?>').show();
+                $('#luna_row').show();
+                return;
+            }
+
             $('#luna_help_text').hide();
             $('#luna_row').hide();
         }
 
-        function renderLunaOptions(rows, selectedId) {
+        function renderLunaOptions(rows, selectedId, emptyMessage) {
             if (!rows.length) {
-                resetLunaOptions();
+                resetLunaOptions(true, emptyMessage);
                 return;
             }
 
-            var options = ['<option value=""><?= esc(lang('Loan_adjustments.no_luna'), 'js') ?></option>'];
+            var options = ['<option value=""><?= esc(lang('Loan_adjustments.select_luna_placeholder'), 'js') ?></option>'];
 
             $.each(rows, function(index, row) {
                 var label = row.area_name || '';
@@ -382,6 +383,13 @@
             rules: {
                 supplier_name: 'required',
                 adjustment_time: { required: true },
+                luna_id: {
+                    required: {
+                        depends: function() {
+                            return $.trim($('#supplier_id').val()) !== '';
+                        }
+                    }
+                },
                 amount: {
                     required: true,
                     positiveAmount: true,
@@ -391,6 +399,9 @@
             messages: {
                 supplier_name: "<?= lang('Loan_adjustments.supplier_required') ?>",
                 adjustment_time: { required: "<?= lang('Loan_adjustments.date_required') ?>" },
+                luna_id: {
+                    required: "<?= lang('Loan_adjustments.luna_required') ?>"
+                },
                 amount: {
                     required: "<?= lang('Loan_adjustments.amount_required') ?>",
                     positiveAmount: "<?= lang('Loan_adjustments.amount_positive') ?>",

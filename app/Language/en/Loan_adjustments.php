@@ -17,6 +17,7 @@ return [
     'current_loan_balance'       => 'Current Loan Balance',
     'loan_breakdown'             => 'Loan Breakdown',
     'select_luna'                => 'Luna',
+    'select_luna_placeholder'    => '-- Select Luna --',
     'no_luna'                    => '-- No Luna --',
     'direction'                  => 'Type',
     'increase_loan'              => 'Cash Given to Supplier (Increase Loan)',
@@ -47,6 +48,9 @@ return [
     // Validation messages
     'supplier_required' => 'Please select a supplier.',
     'date_required'     => 'Date is required.',
+    'luna_required'     => 'Please select a luna.',
+    'no_luna_added'     => 'No luna added for this land owner yet. Add a luna first.',
+    'no_luna_assigned'  => 'No luna assigned to this tenant yet. Assign a luna first.',
     'amount_required'   => 'Amount is required.',
     'amount_number'     => 'Amount must be a valid number.',
     'amount_positive'   => 'Amount must be greater than zero.',

@@ -285,6 +285,10 @@ class Supplier extends Person
                 continue;
             }
 
+            if (! in_array((int) ($supplier_info->category ?? 0), [LAND_OWNER_SUPPLIER, TENANT_SUPPLIER], true)) {
+                continue;
+            }
+
             $suggestions[] = [
                 'value' => $supplier_id,
                 'label' => $this->getDisplayName($supplier_info, true),

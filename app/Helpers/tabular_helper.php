@@ -949,6 +949,10 @@ function get_loan_adjustment_data_row(object $adjustment): array
         if (! empty($adjustment->barangay)) {
             $lunaLabel .= ' (' . trim((string) $adjustment->barangay) . ')';
         }
+
+        if (! empty($adjustment->landowner_name)) {
+            $lunaLabel .= ' - ' . trim((string) $adjustment->landowner_name);
+        }
     }
 
     return [
