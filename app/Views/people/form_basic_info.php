@@ -2,7 +2,12 @@
 /**
  * @var object $person_info
  * @var array $config
+ * @var bool $hide_gender
+ * @var bool $phone_before_email
  */
+
+$hide_gender = $hide_gender ?? false;
+$phone_before_email = $phone_before_email ?? false;
 ?>
 
 <div class="form-group form-group-sm">
@@ -29,6 +34,24 @@
     </div>
 </div>
 
+<?php if ($phone_before_email): ?>
+<div class="form-group form-group-sm">
+    <?= form_label(lang('Common.phone_number'), 'phone_number', ['class' => 'control-label col-xs-3']) ?>
+    <div class="col-xs-8">
+        <div class="input-group">
+            <span class="input-group-addon input-sm"><span class="glyphicon glyphicon-phone-alt"></span></span>
+            <?= form_input([
+                'name'  => 'phone_number',
+                'id'    => 'phone_number',
+                'class' => 'form-control input-sm',
+                'value' => $person_info->phone_number
+            ]) ?>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
+
+<?php if (! $hide_gender): ?>
 <div class="form-group form-group-sm">
     <?= form_label(lang('Common.gender'), 'gender', !empty($basic_version) ? ['class' => 'required control-label col-xs-3'] : ['class' => 'control-label col-xs-3']) ?>
     <div class="col-xs-4">
@@ -53,6 +76,7 @@
 
     </div>
 </div>
+<?php endif; ?>
 
 <div class="form-group form-group-sm">
     <?= form_label(lang('Common.email'), 'email', ['class' => 'control-label col-xs-3']) ?>
@@ -69,6 +93,7 @@
     </div>
 </div>
 
+<?php if (! $phone_before_email): ?>
 <div class="form-group form-group-sm">
     <?= form_label(lang('Common.phone_number'), 'phone_number', ['class' => 'control-label col-xs-3']) ?>
     <div class="col-xs-8">
@@ -83,6 +108,7 @@
         </div>
     </div>
 </div>
+<?php endif; ?>
 
 <div class="form-group form-group-sm">
     <?= form_label(lang('Common.address_1'), 'address_1', ['class' => 'control-label col-xs-3']) ?>

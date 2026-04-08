@@ -17,7 +17,7 @@
 <?= form_open("{$controller_name}/save/{$person_info->person_id}", ['id' => 'supplier_form', 'class' => 'form-horizontal']) ?>
     <fieldset id="supplier_basic_info">
 
-        <div class="form-group form-group-sm">
+        <div class="form-group form-group-sm" id="company_name_row">
             <?= form_label(lang('Suppliers.company_name'), 'company_name', ['class' => 'control-label col-xs-3', 'id' => 'company_name_label']) ?>
             <div class="col-xs-8">
                 <?= form_input([
@@ -36,7 +36,7 @@
             </div>
         </div>
 
-        <div class="form-group form-group-sm">
+        <div class="form-group form-group-sm" id="agency_name_row">
             <?= form_label(lang('Suppliers.agency_name'), 'agency_name', ['class' => 'control-label col-xs-3']) ?>
             <div class="col-xs-8">
                 <?= form_input([
@@ -48,7 +48,10 @@
             </div>
         </div>
 
-        <?= view('people/form_basic_info') ?>
+        <?= view('people/form_basic_info', [
+            'hide_gender' => true,
+            'phone_before_email' => true,
+        ]) ?>
 
         <div class="form-group form-group-sm">
             <?= form_label(lang('Suppliers.account_number'), 'account_number', ['class' => 'control-label col-xs-3']) ?>
@@ -169,6 +172,30 @@
         </div>
         <?php endif; ?>
 
+        <div class="form-group form-group-sm" id="supplier_gender_row">
+            <?= form_label(lang('Common.gender'), 'gender', ['class' => 'control-label col-xs-3']) ?>
+            <div class="col-xs-4">
+                <label class="radio-inline">
+                    <?= form_radio([
+                        'name'    => 'gender',
+                        'type'    => 'radio',
+                        'id'      => 'gender',
+                        'value'   => 1,
+                        'checked' => $person_info->gender === '1',
+                    ]) ?> <?= lang('Common.gender_male') ?>
+                </label>
+                <label class="radio-inline">
+                    <?= form_radio([
+                        'name'    => 'gender',
+                        'type'    => 'radio',
+                        'id'      => 'gender',
+                        'value'   => 0,
+                        'checked' => $person_info->gender === '0',
+                    ]) ?> <?= lang('Common.gender_female') ?>
+                </label>
+            </div>
+        </div>
+
     </fieldset>
 <?= form_close() ?>
 
@@ -210,21 +237,34 @@
             return $('<div>').text(value || '').html();
         }
 
-        function moveLunaPanelBelowGender() {
-            var $genderRow = $('#supplier_basic_info .form-group').has('label[for="gender"]').first();
+        function arrangeSupplierSections() {
+            var $phoneRow = $('#supplier_basic_info .form-group').has('label[for="phone_number"]').first();
             var $lunaPanel = $('#luna_panel');
+            var $genderRow = $('#supplier_gender_row');
 
-            if ($genderRow.length && $lunaPanel.length) {
-                $lunaPanel.insertAfter($genderRow);
+            if (! $phoneRow.length || ! $genderRow.length) {
+                return;
             }
+
+            if ($lunaPanel.length) {
+                $lunaPanel.insertAfter($phoneRow);
+                $genderRow.insertAfter($lunaPanel);
+                return;
+            }
+
+            $genderRow.insertAfter($phoneRow);
         }
 
         function categoryAutoCreatesCustomer() {
             return $('#category').val() === landOwnerCategory || $('#category').val() === tenantCategory;
         }
 
-        function toggleCompanyNameRequirement() {
-            $('#company_name_label').toggleClass('required', !categoryAutoCreatesCustomer());
+        function toggleSupplierBusinessFields() {
+            var showBusinessFields = !categoryAutoCreatesCustomer();
+
+            $('#company_name_row').toggle(showBusinessFields);
+            $('#agency_name_row').toggle(showBusinessFields);
+            $('#company_name_label').toggleClass('required', showBusinessFields);
         }
 
         function toggleLinkedCustomerControls() {
@@ -368,13 +408,13 @@
 
         $('#category').on('change', function() {
             toggleLinkedCustomerControls();
-            toggleCompanyNameRequirement();
+            toggleSupplierBusinessFields();
             toggleLunaPanel();
         });
 
         toggleLinkedCustomerControls();
-        toggleCompanyNameRequirement();
-        moveLunaPanelBelowGender();
+        toggleSupplierBusinessFields();
+        arrangeSupplierSections();
 
         <?php if (! empty($person_info->person_id)): ?>
         $('#add_luna_button').on('click', function() {
