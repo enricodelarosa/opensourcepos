@@ -22,6 +22,7 @@ docker-compose -f docker-compose.dev.yml up
 ```
 - App at `http://localhost`
 - DB: MariaDB 10.5, user `admin` / password `pointofsale`, database `ospos`
+- Open the MySQL shell with `docker compose exec mysql mysql -uadmin -ppointofsale ospos`
 
 ### Testing
 ```bash

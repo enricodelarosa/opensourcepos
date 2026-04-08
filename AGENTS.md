@@ -13,6 +13,7 @@ This document provides guidance for AI agents working on the Open Source Point o
 
 - Create a new git worktree for each issue, based on the latest state of `origin/master`
 - Commit fixes to the worktree and push to the remote
+- Open the MySQL shell with `docker compose exec mysql mysql -uadmin -ppointofsale ospos`
 
 ## Testing
 
