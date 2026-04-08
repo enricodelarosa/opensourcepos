@@ -300,6 +300,72 @@
             $('#loan_breakdown_row').show();
         }
 
+        function getAmountSeparators() {
+            var separators = {
+                group: '',
+                decimal: '.'
+            };
+            var numberLocale = <?= json_encode(str_replace('_', '-', $config['number_locale'])) ?>;
+            var formatter = null;
+
+            if (window.Intl && typeof Intl.NumberFormat === 'function' && typeof Intl.NumberFormat().formatToParts === 'function') {
+                try {
+                    formatter = Intl.NumberFormat(numberLocale);
+                } catch (error) {
+                    formatter = Intl.NumberFormat();
+                }
+
+                $.each(formatter.formatToParts(12345.6), function(index, part) {
+                    if (part.type === 'group') {
+                        separators.group = part.value;
+                    }
+
+                    if (part.type === 'decimal') {
+                        separators.decimal = part.value;
+                    }
+                });
+            }
+
+            if (!<?= $config['thousands_separator'] ? 'true' : 'false' ?>) {
+                separators.group = '';
+            }
+
+            return separators;
+        }
+
+        function parseLocalizedAmount(value) {
+            var normalizedValue = $.trim(value || '');
+            var separators = getAmountSeparators();
+
+            if (!normalizedValue.length) {
+                return null;
+            }
+
+            if (separators.group) {
+                normalizedValue = normalizedValue.split(separators.group).join('');
+            }
+
+            if (separators.decimal !== '.') {
+                normalizedValue = normalizedValue.split(separators.decimal).join('.');
+            }
+
+            normalizedValue = normalizedValue.replace(/\s+/g, '');
+
+            var parsedAmount = Number(normalizedValue);
+
+            return isFinite(parsedAmount) ? parsedAmount : null;
+        }
+
+        $.validator.addMethod('positiveAmount', function(value, element) {
+            var parsedAmount = parseLocalizedAmount(value);
+
+            if (this.optional(element) || parsedAmount === null) {
+                return true;
+            }
+
+            return parsedAmount > 0;
+        }, "<?= esc(lang('Loan_adjustments.amount_positive'), 'js') ?>");
+
         // Form validation and submit
         $('#loan_adjustment_form').validate($.extend({
             submitHandler: function(form) {
@@ -318,6 +384,7 @@
                 adjustment_time: { required: true },
                 amount: {
                     required: true,
+                    positiveAmount: true,
                     remote: "<?= "{$controller_name}/checkNumeric" ?>"
                 }
             },
@@ -326,6 +393,7 @@
                 adjustment_time: { required: "<?= lang('Loan_adjustments.date_required') ?>" },
                 amount: {
                     required: "<?= lang('Loan_adjustments.amount_required') ?>",
+                    positiveAmount: "<?= lang('Loan_adjustments.amount_positive') ?>",
                     remote: "<?= lang('Loan_adjustments.amount_number') ?>"
                 }
             }

@@ -49,6 +49,7 @@ return [
     'date_required'     => 'Date is required.',
     'amount_required'   => 'Amount is required.',
     'amount_number'     => 'Amount must be a valid number.',
+    'amount_positive'   => 'Amount must be greater than zero.',
 
     // Success / error messages
     'successful_adding'        => 'Loan adjustment successfully added.',

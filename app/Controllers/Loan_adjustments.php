@@ -198,7 +198,8 @@ class Loan_adjustments extends Secure_Controller
 
         $supplier_id      = (int) $this->request->getPost('supplier_id', FILTER_SANITIZE_NUMBER_INT);
         $direction        = $this->request->getPost('direction', FILTER_SANITIZE_FULL_SPECIAL_CHARS); // 'increase' or 'decrease'
-        $raw_amount       = parse_decimals($this->request->getPost('amount'));
+        $raw_amount       = parse_decimals((string) ($this->request->getPost('amount') ?? ''));
+        $amount           = is_numeric($raw_amount) ? (float) $raw_amount : null;
         $comment          = $this->request->getPost('comment', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
         $selected_luna_id = $this->request->getPost('luna_id', FILTER_SANITIZE_NUMBER_INT);
         $selected_luna_id = $selected_luna_id === '' || $selected_luna_id === null ? null : (int) $selected_luna_id;
@@ -220,6 +221,10 @@ class Loan_adjustments extends Secure_Controller
             return $this->response->setJSON(['success' => false, 'message' => lang('Loan_adjustments.error_no_linked_customer'), 'id' => NEW_ENTRY]);
         }
 
+        if ($amount === null || $amount <= 0) {
+            return $this->response->setJSON(['success' => false, 'message' => lang('Loan_adjustments.amount_positive'), 'id' => NEW_ENTRY]);
+        }
+
         if ($selected_luna_id !== null) {
             $selected_luna = $this->luna->get_info($selected_luna_id);
             if ($selected_luna === null) {
@@ -237,7 +242,7 @@ class Loan_adjustments extends Secure_Controller
         $customer_id = $supplier_info->customer_id;
 
         // Positive = increase loan (cash out), Negative = decrease loan (cash in)
-        $loan_amount = $direction === 'decrease' ? -abs($raw_amount) : abs($raw_amount);
+        $loan_amount = $direction === 'decrease' ? -$amount : $amount;
 
         $adjustment_data = [
             'adjustment_time' => $adjustment_time,
