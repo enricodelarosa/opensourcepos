@@ -125,8 +125,8 @@
                         <?php if ($luna_panel_mode === 'landowner'): ?>
                         <hr>
 
-                        <div class="luna-form-field">
-                            <div>
+                        <div class="row">
+                            <div class="col-sm-6 luna-form-field">
                                 <?= form_label(lang('Suppliers.area_name'), 'luna_area_name') ?>
                                 <?= form_input([
                                     'name'  => 'luna_area_name',
@@ -134,9 +134,7 @@
                                     'class' => 'form-control input-sm',
                                 ]) ?>
                             </div>
-                        </div>
-                        <div class="luna-form-field">
-                            <div>
+                            <div class="col-sm-6 luna-form-field">
                                 <?= form_label(lang('Suppliers.barangay'), 'luna_barangay') ?>
                                 <?= form_input([
                                     'name'  => 'luna_barangay',
@@ -184,8 +182,16 @@
         min-width: 640px;
     }
 
-    #luna_panel .luna-form-field + .luna-form-field {
+    #luna_panel > .panel > .panel-body > .luna-form-field + .luna-form-field {
         margin-top: 12px;
+    }
+
+    #luna_panel .row + .luna-form-field {
+        margin-top: 12px;
+    }
+
+    #luna_panel .row .luna-form-field {
+        margin-top: 0;
     }
 </style>
 
@@ -202,6 +208,15 @@
 
         function escapeHtml(value) {
             return $('<div>').text(value || '').html();
+        }
+
+        function moveLunaPanelBelowGender() {
+            var $genderRow = $('#supplier_basic_info .form-group').has('label[for="gender"]').first();
+            var $lunaPanel = $('#luna_panel');
+
+            if ($genderRow.length && $lunaPanel.length) {
+                $lunaPanel.insertAfter($genderRow);
+            }
         }
 
         function categoryAutoCreatesCustomer() {
@@ -359,6 +374,7 @@
 
         toggleLinkedCustomerControls();
         toggleCompanyNameRequirement();
+        moveLunaPanelBelowGender();
 
         <?php if (! empty($person_info->person_id)): ?>
         $('#add_luna_button').on('click', function() {
