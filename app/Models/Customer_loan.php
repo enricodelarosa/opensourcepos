@@ -251,6 +251,7 @@ class Customer_loan extends Model
         int $limit = 0,
         int $offset = 0,
         string $direction = 'desc',
+        ?int $luna_id = null,
     ): array {
         $builder = $this->db->table('customer_loans AS customer_loans');
         $builder->select([
@@ -278,6 +279,10 @@ class Customer_loan extends Model
             $builder->where('customer_loans.transaction_time <=', $end_time);
         }
 
+        if ($luna_id !== null) {
+            $builder->where('customer_loans.luna_id', $luna_id);
+        }
+
         $direction = strtolower($direction) === 'asc' ? 'asc' : 'desc';
         $builder->orderBy('customer_loans.transaction_time', $direction);
         $builder->orderBy('customer_loans.loan_id', $direction);
@@ -292,7 +297,7 @@ class Customer_loan extends Model
     /**
      * Returns the total number of history rows for a customer.
      */
-    public function get_history_total(int $customer_id, ?string $start_time = null, ?string $end_time = null): int
+    public function get_history_total(int $customer_id, ?string $start_time = null, ?string $end_time = null, ?int $luna_id = null): int
     {
         $builder = $this->db->table('customer_loans');
         $builder->selectCount('loan_id', 'total');
@@ -304,6 +309,10 @@ class Customer_loan extends Model
 
         if ($end_time !== null && $end_time !== '') {
             $builder->where('transaction_time <=', $end_time);
+        }
+
+        if ($luna_id !== null) {
+            $builder->where('luna_id', $luna_id);
         }
 
         $row = $builder->get()->getRowArray();

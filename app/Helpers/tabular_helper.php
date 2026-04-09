@@ -351,6 +351,93 @@ function get_suppliers_manage_table_headers(): string
     return transform_headers($headers);
 }
 
+function luna_headers(): array
+{
+    return [
+        ['luna_name'                => lang('Lunas.luna_name'), 'escape' => false],
+        ['landowner_name'           => lang('Lunas.land_owner')],
+        ['landowner_loan'           => lang('Lunas.land_owner_loan'), 'escape' => false],
+        ['tenant_name'              => lang('Lunas.tenant')],
+        ['tenant_loan'              => lang('Lunas.tenant_loan'), 'escape' => false],
+        ['total_loan'               => lang('Lunas.total_loan'), 'escape' => false],
+        ['total_kilo_yield'         => lang('Lunas.total_kilo_yield')],
+        ['average_kilo_yield'       => lang('Lunas.average_kilo_yield')],
+        ['last_harvest_at'          => lang('Lunas.last_harvest_recorded')],
+        ['next_expected_harvest_at' => lang('Lunas.next_expected_harvest')],
+    ];
+}
+
+/**
+ * Get the header for the lunas tabular view
+ */
+function get_lunas_manage_table_headers(): string
+{
+    return transform_headers(luna_headers(), true, false);
+}
+
+/**
+ * Get the html data row for the luna
+ */
+function get_luna_data_row(object $luna): array
+{
+    $luna_name    = trim((string) ($luna->luna_name ?? ''));
+    $tenant_name  = trim((string) ($luna->tenant_name ?? ''));
+    $last_harvest = empty($luna->last_harvest_at) ? lang('Lunas.no_harvest_recorded') : to_date(strtotime((string) $luna->last_harvest_at));
+    $next_harvest = empty($luna->next_expected_harvest_at) ? lang('Lunas.no_harvest_recorded') : to_date(strtotime((string) $luna->next_expected_harvest_at));
+
+    return [
+        'luna_id'                  => (int) $luna->luna_id,
+        'luna_name'                => anchor(
+            'lunas/summary/' . (int) $luna->luna_id,
+            esc($luna_name),
+            [
+                'class' => 'modal-dlg modal-dlg-wide',
+                'title' => lang('Lunas.purchase_summary'),
+            ],
+        ),
+        'landowner_name'           => (string) ($luna->landowner_name ?? ''),
+        'landowner_loan'           => format_luna_loan_link((float) ($luna->landowner_loan ?? 0), (int) $luna->luna_id, (int) ($luna->landowner_id ?? 0)),
+        'tenant_name'              => $tenant_name !== '' ? $tenant_name : lang('Lunas.no_tenant_assigned'),
+        'tenant_loan'              => format_luna_loan_link((float) ($luna->tenant_loan ?? 0), (int) $luna->luna_id, empty($luna->tenant_id) ? null : (int) $luna->tenant_id),
+        'total_loan'               => format_luna_loan_balance((float) ($luna->total_loan ?? 0)),
+        'total_kilo_yield'         => to_quantity_decimals((string) ($luna->total_kilo_yield ?? 0)),
+        'average_kilo_yield'       => to_quantity_decimals((string) ($luna->average_kilo_yield ?? 0)),
+        'last_harvest_at'          => $last_harvest,
+        'next_expected_harvest_at' => $next_harvest,
+    ];
+}
+
+function format_luna_loan_link(float $balance, int $luna_id, ?int $supplier_id): string
+{
+    $formatted_balance = format_luna_loan_balance($balance);
+
+    if ($supplier_id === null || $supplier_id <= 0) {
+        return $formatted_balance;
+    }
+
+    return anchor(
+        "lunas/loanDetails/{$luna_id}/{$supplier_id}",
+        $formatted_balance,
+        [
+            'class' => 'modal-dlg modal-dlg-wide',
+            'title' => lang('Lunas.loan_details'),
+        ],
+    );
+}
+
+function format_luna_loan_balance(float $balance): string
+{
+    if ($balance > 0) {
+        return '<span style="color:#d9534f;font-weight:bold;">' . to_currency((string) $balance) . '</span>';
+    }
+
+    if ($balance < 0) {
+        return '<span style="color:#5cb85c;font-weight:bold;">' . to_currency((string) $balance) . '</span>';
+    }
+
+    return to_currency('0');
+}
+
 /**
  * Get the html data row for the supplier
  */

@@ -36,6 +36,8 @@ return [
     "cash_summary_desc"          => "View daily session cash totals.",
     "loan_adjustments"           => "Loan Adjustments",
     "loan_adjustments_desc"      => "Manually adjust supplier loan balances and track cash impact.",
+    "lunas"                      => "Lunas",
+    "lunas_desc"                 => "View and search luna records and related purchase summaries.",
     "receivings"                 => "Supplier Purchases/CP",
     "receivings_desc"            => "Process Supplier Purchases.",
     "reports"                    => "Reports",

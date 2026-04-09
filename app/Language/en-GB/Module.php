@@ -32,6 +32,8 @@ return [
     "migrate_desc"               => "Update the OSPOS Database.",
     "office"                     => "Office",
     "office_desc"                => "List office menu modules.",
+    "lunas"                      => "Lunas",
+    "lunas_desc"                 => "View and search luna records and related purchase summaries.",
     "receivings"                 => "Receivings",
     "receivings_desc"            => "Process Purchase Orders.",
     "reports"                    => "Reports",

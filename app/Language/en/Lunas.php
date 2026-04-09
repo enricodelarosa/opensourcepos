@@ -1,0 +1,26 @@
+<?php
+
+return [
+    'average_kilo_yield'    => 'Average Kilo Yield',
+    'land_owner'            => 'Land Owner',
+    'land_owner_loan'       => 'Land Owner Loan',
+    'last_harvest_recorded' => 'Last Harvest Recorded',
+    'loan_details'          => 'Loan Details',
+    'luna_name'             => 'Luna Name (Barangay)',
+    'next_expected_harvest' => 'Next Expected Harvest',
+    'no_harvest_recorded'   => 'No harvest recorded',
+    'no_purchases'          => 'No purchases recorded for this luna.',
+    'no_tenant_assigned'    => '-- No Tenant Assigned --',
+    'number_of_kilos'       => 'Number of Kilos',
+    'price_per_kilo'        => 'Price per Kilo',
+    'purchase'              => 'Purchase',
+    'purchase_count'        => 'Purchases',
+    'purchase_summary'      => 'Purchase Summary',
+    'related_purchases'     => 'Related Purchases',
+    'tenant'                => 'Tenant',
+    'tenant_loan'           => 'Tenant Loan',
+    'total_amount'          => 'Total Amount',
+    'total_kilo_yield'      => 'Total Kilo Yield',
+    'total_kilos'           => 'Total Kilos',
+    'total_loan'            => 'Total Loan',
+];
