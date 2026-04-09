@@ -324,12 +324,9 @@ function supplier_headers(): array
 {
     return [
         ['people.person_id' => lang('Common.id')],
-        ['company_name'    => lang('Suppliers.company_name')],
-        ['agency_name'     => lang('Suppliers.agency_name')],
         ['category'        => lang('Suppliers.category')],
         ['last_name'       => lang('Common.last_name')],
         ['first_name'      => lang('Common.first_name')],
-        ['email'           => lang('Common.email')],
         ['phone_number'    => lang('Common.phone_number')],
         ['linked_customer' => lang('Suppliers.linked_customer'), 'sortable' => false, 'escape' => false],
         ['loan_balance'    => lang('Customers.loan_balance'), 'sortable' => false, 'escape' => false],
