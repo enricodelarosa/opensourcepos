@@ -330,7 +330,7 @@ function supplier_headers(): array
         ['phone_number'    => lang('Common.phone_number')],
         ['linked_customer' => lang('Suppliers.linked_customer'), 'sortable' => false, 'escape' => false],
         ['loan_balance'    => lang('Customers.loan_balance'), 'sortable' => false, 'escape' => false],
-        ['lunas'           => lang('Suppliers.lunas'), 'sortable' => false],
+        ['lunas'           => lang('Suppliers.lunas'), 'sortable' => false, 'escape' => false],
     ];
 }
 
@@ -476,17 +476,10 @@ function get_supplier_data_row(object $supplier): array
     $luna_summary   = '';
     $supplier_model = model(Supplier::class);
     if (in_array((int) $supplier->category, [LAND_OWNER_SUPPLIER, TENANT_SUPPLIER], true)) {
-        $lunas      = $supplier_model->get_lunas((int) $supplier->person_id);
-        $area_names = array_filter(array_map(static function (array $luna) use ($supplier): string {
-            $label = trim((string) ($luna['area_name'] ?? ''));
-
-            if ((int) $supplier->category === TENANT_SUPPLIER && ! empty($luna['landowner_name'])) {
-                $label .= ' [' . trim((string) $luna['landowner_name']) . ']';
-            }
-
-            return $label;
-        }, $lunas));
-        $luna_summary = empty($area_names) ? lang('Suppliers.no_lunas') : implode(', ', $area_names);
+        $luna_summary = format_supplier_luna_summary(
+            $supplier_model->get_lunas((int) $supplier->person_id),
+            (int) $supplier->category,
+        );
     }
 
     return [
@@ -522,6 +515,38 @@ function get_supplier_data_row(object $supplier): array
             ],
         ),
     ];
+}
+
+/**
+ * Formats supplier lunas for the manage table.
+ */
+function format_supplier_luna_summary(array $lunas, int $supplier_category): string
+{
+    $labels = array_values(array_filter(array_map(static function (array $luna) use ($supplier_category): string {
+        $label = trim((string) ($luna['area_name'] ?? ''));
+
+        if ($label === '') {
+            return '';
+        }
+
+        if ($supplier_category === LAND_OWNER_SUPPLIER && ! empty($luna['tenant_name'])) {
+            $label .= ' (' . trim((string) $luna['tenant_name']) . ')';
+        }
+
+        if ($supplier_category === TENANT_SUPPLIER && ! empty($luna['landowner_name'])) {
+            $label .= ' [' . trim((string) $luna['landowner_name']) . ']';
+        }
+
+        return $label;
+    }, $lunas)));
+
+    if ($labels === []) {
+        return lang('Suppliers.no_lunas');
+    }
+
+    $items = array_map(static fn (string $label): string => '<li>' . esc($label) . '</li>', $labels);
+
+    return '<ul class="supplier-luna-list" style="margin:0; padding-left:18px;">' . implode('', $items) . '</ul>';
 }
 
 function item_headers(): array
