@@ -300,8 +300,8 @@ if (isset($success)) {
 
                 foreach ($lunas as $luna_row) {
                     $label = $luna_row['area_name'];
-                    if (! empty($luna_row['barangay'])) {
-                        $label .= ' (' . $luna_row['barangay'] . ')';
+                    if (! empty($luna_row['tenant_name'])) {
+                        $label .= ' - ' . $luna_row['tenant_name'];
                     }
                     $luna_options[$luna_row['luna_id']] = $label;
                 }
