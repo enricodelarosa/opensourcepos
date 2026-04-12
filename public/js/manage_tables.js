@@ -194,11 +194,28 @@
 
     var options;
 
+    var get_user_settings = function() {
+        var user_settings = localStorage[options.employee_id];
+
+        return (user_settings && JSON.parse(user_settings)) || {};
+    };
+
+    var get_resource_settings = function() {
+        return get_user_settings()[options.resource] || {};
+    };
+
+    var get_saved_page_size = function() {
+        var page_size = parseInt(get_resource_settings().pageSize, 10);
+
+        return Number.isInteger(page_size) && page_size > 0 ? page_size : options.pageSize;
+    };
+
     var toggle_column_visibility = function() {
         if (localStorage[options.employee_id]) {
-            var user_settings = JSON.parse(localStorage[options.employee_id]);
-            user_settings[options.resource] && $.each(user_settings[options.resource], function(index, element) {
-                element ? table().showColumn(index) : table().hideColumn(index);
+            $.each(get_resource_settings(), function(index, element) {
+                if (typeof element === 'boolean') {
+                    element ? table().showColumn(index) : table().hideColumn(index);
+                }
             });
         }
     };
@@ -217,7 +234,7 @@
             url: options.resource + '/search',
             sidePagination: 'server',
             selectItemName: 'btSelectItem',
-            pageSize: options.pageSize,
+            pageSize: get_saved_page_size(),
             pageList: [10, 25, 50, 100, 300, 500],
             pagination: true,
             search: options.resource || false,
@@ -229,8 +246,13 @@
             exportOptions: {
                 fileName: options.resource.replace(/.*\/(.*?)$/g, '$1') + "_" + export_suffix
             },
-            onPageChange: function(response) {
-                load_success(response);
+            onPageChange: function(number, size) {
+                var user_settings = get_user_settings();
+
+                user_settings[options.resource] = user_settings[options.resource] || {};
+                user_settings[options.resource].pageSize = size;
+                localStorage[options.employee_id] = JSON.stringify(user_settings);
+                load_success(number);
                 enable_actions();
             },
             toolbar: '#toolbar',
@@ -245,8 +267,7 @@
                 enable_actions();
             },
             onColumnSwitch : function(field, checked) {
-                var user_settings = localStorage[options.employee_id];
-                user_settings = (user_settings && JSON.parse(user_settings)) || {};
+                var user_settings = get_user_settings();
                 user_settings[options.resource] = user_settings[options.resource] || {};
                 user_settings[options.resource][field] = checked;
                 localStorage[options.employee_id] = JSON.stringify(user_settings);
