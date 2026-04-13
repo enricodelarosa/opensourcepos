@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use CodeIgniter\Database\BaseBuilder;
 use CodeIgniter\Database\ResultInterface;
 use CodeIgniter\Model;
 use Config\OSPOS;
@@ -273,16 +274,28 @@ class Receiving extends Model
      */
     public function get_cash_total_for_period(string $start_date, string $end_date): float
     {
-        $builder = $this->db->table('receivings');
-        $builder->select('SUM(CASE WHEN discount_type = ' . PERCENT . ' THEN quantity_purchased * item_unit_price * (1 - discount / 100) ELSE quantity_purchased * item_unit_price - discount END) AS total');
-        $builder->join('receivings_items', 'receivings_items.receiving_id = receivings.receiving_id');
-        $builder->where('payment_type', lang('Sales.cash'));
-        $builder->where('DATE(receiving_time) >=', $start_date);
-        $builder->where('DATE(receiving_time) <=', $end_date);
+        if (! $this->db->tableExists('receiving_payments')) {
+            $builder = $this->db->table('receivings');
+            $builder->select('SUM(' . $this->getReceivingLineTotalExpression('receivings_items') . ') AS total', false);
+            $builder->join('receivings_items', 'receivings_items.receiving_id = receivings.receiving_id');
+            $builder->where('receivings.payment_type', lang('Sales.cash'));
+            $builder->where('DATE(receivings.receiving_time) >=', $start_date);
+            $builder->where('DATE(receivings.receiving_time) <=', $end_date);
 
-        $result = $builder->get()->getRow();
+            $result = $builder->get()->getRow();
 
-        return $result && $result->total ? (float) $result->total : 0.0;
+            return $result && $result->total ? (float) $result->total : 0.0;
+        }
+
+        $payments_builder = $this->db->table('receiving_payments');
+        $payments_builder->select('SUM(receiving_payments.cash_amount) AS total');
+        $payments_builder->join('receivings', 'receivings.receiving_id = receiving_payments.receiving_id');
+        $payments_builder->where('DATE(receivings.receiving_time) >=', $start_date);
+        $payments_builder->where('DATE(receivings.receiving_time) <=', $end_date);
+
+        $payments_total = (float) ($payments_builder->get()->getRow()->total ?? 0);
+
+        return $payments_total + $this->get_unassigned_cash_total_for_period($start_date, $end_date);
     }
 
     /**
@@ -303,6 +316,10 @@ class Receiving extends Model
      */
     public function get_cash_receivings_for_period(string $start_date, string $end_date): array
     {
+        if (! $this->db->tableExists('receiving_payments')) {
+            return $this->format_cash_receiving_rows($this->get_legacy_cash_receivings_for_period($start_date, $end_date));
+        }
+
         $db_prefix = $this->db->getPrefix();
 
         $builder = $this->db->table('receiving_payments');
@@ -316,12 +333,97 @@ class Receiving extends Model
         $builder->join('receivings', 'receivings.receiving_id = receiving_payments.receiving_id');
         $builder->join('people', 'people.person_id = receiving_payments.supplier_id', 'LEFT');
         $builder->join('lunas', 'lunas.luna_id = receivings.luna_id', 'LEFT');
-        $builder->where('DATE(receiving_time) >=', $start_date);
-        $builder->where('DATE(receiving_time) <=', $end_date);
+        $builder->where('DATE(receivings.receiving_time) >=', $start_date);
+        $builder->where('DATE(receivings.receiving_time) <=', $end_date);
+
+        $rows = array_merge(
+            $builder->get()->getResultArray(),
+            $this->get_unassigned_cash_receivings_for_period($start_date, $end_date),
+        );
+
+        usort($rows, static fn (array $left, array $right): int => strcmp((string) ($left['trans_time'] ?? ''), (string) ($right['trans_time'] ?? '')));
+
+        return $this->format_cash_receiving_rows($rows);
+    }
+
+    private function get_unassigned_cash_total_for_period(string $start_date, string $end_date): float
+    {
+        $builder = $this->build_unassigned_cash_receivings_builder($start_date, $end_date);
+        $builder->select('SUM(' . $this->getReceivingLineTotalExpression('receivings_items') . ') AS total', false);
+
+        return (float) ($builder->get()->getRow()->total ?? 0);
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private function get_unassigned_cash_receivings_for_period(string $start_date, string $end_date): array
+    {
+        $builder = $this->build_unassigned_cash_receivings_builder($start_date, $end_date);
+        $builder->select([
+            "'' AS supplier_name",
+            'MAX(lunas.area_name) AS area_name',
+            'MAX(lunas.barangay) AS barangay',
+            'SUM(' . $this->getReceivingLineTotalExpression('receivings_items') . ') AS amount',
+            'MAX(receivings.receiving_time) AS trans_time',
+        ], false);
+        $builder->groupBy('receivings.receiving_id');
+
+        return $builder->get()->getResultArray();
+    }
+
+    private function build_unassigned_cash_receivings_builder(string $start_date, string $end_date): BaseBuilder
+    {
+        $builder = $this->db->table('receivings');
+        $builder->join('receivings_items', 'receivings_items.receiving_id = receivings.receiving_id');
+        $builder->join('receiving_payments', 'receiving_payments.receiving_id = receivings.receiving_id', 'left');
+        $builder->join('lunas', 'lunas.luna_id = receivings.luna_id', 'left');
+        $builder->where('receivings.supplier_id IS NULL', null, false);
+        $builder->where('receiving_payments.id IS NULL', null, false);
+        $builder->where('receivings.payment_type', lang('Sales.cash'));
+        $builder->where('DATE(receivings.receiving_time) >=', $start_date);
+        $builder->where('DATE(receivings.receiving_time) <=', $end_date);
+
+        return $builder;
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private function get_legacy_cash_receivings_for_period(string $start_date, string $end_date): array
+    {
+        $builder = $this->db->table('receivings');
+        $builder->select([
+            "CONCAT(COALESCE(people.first_name, ''), ' ', COALESCE(people.last_name, '')) AS supplier_name",
+            'MAX(lunas.area_name) AS area_name',
+            'MAX(lunas.barangay) AS barangay',
+            'SUM(' . $this->getReceivingLineTotalExpression('receivings_items') . ') AS amount',
+            'MAX(receivings.receiving_time) AS trans_time',
+        ], false);
+        $builder->join('receivings_items', 'receivings_items.receiving_id = receivings.receiving_id');
+        $builder->join('people', 'people.person_id = receivings.supplier_id', 'left');
+        $builder->join('lunas', 'lunas.luna_id = receivings.luna_id', 'left');
+        $builder->where('receivings.payment_type', lang('Sales.cash'));
+        $builder->where('DATE(receivings.receiving_time) >=', $start_date);
+        $builder->where('DATE(receivings.receiving_time) <=', $end_date);
+        $builder->groupBy('receivings.receiving_id');
         $builder->orderBy('receivings.receiving_time', 'ASC');
 
-        return array_map(static function (array $row): array {
-            $particular = trim($row['supplier_name']);
+        return $builder->get()->getResultArray();
+    }
+
+    /**
+     * @param array<int, array<string, mixed>> $rows
+     * @return array<int, array{particular: string, amount: float, trans_time: string}>
+     */
+    private function format_cash_receiving_rows(array $rows): array
+    {
+        return array_map(function (array $row): array {
+            $particular = trim((string) ($row['supplier_name'] ?? ''));
+
+            if ($particular === '') {
+                $particular = lang('Common.unknown') . ' ' . lang('Receivings.supplier');
+            }
 
             if (! empty($row['area_name'])) {
                 $particular .= ' - ' . $row['area_name'];
@@ -333,10 +435,19 @@ class Receiving extends Model
 
             return [
                 'particular' => $particular,
-                'amount'     => $row['amount'],
-                'trans_time' => $row['trans_time'],
+                'amount'     => (float) ($row['amount'] ?? 0),
+                'trans_time' => (string) ($row['trans_time'] ?? ''),
             ];
-        }, $builder->get()->getResultArray());
+        }, $rows);
+    }
+
+    private function getReceivingLineTotalExpression(string $itemsAlias): string
+    {
+        return '(CASE WHEN ' . $itemsAlias . '.discount_type = ' . PERCENT
+            . ' THEN ' . $itemsAlias . '.item_unit_price * ' . $itemsAlias . '.quantity_purchased * ' . $itemsAlias . '.receiving_quantity'
+            . ' - ' . $itemsAlias . '.item_unit_price * ' . $itemsAlias . '.quantity_purchased * ' . $itemsAlias . '.receiving_quantity * ' . $itemsAlias . '.discount / 100'
+            . ' ELSE ' . $itemsAlias . '.item_unit_price * ' . $itemsAlias . '.quantity_purchased * ' . $itemsAlias . '.receiving_quantity'
+            . ' - ' . $itemsAlias . '.discount END)';
     }
 
     /**
