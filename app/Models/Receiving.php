@@ -447,8 +447,10 @@ class Receiving extends Model
 
     private function applyReceivingDateRange(BaseBuilder $builder, string $start_date, string $end_date): void
     {
-        $builder->where('DATE(receivings.receiving_time) >= ' . $this->db->escape($start_date), null, false);
-        $builder->where('DATE(receivings.receiving_time) <= ' . $this->db->escape($end_date), null, false);
+        $receivings_table = $this->db->prefixTable('receivings');
+
+        $builder->where('DATE(' . $receivings_table . '.receiving_time) >= ' . $this->db->escape($start_date), null, false);
+        $builder->where('DATE(' . $receivings_table . '.receiving_time) <= ' . $this->db->escape($end_date), null, false);
     }
 
     /**
