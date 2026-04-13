@@ -275,9 +275,9 @@ class Receiving extends Model
     public function get_cash_total_for_period(string $start_date, string $end_date): float
     {
         if (! $this->db->tableExists('receiving_payments')) {
-            $builder = $this->db->table('receivings');
+            $builder = $this->db->table('receivings AS receivings');
             $builder->select('SUM(' . $this->getReceivingLineTotalExpression('receivings_items') . ') AS total', false);
-            $builder->join('receivings_items', 'receivings_items.receiving_id = receivings.receiving_id');
+            $builder->join('receivings_items AS receivings_items', 'receivings_items.receiving_id = receivings.receiving_id');
             $builder->where('receivings.payment_type', lang('Sales.cash'));
             $this->applyReceivingDateRange($builder, $start_date, $end_date);
 
@@ -286,9 +286,9 @@ class Receiving extends Model
             return $result && $result->total ? (float) $result->total : 0.0;
         }
 
-        $payments_builder = $this->db->table('receiving_payments');
+        $payments_builder = $this->db->table('receiving_payments AS receiving_payments');
         $payments_builder->select('SUM(receiving_payments.cash_amount) AS total');
-        $payments_builder->join('receivings', 'receivings.receiving_id = receiving_payments.receiving_id');
+        $payments_builder->join('receivings AS receivings', 'receivings.receiving_id = receiving_payments.receiving_id');
         $this->applyReceivingDateRange($payments_builder, $start_date, $end_date);
 
         $payments_total = (float) ($payments_builder->get()->getRow()->total ?? 0);
@@ -318,19 +318,17 @@ class Receiving extends Model
             return $this->format_cash_receiving_rows($this->get_legacy_cash_receivings_for_period($start_date, $end_date));
         }
 
-        $db_prefix = $this->db->getPrefix();
-
-        $builder = $this->db->table('receiving_payments');
+        $builder = $this->db->table('receiving_payments AS receiving_payments');
         $builder->select([
-            "CONCAT(COALESCE({$db_prefix}people.first_name, ''), ' ', COALESCE({$db_prefix}people.last_name, '')) AS supplier_name",
+            "CONCAT(COALESCE(people.first_name, ''), ' ', COALESCE(people.last_name, '')) AS supplier_name",
             'lunas.area_name',
             'lunas.barangay',
-            "{$db_prefix}receiving_payments.cash_amount AS amount",
+            'receiving_payments.cash_amount AS amount',
             'receivings.receiving_time AS trans_time',
-        ]);
-        $builder->join('receivings', 'receivings.receiving_id = receiving_payments.receiving_id');
-        $builder->join('people', 'people.person_id = receiving_payments.supplier_id', 'LEFT');
-        $builder->join('lunas', 'lunas.luna_id = receivings.luna_id', 'LEFT');
+        ], false);
+        $builder->join('receivings AS receivings', 'receivings.receiving_id = receiving_payments.receiving_id');
+        $builder->join('people AS people', 'people.person_id = receiving_payments.supplier_id', 'LEFT');
+        $builder->join('lunas AS lunas', 'lunas.luna_id = receivings.luna_id', 'LEFT');
         $this->applyReceivingDateRange($builder, $start_date, $end_date);
 
         $rows = array_merge(
@@ -371,10 +369,10 @@ class Receiving extends Model
 
     private function build_unassigned_cash_receivings_builder(string $start_date, string $end_date): BaseBuilder
     {
-        $builder = $this->db->table('receivings');
-        $builder->join('receivings_items', 'receivings_items.receiving_id = receivings.receiving_id');
-        $builder->join('receiving_payments', 'receiving_payments.receiving_id = receivings.receiving_id', 'left');
-        $builder->join('lunas', 'lunas.luna_id = receivings.luna_id', 'left');
+        $builder = $this->db->table('receivings AS receivings');
+        $builder->join('receivings_items AS receivings_items', 'receivings_items.receiving_id = receivings.receiving_id');
+        $builder->join('receiving_payments AS receiving_payments', 'receiving_payments.receiving_id = receivings.receiving_id', 'left');
+        $builder->join('lunas AS lunas', 'lunas.luna_id = receivings.luna_id', 'left');
         $builder->where('receivings.supplier_id IS NULL', null, false);
         $builder->where('receiving_payments.id IS NULL', null, false);
         $builder->where('receivings.payment_type', lang('Sales.cash'));
@@ -388,7 +386,7 @@ class Receiving extends Model
      */
     private function get_legacy_cash_receivings_for_period(string $start_date, string $end_date): array
     {
-        $builder = $this->db->table('receivings');
+        $builder = $this->db->table('receivings AS receivings');
         $builder->select([
             "CONCAT(COALESCE(people.first_name, ''), ' ', COALESCE(people.last_name, '')) AS supplier_name",
             'MAX(lunas.area_name) AS area_name',
@@ -396,9 +394,9 @@ class Receiving extends Model
             'SUM(' . $this->getReceivingLineTotalExpression('receivings_items') . ') AS amount',
             'MAX(receivings.receiving_time) AS trans_time',
         ], false);
-        $builder->join('receivings_items', 'receivings_items.receiving_id = receivings.receiving_id');
-        $builder->join('people', 'people.person_id = receivings.supplier_id', 'left');
-        $builder->join('lunas', 'lunas.luna_id = receivings.luna_id', 'left');
+        $builder->join('receivings_items AS receivings_items', 'receivings_items.receiving_id = receivings.receiving_id');
+        $builder->join('people AS people', 'people.person_id = receivings.supplier_id', 'left');
+        $builder->join('lunas AS lunas', 'lunas.luna_id = receivings.luna_id', 'left');
         $builder->where('receivings.payment_type', lang('Sales.cash'));
         $this->applyReceivingDateRange($builder, $start_date, $end_date);
         $builder->groupBy('receivings.receiving_id');
