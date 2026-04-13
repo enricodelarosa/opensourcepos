@@ -318,17 +318,18 @@ class Receiving extends Model
             return $this->format_cash_receiving_rows($this->get_legacy_cash_receivings_for_period($start_date, $end_date));
         }
 
+        $has_luna_context = $this->hasLunaContext();
         $builder = $this->db->table('receiving_payments AS receiving_payments');
-        $builder->select([
-            "CONCAT(COALESCE(people.first_name, ''), ' ', COALESCE(people.last_name, '')) AS supplier_name",
-            'lunas.area_name',
-            'lunas.barangay',
-            'receiving_payments.cash_amount AS amount',
-            'receivings.receiving_time AS trans_time',
-        ], false);
+        $builder->select("CONCAT(COALESCE(people.first_name, ''), ' ', COALESCE(people.last_name, '')) AS supplier_name", false);
+        $builder->select($has_luna_context ? 'lunas.area_name' : "'' AS area_name", false);
+        $builder->select($has_luna_context ? 'lunas.barangay' : "'' AS barangay", false);
+        $builder->select('receiving_payments.cash_amount AS amount', false);
+        $builder->select('receivings.receiving_time AS trans_time', false);
         $builder->join('receivings AS receivings', 'receivings.receiving_id = receiving_payments.receiving_id');
         $builder->join('people AS people', 'people.person_id = receiving_payments.supplier_id', 'LEFT');
-        $builder->join('lunas AS lunas', 'lunas.luna_id = receivings.luna_id', 'LEFT');
+        if ($has_luna_context) {
+            $builder->join('lunas AS lunas', 'lunas.luna_id = receivings.luna_id', 'LEFT');
+        }
         $this->applyReceivingDateRange($builder, $start_date, $end_date);
 
         $rows = array_merge(
@@ -354,14 +355,13 @@ class Receiving extends Model
      */
     private function get_unassigned_cash_receivings_for_period(string $start_date, string $end_date): array
     {
+        $has_luna_context = $this->hasLunaContext();
         $builder = $this->build_unassigned_cash_receivings_builder($start_date, $end_date);
-        $builder->select([
-            "'' AS supplier_name",
-            'MAX(lunas.area_name) AS area_name',
-            'MAX(lunas.barangay) AS barangay',
-            'SUM(' . $this->getReceivingLineTotalExpression('receivings_items') . ') AS amount',
-            'MAX(receivings.receiving_time) AS trans_time',
-        ], false);
+        $builder->select("'' AS supplier_name", false);
+        $builder->select($has_luna_context ? 'MAX(lunas.area_name) AS area_name' : "'' AS area_name", false);
+        $builder->select($has_luna_context ? 'MAX(lunas.barangay) AS barangay' : "'' AS barangay", false);
+        $builder->select('SUM(' . $this->getReceivingLineTotalExpression('receivings_items') . ') AS amount', false);
+        $builder->select('MAX(receivings.receiving_time) AS trans_time', false);
         $builder->groupBy('receivings.receiving_id');
 
         return $builder->get()->getResultArray();
@@ -369,10 +369,13 @@ class Receiving extends Model
 
     private function build_unassigned_cash_receivings_builder(string $start_date, string $end_date): BaseBuilder
     {
+        $has_luna_context = $this->hasLunaContext();
         $builder = $this->db->table('receivings AS receivings');
         $builder->join('receivings_items AS receivings_items', 'receivings_items.receiving_id = receivings.receiving_id');
         $builder->join('receiving_payments AS receiving_payments', 'receiving_payments.receiving_id = receivings.receiving_id', 'left');
-        $builder->join('lunas AS lunas', 'lunas.luna_id = receivings.luna_id', 'left');
+        if ($has_luna_context) {
+            $builder->join('lunas AS lunas', 'lunas.luna_id = receivings.luna_id', 'left');
+        }
         $builder->where('receivings.supplier_id IS NULL', null, false);
         $builder->where('receiving_payments.id IS NULL', null, false);
         $builder->where('receivings.payment_type', lang('Sales.cash'));
@@ -386,17 +389,18 @@ class Receiving extends Model
      */
     private function get_legacy_cash_receivings_for_period(string $start_date, string $end_date): array
     {
+        $has_luna_context = $this->hasLunaContext();
         $builder = $this->db->table('receivings AS receivings');
-        $builder->select([
-            "CONCAT(COALESCE(people.first_name, ''), ' ', COALESCE(people.last_name, '')) AS supplier_name",
-            'MAX(lunas.area_name) AS area_name',
-            'MAX(lunas.barangay) AS barangay',
-            'SUM(' . $this->getReceivingLineTotalExpression('receivings_items') . ') AS amount',
-            'MAX(receivings.receiving_time) AS trans_time',
-        ], false);
+        $builder->select("CONCAT(COALESCE(people.first_name, ''), ' ', COALESCE(people.last_name, '')) AS supplier_name", false);
+        $builder->select($has_luna_context ? 'MAX(lunas.area_name) AS area_name' : "'' AS area_name", false);
+        $builder->select($has_luna_context ? 'MAX(lunas.barangay) AS barangay' : "'' AS barangay", false);
+        $builder->select('SUM(' . $this->getReceivingLineTotalExpression('receivings_items') . ') AS amount', false);
+        $builder->select('MAX(receivings.receiving_time) AS trans_time', false);
         $builder->join('receivings_items AS receivings_items', 'receivings_items.receiving_id = receivings.receiving_id');
         $builder->join('people AS people', 'people.person_id = receivings.supplier_id', 'left');
-        $builder->join('lunas AS lunas', 'lunas.luna_id = receivings.luna_id', 'left');
+        if ($has_luna_context) {
+            $builder->join('lunas AS lunas', 'lunas.luna_id = receivings.luna_id', 'left');
+        }
         $builder->where('receivings.payment_type', lang('Sales.cash'));
         $this->applyReceivingDateRange($builder, $start_date, $end_date);
         $builder->groupBy('receivings.receiving_id');
@@ -445,10 +449,13 @@ class Receiving extends Model
 
     private function applyReceivingDateRange(BaseBuilder $builder, string $start_date, string $end_date): void
     {
-        $receivings_table = $this->db->prefixTable('receivings');
+        $builder->where('DATE(receivings.receiving_time) >= ' . $this->db->escape($start_date), null, false);
+        $builder->where('DATE(receivings.receiving_time) <= ' . $this->db->escape($end_date), null, false);
+    }
 
-        $builder->where('DATE(' . $receivings_table . '.receiving_time) >= ' . $this->db->escape($start_date), null, false);
-        $builder->where('DATE(' . $receivings_table . '.receiving_time) <= ' . $this->db->escape($end_date), null, false);
+    private function hasLunaContext(): bool
+    {
+        return $this->db->tableExists('lunas') && $this->db->fieldExists('luna_id', 'receivings');
     }
 
     /**
