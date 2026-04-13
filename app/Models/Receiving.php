@@ -279,8 +279,7 @@ class Receiving extends Model
             $builder->select('SUM(' . $this->getReceivingLineTotalExpression('receivings_items') . ') AS total', false);
             $builder->join('receivings_items', 'receivings_items.receiving_id = receivings.receiving_id');
             $builder->where('receivings.payment_type', lang('Sales.cash'));
-            $builder->where('DATE(receivings.receiving_time) >=', $start_date);
-            $builder->where('DATE(receivings.receiving_time) <=', $end_date);
+            $this->applyReceivingDateRange($builder, $start_date, $end_date);
 
             $result = $builder->get()->getRow();
 
@@ -290,8 +289,7 @@ class Receiving extends Model
         $payments_builder = $this->db->table('receiving_payments');
         $payments_builder->select('SUM(receiving_payments.cash_amount) AS total');
         $payments_builder->join('receivings', 'receivings.receiving_id = receiving_payments.receiving_id');
-        $payments_builder->where('DATE(receivings.receiving_time) >=', $start_date);
-        $payments_builder->where('DATE(receivings.receiving_time) <=', $end_date);
+        $this->applyReceivingDateRange($payments_builder, $start_date, $end_date);
 
         $payments_total = (float) ($payments_builder->get()->getRow()->total ?? 0);
 
@@ -333,8 +331,7 @@ class Receiving extends Model
         $builder->join('receivings', 'receivings.receiving_id = receiving_payments.receiving_id');
         $builder->join('people', 'people.person_id = receiving_payments.supplier_id', 'LEFT');
         $builder->join('lunas', 'lunas.luna_id = receivings.luna_id', 'LEFT');
-        $builder->where('DATE(receivings.receiving_time) >=', $start_date);
-        $builder->where('DATE(receivings.receiving_time) <=', $end_date);
+        $this->applyReceivingDateRange($builder, $start_date, $end_date);
 
         $rows = array_merge(
             $builder->get()->getResultArray(),
@@ -381,8 +378,7 @@ class Receiving extends Model
         $builder->where('receivings.supplier_id IS NULL', null, false);
         $builder->where('receiving_payments.id IS NULL', null, false);
         $builder->where('receivings.payment_type', lang('Sales.cash'));
-        $builder->where('DATE(receivings.receiving_time) >=', $start_date);
-        $builder->where('DATE(receivings.receiving_time) <=', $end_date);
+        $this->applyReceivingDateRange($builder, $start_date, $end_date);
 
         return $builder;
     }
@@ -404,8 +400,7 @@ class Receiving extends Model
         $builder->join('people', 'people.person_id = receivings.supplier_id', 'left');
         $builder->join('lunas', 'lunas.luna_id = receivings.luna_id', 'left');
         $builder->where('receivings.payment_type', lang('Sales.cash'));
-        $builder->where('DATE(receivings.receiving_time) >=', $start_date);
-        $builder->where('DATE(receivings.receiving_time) <=', $end_date);
+        $this->applyReceivingDateRange($builder, $start_date, $end_date);
         $builder->groupBy('receivings.receiving_id');
         $builder->orderBy('receivings.receiving_time', 'ASC');
 
@@ -448,6 +443,12 @@ class Receiving extends Model
             . ' - ' . $itemsAlias . '.item_unit_price * ' . $itemsAlias . '.quantity_purchased * ' . $itemsAlias . '.receiving_quantity * ' . $itemsAlias . '.discount / 100'
             . ' ELSE ' . $itemsAlias . '.item_unit_price * ' . $itemsAlias . '.quantity_purchased * ' . $itemsAlias . '.receiving_quantity'
             . ' - ' . $itemsAlias . '.discount END)';
+    }
+
+    private function applyReceivingDateRange(BaseBuilder $builder, string $start_date, string $end_date): void
+    {
+        $builder->where('DATE(receivings.receiving_time) >= ' . $this->db->escape($start_date), null, false);
+        $builder->where('DATE(receivings.receiving_time) <= ' . $this->db->escape($end_date), null, false);
     }
 
     /**
