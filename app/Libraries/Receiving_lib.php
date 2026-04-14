@@ -75,6 +75,8 @@ class Receiving_lib
     {
         $this->session->remove('recv_supplier');
         $this->remove_luna_id();
+        $this->clear_copra_split();
+        $this->clear_copra_expenses();
     }
 
     public function get_luna_id(): int
@@ -94,6 +96,54 @@ class Receiving_lib
     public function remove_luna_id(): void
     {
         $this->session->remove('recv_luna_id');
+    }
+
+    public function get_copra_split(): array
+    {
+        $split = $this->session->get('recv_copra_split');
+
+        if (! is_array($split)) {
+            $split = [
+                'landowner_share_percent' => 50.0,
+                'tenant_share_percent'    => 50.0,
+            ];
+            $this->set_copra_split($split['landowner_share_percent'], $split['tenant_share_percent']);
+        }
+
+        return [
+            'landowner_share_percent' => round(max(0, min(100, (float) ($split['landowner_share_percent'] ?? 50))), 2),
+            'tenant_share_percent'    => round(max(0, min(100, (float) ($split['tenant_share_percent'] ?? 50))), 2),
+        ];
+    }
+
+    public function set_copra_split(float $landowner_share_percent, float $tenant_share_percent): void
+    {
+        $this->session->set('recv_copra_split', [
+            'landowner_share_percent' => round(max(0, min(100, $landowner_share_percent)), 2),
+            'tenant_share_percent'    => round(max(0, min(100, $tenant_share_percent)), 2),
+        ]);
+    }
+
+    public function clear_copra_split(): void
+    {
+        $this->session->remove('recv_copra_split');
+    }
+
+    public function get_copra_expenses(): array
+    {
+        $expenses = $this->session->get('recv_copra_expenses');
+
+        return is_array($expenses) ? $this->normalize_copra_expenses($expenses) : [];
+    }
+
+    public function set_copra_expenses(array $expenses): void
+    {
+        $this->session->set('recv_copra_expenses', $this->normalize_copra_expenses($expenses));
+    }
+
+    public function clear_copra_expenses(): void
+    {
+        $this->session->remove('recv_copra_expenses');
     }
 
     public function get_mode(): string
@@ -397,5 +447,28 @@ class Receiving_lib
         }
 
         return $total;
+    }
+
+    private function normalize_copra_expenses(array $expenses): array
+    {
+        $normalized = [];
+
+        foreach ($expenses as $expense) {
+            $expense_type = (string) ($expense['expense_type'] ?? 'shared');
+            $description  = trim((string) ($expense['description'] ?? ''));
+            $amount       = round(max(0, (float) ($expense['amount'] ?? 0)), 2);
+
+            if (! in_array($expense_type, ['shared', 'landowner', 'tenant'], true)) {
+                $expense_type = 'shared';
+            }
+
+            $normalized[] = [
+                'expense_type' => $expense_type,
+                'description'  => $description,
+                'amount'       => $amount,
+            ];
+        }
+
+        return $normalized;
     }
 }

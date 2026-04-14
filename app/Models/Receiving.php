@@ -26,6 +26,8 @@ class Receiving extends Model
         'receiving_id',
         'payment_type',
         'reference',
+        'landowner_share_percent',
+        'tenant_share_percent',
     ];
 
     public function get_info(int $receiving_id): ResultInterface
@@ -81,7 +83,18 @@ class Receiving extends Model
     /**
      * @throws ReflectionException
      */
-    public function save_value(array $items, int $supplier_id, int $employee_id, string $comment, string $reference, ?string $payment_type, int $stock_location = 0, ?int $luna_id = null): int
+    public function save_value(
+        array $items,
+        int $supplier_id,
+        int $employee_id,
+        string $comment,
+        string $reference,
+        ?string $payment_type,
+        int $stock_location = 0,
+        ?int $luna_id = null,
+        ?float $landowner_share_percent = null,
+        ?float $tenant_share_percent = null,
+    ): int
     {
         $attribute     = model(Attribute::class);
         $inventory     = model('Inventory');
@@ -101,6 +114,8 @@ class Receiving extends Model
             'payment_type'   => $payment_type,
             'comment'        => $comment,
             'reference'      => $reference,
+            'landowner_share_percent' => $landowner_share_percent,
+            'tenant_share_percent'    => $tenant_share_percent,
         ];
 
         // Run these queries as a transaction, we want to make sure we do all or nothing

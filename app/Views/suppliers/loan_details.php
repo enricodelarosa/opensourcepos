@@ -12,12 +12,19 @@ $total_balance       = (float) $loan_balance;
 $total_balance_style = $total_balance > 0
     ? 'color:#d9534f; font-weight:bold;'
     : ($total_balance < 0 ? 'color:#5cb85c; font-weight:bold;' : '');
+$supplier_name       = trim(($supplier_info->first_name ?? '') . ' ' . ($supplier_info->last_name ?? ''));
+$supplier_category   = (int) ($supplier_info->category ?? 0);
+$supplier_role       = match ($supplier_category) {
+    LAND_OWNER_SUPPLIER => lang('Suppliers.land_owner'),
+    TENANT_SUPPLIER => lang('Suppliers.tenant'),
+    default => '',
+};
 ?>
 
 <div class="container-fluid">
     <div class="row" style="margin-bottom: 15px;">
         <div class="col-xs-12">
-            <h4 style="margin-top: 0; margin-bottom: 5px;"><?= esc(trim(($supplier_info->first_name ?? '') . ' ' . ($supplier_info->last_name ?? ''))) ?></h4>
+            <h4 style="margin-top: 0; margin-bottom: 5px;"><?= esc($supplier_name . ($supplier_role !== '' ? ' - ' . $supplier_role : '')) ?></h4>
             <div><strong><?= esc(lang('Customers.loan_balance')) ?>:</strong> <span<?= $total_balance_style !== '' ? ' style="' . esc($total_balance_style) . '"' : '' ?>><?= to_currency($total_balance) ?></span></div>
         </div>
     </div>
@@ -44,9 +51,11 @@ $total_balance_style = $total_balance > 0
                             <?php } else { ?>
                                 <?php foreach ($breakdown as $row) { ?>
                                     <?php
-                                    $label         = lang('Reports.general_advance');
-                                    $balance       = (float) ($row['balance'] ?? 0);
-                                    $balance_style = $balance > 0
+                                    $label              = lang('Reports.general_advance');
+                                    $relationship_name  = '';
+                                    $relationship_role  = '';
+                                    $balance            = (float) ($row['balance'] ?? 0);
+                                    $balance_style      = $balance > 0
                                         ? 'color:#d9534f; font-weight:bold;'
                                         : ($balance < 0 ? 'color:#5cb85c; font-weight:bold;' : '');
                                     if (! empty($row['luna_id'])) {
@@ -54,13 +63,26 @@ $total_balance_style = $total_balance > 0
                                         if (! empty($row['barangay'])) {
                                             $label .= ' (' . trim((string) $row['barangay']) . ')';
                                         }
-                                        if (! empty($row['landowner_name'])) {
-                                            $label .= ' - ' . trim((string) $row['landowner_name']);
+                                        if ($supplier_category === LAND_OWNER_SUPPLIER) {
+                                            $relationship_name = trim((string) (($row['tenant_name'] ?? '') !== '' ? $row['tenant_name'] : lang('Suppliers.no_tenant_assigned')));
+                                            $relationship_role = lang('Suppliers.tenant');
+                                        } elseif ($supplier_category === TENANT_SUPPLIER) {
+                                            $relationship_name = trim((string) ($row['landowner_name'] ?? ''));
+                                            $relationship_role = lang('Suppliers.land_owner');
                                         }
                                     }
                                     ?>
                                     <tr>
-                                        <td><?= esc($label) ?></td>
+                                        <td>
+                                            <?= esc($label) ?>
+                                            <?php if ($relationship_name !== '') { ?>
+                                                <span class="text-muted">
+                                                    -
+                                                    <?= esc($relationship_role) ?>:
+                                                    <?= esc($relationship_name) ?>
+                                                </span>
+                                            <?php } ?>
+                                        </td>
                                         <td style="text-align: right;<?= $balance_style !== '' ? ' ' . esc($balance_style) : '' ?>"><?= to_currency($balance) ?></td>
                                     </tr>
                                 <?php } ?>

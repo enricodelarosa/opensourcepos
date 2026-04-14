@@ -302,7 +302,7 @@ class Luna extends Model
 
     private function applyManageJoins(BaseBuilder $builder): void
     {
-        $builder->join('suppliers AS landowner_suppliers', 'landowner_suppliers.person_id = lunas.landowner_id AND landowner_suppliers.deleted = 0', 'left');
+        $builder->join('suppliers AS landowner_suppliers', 'landowner_suppliers.person_id = lunas.landowner_id AND landowner_suppliers.deleted = 0', 'inner');
         $builder->join('people AS landowner_people', 'landowner_people.person_id = landowner_suppliers.person_id', 'left');
         $builder->join('customers AS landowner_customers', 'landowner_customers.person_id = landowner_suppliers.person_id AND landowner_customers.deleted = 0', 'left');
         $builder->join('suppliers AS tenant_suppliers', 'tenant_suppliers.person_id = lunas.tenant_id AND tenant_suppliers.deleted = 0', 'left');

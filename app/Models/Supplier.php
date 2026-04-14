@@ -303,6 +303,48 @@ class Supplier extends Person
         return $suggestions;
     }
 
+    public function is_allowed_receiving_category(int $category): bool
+    {
+        return $category !== TENANT_SUPPLIER;
+    }
+
+    public function get_receiving_suggestions(string $search, int $limit = 25): array
+    {
+        $suggestions = [];
+        $seen        = [];
+        $fetch_limit = max($limit * 4, 50);
+
+        foreach ($this->get_search_suggestions($search, $fetch_limit, true) as $suggestion) {
+            $supplier_id = (int) ($suggestion['value'] ?? 0);
+
+            if ($supplier_id <= 0 || isset($seen[$supplier_id])) {
+                continue;
+            }
+
+            $supplier_info = $this->get_info($supplier_id);
+
+            if (
+                empty($supplier_info->person_id)
+                || (int) ($supplier_info->deleted ?? 0) === DELETED
+                || ! $this->is_allowed_receiving_category((int) ($supplier_info->category ?? GOODS_SUPPLIER))
+            ) {
+                continue;
+            }
+
+            $suggestions[] = [
+                'value' => $supplier_id,
+                'label' => $this->getDisplayName($supplier_info, false),
+            ];
+            $seen[$supplier_id] = true;
+
+            if (count($suggestions) >= $limit) {
+                break;
+            }
+        }
+
+        return $suggestions;
+    }
+
     /**
      * Gets rows
      */

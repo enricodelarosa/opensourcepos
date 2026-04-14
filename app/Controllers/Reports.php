@@ -1847,9 +1847,10 @@ class Reports extends Secure_Controller
                 ),
             ];
 
-            $context_rows = [];
+            $raw_receiving_context = $raw_context_data[$row['receiving_id']] ?? [];
+            $context_rows          = [];
 
-            foreach (($raw_context_data[$row['receiving_id']]['rows'] ?? []) as $context_row) {
+            foreach (($raw_receiving_context['rows'] ?? []) as $context_row) {
                 $context_rows[] = [
                     'party_label'           => $context_row['party_label'],
                     'supplier_name'         => $context_row['supplier_name'],
@@ -1860,8 +1861,12 @@ class Reports extends Secure_Controller
                 ];
             }
 
+            $split_context = $this->formatReceivingSplitContext($raw_receiving_context, (float) $row['total']);
+
             $context_data[$row['receiving_id']] = [
-                'luna_label' => $raw_context_data[$row['receiving_id']]['luna_label'] ?? '',
+                'luna_label' => $raw_receiving_context['luna_label'] ?? '',
+                'split'      => $split_context,
+                'expenses'   => $this->formatReceivingExpenseContext($raw_receiving_context, $split_context !== null),
                 'rows'       => $context_rows,
             ];
 
@@ -1896,6 +1901,64 @@ class Reports extends Secure_Controller
         ];
 
         return view('reports/tabular_details', $data);
+    }
+
+    private function formatReceivingSplitContext(array $receiving_context, float $total): ?array
+    {
+        $landowner_share_percent = $receiving_context['landowner_share_percent'] ?? null;
+        $tenant_share_percent    = $receiving_context['tenant_share_percent'] ?? null;
+
+        if ($landowner_share_percent === null || $tenant_share_percent === null) {
+            return null;
+        }
+
+        $shared_total = 0.0;
+
+        foreach ($receiving_context['expenses'] ?? [] as $expense) {
+            $amount = (float) ($expense['amount'] ?? 0);
+            $shared_total += $amount;
+        }
+
+        $landowner_name = trim((string) ($receiving_context['landowner_name'] ?? ''));
+        $tenant_name    = trim((string) ($receiving_context['tenant_name'] ?? ''));
+
+        $shared_transfer_amount     = round($shared_total / 2, 2);
+        $landowner_base_share       = round($total * (((float) $landowner_share_percent) / 100), 2);
+        $tenant_base_share          = round($total - $landowner_base_share, 2);
+        $landowner_share_after_split = round($landowner_base_share - $shared_transfer_amount, 2);
+        $tenant_share_after_split    = round($tenant_base_share + $shared_transfer_amount, 2);
+
+        return [
+            'landowner_name'              => $landowner_name !== '' ? $landowner_name : lang('Reports.landowner'),
+            'tenant_name'                 => $tenant_name !== '' ? $tenant_name : lang('Reports.tenant'),
+            'landowner_share_percent'     => to_decimals((float) $landowner_share_percent) . '%',
+            'tenant_share_percent'        => to_decimals((float) $tenant_share_percent) . '%',
+            'landowner_base_share'        => to_currency($landowner_base_share),
+            'tenant_base_share'           => to_currency($tenant_base_share),
+            'has_shared_expense_transfer' => $shared_transfer_amount > 0.009,
+            'shared_transfer_amount'      => $this->formatCurrencyAdjustment(-$shared_transfer_amount),
+            'shared_total'                => $this->formatCurrencyAdjustment($shared_total),
+            'landowner_share_after_split' => to_currency($landowner_share_after_split),
+            'tenant_share_after_split'    => to_currency($tenant_share_after_split),
+        ];
+    }
+
+    private function formatReceivingExpenseContext(array $receiving_context, bool $show_split): array
+    {
+        if (! $show_split || empty($receiving_context['expenses'])) {
+            return [];
+        }
+
+        $rows = [];
+
+        foreach ($receiving_context['expenses'] as $expense) {
+            $rows[] = [
+                'description' => trim((string) ($expense['description'] ?? '')),
+                'amount'      => to_currency((float) ($expense['amount'] ?? 0)),
+            ];
+        }
+
+        return $rows;
     }
 
     public function inventory_low(): string
@@ -2130,6 +2193,19 @@ class Reports extends Secure_Controller
         }
 
         return $label !== '' ? $label : lang('Reports.general_advance');
+    }
+
+    private function formatCurrencyAdjustment(float $amount): string
+    {
+        if ($amount > 0) {
+            return '+' . to_currency($amount);
+        }
+
+        if ($amount < 0) {
+            return '-' . to_currency(abs($amount));
+        }
+
+        return to_currency(0);
     }
 
     private function clearCache(): void

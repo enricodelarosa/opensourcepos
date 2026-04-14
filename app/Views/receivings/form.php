@@ -83,7 +83,7 @@
         };
 
         $('#supplier_name').autocomplete({
-            source: "<?= 'suppliers/suggest' ?>",
+            source: "<?= 'receivings/supplierSearch' ?>",
             minChars: 0,
             delay: 15,
             cacheLength: 1,

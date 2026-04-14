@@ -86,6 +86,7 @@ class Customer_loan extends Model
                 'area_name'      => $row['area_name'],
                 'barangay'       => $row['barangay'],
                 'landowner_name' => null,
+                'tenant_name'    => null,
                 'balance'        => $row['balance'] ?? '0.00',
             ];
         }
@@ -105,9 +106,12 @@ class Customer_loan extends Model
                     if (
                         $luna_id > 0
                         && isset($breakdown_by_luna[$luna_id])
-                        && (int) ($supplier->category ?? 0) === TENANT_SUPPLIER
                     ) {
-                        $breakdown_by_luna[$luna_id]['landowner_name'] = $luna_row['landowner_name'] ?? null;
+                        if ((int) ($supplier->category ?? 0) === TENANT_SUPPLIER) {
+                            $breakdown_by_luna[$luna_id]['landowner_name'] = $luna_row['landowner_name'] ?? null;
+                        } elseif ((int) ($supplier->category ?? 0) === LAND_OWNER_SUPPLIER) {
+                            $breakdown_by_luna[$luna_id]['tenant_name'] = $luna_row['tenant_name'] ?? null;
+                        }
                     }
 
                     continue;
@@ -118,6 +122,7 @@ class Customer_loan extends Model
                     'area_name'      => $luna_row['area_name'] ?? null,
                     'barangay'       => $luna_row['barangay'] ?? null,
                     'landowner_name' => (int) ($supplier->category ?? 0) === TENANT_SUPPLIER ? ($luna_row['landowner_name'] ?? null) : null,
+                    'tenant_name'    => (int) ($supplier->category ?? 0) === LAND_OWNER_SUPPLIER ? ($luna_row['tenant_name'] ?? null) : null,
                     'balance'        => '0.00',
                 ];
             }
@@ -139,6 +144,7 @@ class Customer_loan extends Model
                 'area_name'      => null,
                 'barangay'       => null,
                 'landowner_name' => null,
+                'tenant_name'    => null,
                 'balance'        => $general_row['balance'],
             ];
         }

@@ -72,12 +72,18 @@ class Receiving_loan_snapshot extends Model
         }
 
         $receiving_meta = $this->get_receiving_metadata($receiving_ids);
+        $expense_rows   = $this->get_expense_rows($receiving_ids);
         $context        = [];
 
         foreach ($receiving_meta as $receiving_id => $meta) {
             $context[$receiving_id] = [
-                'luna_label' => $meta['luna_label'],
-                'rows'       => [],
+                'luna_label'              => $meta['luna_label'],
+                'landowner_name'          => $meta['landowner_name'],
+                'tenant_name'             => $meta['tenant_name'],
+                'landowner_share_percent' => $meta['landowner_share_percent'],
+                'tenant_share_percent'    => $meta['tenant_share_percent'],
+                'expenses'                => $expense_rows[$receiving_id] ?? [],
+                'rows'                    => [],
             ];
         }
 
@@ -159,16 +165,23 @@ class Receiving_loan_snapshot extends Model
     private function get_receiving_metadata(array $receiving_ids): array
     {
         $builder = $this->db->table('receivings AS receivings');
-        $builder->select([
+        $select  = [
             'receivings.receiving_id',
             'receivings.supplier_id',
             'receivings.luna_id',
             'lunas.tenant_id',
             'lunas.area_name',
             'lunas.barangay',
-            "CONCAT(COALESCE(primary_people.first_name, ''), ' ', COALESCE(primary_people.last_name, '')) AS primary_supplier_name",
+            "CONCAT(COALESCE(primary_people.first_name, ''), ' ', COALESCE(primary_people.last_name, '')) AS landowner_name",
             "CONCAT(COALESCE(tenant_people.first_name, ''), ' ', COALESCE(tenant_people.last_name, '')) AS tenant_name",
-        ]);
+        ];
+
+        if ($this->hasCopraSplitContext()) {
+            $select[] = 'receivings.landowner_share_percent';
+            $select[] = 'receivings.tenant_share_percent';
+        }
+
+        $builder->select($select);
         $builder->join('lunas', 'lunas.luna_id = receivings.luna_id', 'left');
         $builder->join('people AS primary_people', 'primary_people.person_id = receivings.supplier_id', 'left');
         $builder->join('people AS tenant_people', 'tenant_people.person_id = lunas.tenant_id', 'left');
@@ -178,16 +191,51 @@ class Receiving_loan_snapshot extends Model
 
         foreach ($builder->get()->getResultArray() as $row) {
             $metadata[(int) $row['receiving_id']] = [
-                'supplier_id'           => (int) $row['supplier_id'],
-                'tenant_id'             => empty($row['tenant_id']) ? null : (int) $row['tenant_id'],
-                'luna_id'               => empty($row['luna_id']) ? null : (int) $row['luna_id'],
-                'primary_supplier_name' => trim((string) $row['primary_supplier_name']),
-                'tenant_name'           => trim((string) $row['tenant_name']),
-                'luna_label'            => $this->build_luna_label((string) ($row['area_name'] ?? ''), (string) ($row['barangay'] ?? '')),
+                'supplier_id'             => (int) $row['supplier_id'],
+                'tenant_id'               => empty($row['tenant_id']) ? null : (int) $row['tenant_id'],
+                'luna_id'                 => empty($row['luna_id']) ? null : (int) $row['luna_id'],
+                'landowner_name'          => trim((string) $row['landowner_name']),
+                'tenant_name'             => trim((string) $row['tenant_name']),
+                'landowner_share_percent' => isset($row['landowner_share_percent']) && $row['landowner_share_percent'] !== ''
+                    ? (float) $row['landowner_share_percent']
+                    : null,
+                'tenant_share_percent' => isset($row['tenant_share_percent']) && $row['tenant_share_percent'] !== ''
+                    ? (float) $row['tenant_share_percent']
+                    : null,
+                'luna_label' => $this->build_luna_label((string) ($row['area_name'] ?? ''), (string) ($row['barangay'] ?? '')),
             ];
         }
 
         return $metadata;
+    }
+
+    private function get_expense_rows(array $receiving_ids): array
+    {
+        if (! $this->db->tableExists('receiving_expenses')) {
+            return [];
+        }
+
+        $builder = $this->db->table('receiving_expenses');
+        $builder->select([
+            'receiving_id',
+            'description',
+            'amount',
+        ]);
+        $builder->whereIn('receiving_id', $receiving_ids);
+        $builder->orderBy('receiving_id', 'asc');
+        $builder->orderBy('sort_order', 'asc');
+        $builder->orderBy('id', 'asc');
+
+        $rows = [];
+
+        foreach ($builder->get()->getResultArray() as $row) {
+            $rows[(int) $row['receiving_id']][] = [
+                'description' => trim((string) ($row['description'] ?? '')),
+                'amount'      => round(max(0, (float) ($row['amount'] ?? 0)), 2),
+            ];
+        }
+
+        return $rows;
     }
 
     private function get_payment_rows(array $receiving_ids): array
@@ -346,8 +394,8 @@ class Receiving_loan_snapshot extends Model
 
     private function resolve_supplier_name(array $receiving_meta, int $supplier_id, string $fallback_name = ''): string
     {
-        if ($supplier_id === (int) ($receiving_meta['supplier_id'] ?? 0) && ! empty($receiving_meta['primary_supplier_name'])) {
-            return $receiving_meta['primary_supplier_name'];
+        if ($supplier_id === (int) ($receiving_meta['supplier_id'] ?? 0) && ! empty($receiving_meta['landowner_name'])) {
+            return $receiving_meta['landowner_name'];
         }
 
         if (! empty($receiving_meta['tenant_id']) && $supplier_id === (int) $receiving_meta['tenant_id'] && ! empty($receiving_meta['tenant_name'])) {
@@ -366,5 +414,11 @@ class Receiving_loan_snapshot extends Model
         }
 
         return $label;
+    }
+
+    private function hasCopraSplitContext(): bool
+    {
+        return $this->db->fieldExists('landowner_share_percent', 'receivings')
+            && $this->db->fieldExists('tenant_share_percent', 'receivings');
     }
 }

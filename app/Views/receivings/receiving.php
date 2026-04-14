@@ -25,6 +25,11 @@
  * @var string      $partner_supplier_name
  * @var string      $partner_loan_balance
  * @var int|null    $partner_customer_id
+ * @var int         $supplier_category
+ * @var array       $copra_split
+ * @var array       $copra_expenses
+ * @var bool        $show_copra_split_tools
+ * @var bool        $copra_split_partner_ready
  */
 ?>
 
@@ -471,6 +476,101 @@ if (isset($success)) {
                                         ) ?>
                                     </td>
                                 </tr>
+                                <?php if ($show_copra_split_tools): ?>
+                                    <tr>
+                                        <td colspan="2" style="padding-top: 12px;">
+                                            <strong style="font-size: 1.05em;"><?= esc(lang('Receivings.copra_split_setup')) ?></strong>
+                                            <hr style="margin: 4px 0; border-color: #aaa;">
+                                        </td>
+                                    </tr>
+                                    <?php if ($copra_split_partner_ready): ?>
+                                        <tr>
+                                            <td><?= esc(lang('Receivings.initial_split_guide')) ?></td>
+                                            <td style="text-align: right;">
+                                                <div id="copra_initial_split_guide" style="font-weight: 600;"></div>
+                                                <div id="copra_initial_split_amounts" style="color: #666; font-size: 12px;"></div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td><?= esc(lang('Receivings.landowner_share_percent')) ?></td>
+                                            <td>
+                                                <?= form_input([
+                                                    'name'  => 'landowner_share_percent',
+                                                    'id'    => 'landowner_share_percent',
+                                                    'value' => number_format((float) ($copra_split['landowner_share_percent'] ?? 50), 2, '.', ''),
+                                                    'class' => 'form-control input-sm',
+                                                    'type'  => 'number',
+                                                    'step'  => '0.01',
+                                                    'min'   => '0',
+                                                    'max'   => '100',
+                                                ]) ?>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td><?= esc(lang('Receivings.tenant_share_percent')) ?></td>
+                                            <td>
+                                                <?= form_input([
+                                                    'name'  => 'tenant_share_percent',
+                                                    'id'    => 'tenant_share_percent',
+                                                    'value' => number_format((float) ($copra_split['tenant_share_percent'] ?? 50), 2, '.', ''),
+                                                    'class' => 'form-control input-sm',
+                                                    'type'  => 'number',
+                                                    'step'  => '0.01',
+                                                    'min'   => '0',
+                                                    'max'   => '100',
+                                                ]) ?>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="2" style="padding-top: 8px;">
+                                                <div style="font-weight: 600; margin-bottom: 6px;"><?= esc(lang('Receivings.copra_expenses')) ?></div>
+                                                <div class="table-responsive">
+                                                    <table class="table table-condensed table-bordered" style="margin-bottom: 8px;">
+                                                        <thead>
+                                                            <tr>
+                                                                <th style="width: 70%;"><?= esc(lang('Receivings.expense_description')) ?></th>
+                                                                <th style="width: 24%; text-align: right;"><?= esc(lang('Receivings.expense_amount')) ?></th>
+                                                                <th style="width: 6%; text-align: center;"><?= esc(lang('Common.delete')) ?></th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody id="copra_expense_body"></tbody>
+                                                    </table>
+                                                </div>
+                                                <button type="button" class="btn btn-default btn-sm" id="add_copra_expense_button">
+                                                    <span class="glyphicon glyphicon-plus">&nbsp;</span><?= esc(lang('Receivings.add_expense')) ?>
+                                                </button>
+                                                <?= form_input([
+                                                    'type'  => 'hidden',
+                                                    'name'  => 'copra_expenses_json',
+                                                    'id'    => 'copra_expenses_json',
+                                                    'value' => '[]',
+                                                ]) ?>
+                                            </td>
+                                        </tr>
+                                        <tr id="copra_split_validation_row" style="display: none;">
+                                            <td colspan="2">
+                                                <div id="copra_split_validation_message" class="alert alert-danger" style="margin-bottom: 0;"></div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td><?= esc(lang('Receivings.suggested_cash_to_landowner')) ?></td>
+                                            <td style="text-align: right;"><strong id="suggested_cash_to_landowner"><?= to_currency(0) ?></strong></td>
+                                        </tr>
+                                        <tr>
+                                            <td><?= esc(lang('Receivings.suggested_cash_to_tenant')) ?></td>
+                                            <td style="text-align: right;"><strong id="suggested_cash_to_tenant"><?= to_currency(0) ?></strong></td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="2"><hr style="margin: 10px 0; border-color: #ddd;"></td>
+                                        </tr>
+                                    <?php else: ?>
+                                        <tr>
+                                            <td colspan="2">
+                                                <div class="alert alert-info" style="margin-bottom: 0;"><?= esc(lang('Receivings.select_luna_with_tenant_for_split')) ?></div>
+                                            </td>
+                                        </tr>
+                                    <?php endif; ?>
+                                <?php endif; ?>
                                 <?php
                                     $show_partner_loan = $has_partner_supplier && $partner_customer_id && $partner_loan_balance > 0;
                     $show_any_loan                     = $has_linked_customer || $show_partner_loan;
@@ -494,7 +594,7 @@ if (isset($success)) {
                                             <?= form_input([
                                                 'name'        => 'loan_deduction',
                                                 'id'          => 'loan_deduction',
-                                                'value'       => '',
+                                                'value'       => $loan_deduction ?? '',
                                                 'class'       => 'form-control input-sm',
                                                 'size'        => '5',
                                                 'placeholder' => '0.00',
@@ -520,7 +620,7 @@ if (isset($success)) {
                                             <?= form_input([
                                                 'name'        => 'partner_loan_deduction',
                                                 'id'          => 'partner_loan_deduction',
-                                                'value'       => '',
+                                                'value'       => $partner_loan_deduction ?? '',
                                                 'class'       => 'form-control input-sm',
                                                 'size'        => '5',
                                                 'placeholder' => '0.00',
@@ -528,7 +628,9 @@ if (isset($success)) {
                                         </td>
                                     </tr>
                                     <?php } ?>
-                                    <!-- Cash to pay summary -->
+                                <?php } ?>
+                                <?php $show_cash_to_pay_summary = $show_any_loan || $selected_luna_id > 0 || $has_partner_supplier; ?>
+                                <?php if ($show_cash_to_pay_summary) { ?>
                                     <tr>
                                         <td colspan="2"><hr style="margin: 10px 0; border-color: #ddd;"></td>
                                     </tr>
@@ -716,7 +818,7 @@ if (isset($success)) {
         });
 
         $("#supplier").autocomplete({
-            source: '<?= 'suppliers/suggest' ?>',
+            source: '<?= esc("{$controller_name}/supplierSearch") ?>',
             minChars: 0,
             delay: 10,
             select: function(a, ui) {
@@ -779,15 +881,230 @@ if (isset($success)) {
         });
 
         <?php if ($has_linked_customer || ($partner_customer_id && $partner_loan_balance > 0) || $has_partner_supplier) { ?>
-        // Auto-calculate remaining cash to pay when loan deductions change
         var receivingTotal = <?= json_encode((float) $total) ?>;
         var maxLoanDeduction = Math.max(0, Math.min(<?= json_encode((float) ($loan_balance ?? 0)) ?>, receivingTotal));
         var maxPartnerDeduction = Math.max(0, Math.min(<?= json_encode((float) ($partner_loan_balance ?? 0)) ?>, receivingTotal));
         var currencySymbol = <?= json_encode($config['currency_symbol']) ?>;
+        var copraSplitEnabled = <?= json_encode((bool) $copra_split_partner_ready) ?>;
+        var copraSplitVisible = <?= json_encode((bool) $show_copra_split_tools) ?>;
+        var landownerName = <?= json_encode(! empty($supplier) ? $supplier : lang('Reports.landowner')) ?>;
+        var tenantName = <?= json_encode(! empty($partner_supplier_name) ? $partner_supplier_name : lang('Reports.tenant')) ?>;
+        var initialCopraExpenses = <?= json_encode($copra_expenses) ?>;
+        var copraSettingsUrl = <?= json_encode(site_url("{$controller_name}/setCopraSettings")) ?>;
+        var deleteLabel = <?= json_encode(lang('Common.delete')) ?>;
+        var invalidSplitMessages = {
+            total: <?= json_encode(lang('Receivings.copra_split_total_invalid')) ?>,
+            negative: <?= json_encode(lang('Receivings.copra_split_negative_result')) ?>
+        };
+        var noCopraExpensesLabel = <?= json_encode(lang('Receivings.no_copra_expenses')) ?>;
+        var shareSyncLock = false;
+        var copraSaveTimer = null;
+
+        function roundCurrency(amount) {
+            return Math.round(amount * 100) / 100;
+        }
+
+        function formatDecimal(amount) {
+            return roundCurrency(amount).toLocaleString('en-US', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        }
+
+        function formatCurrency(amount) {
+            return currencySymbol + formatDecimal(amount);
+        }
+
+        function parseNumericValue(value) {
+            var normalizedValue = String(value || '').replace(/,/g, '');
+            var parsedValue = parseFloat(normalizedValue);
+
+            return isNaN(parsedValue) ? 0 : parsedValue;
+        }
+
+        function setFormattedInputValue(selector, amount) {
+            $(selector).val(formatDecimal(Math.max(0, amount)));
+        }
+
+        function normalizeFormattedInput(selector) {
+            if (!$(selector).length) {
+                return;
+            }
+
+            var amount = Math.max(0, parseNumericValue($(selector).val()));
+            setFormattedInputValue(selector, amount);
+        }
+
+        function escapeHtml(value) {
+            return String(value || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function normalizePercentage(value) {
+            var numberValue = parseNumericValue(value);
+
+            if (isNaN(numberValue)) {
+                return 0;
+            }
+
+            if (numberValue < 0) {
+                numberValue = 0;
+            }
+
+            if (numberValue > 100) {
+                numberValue = 100;
+            }
+
+            return roundCurrency(numberValue);
+        }
+
+        function normalizeExpense(rawExpense) {
+            var description = $.trim((rawExpense && rawExpense.description) || '');
+            var amount = parseNumericValue(rawExpense && rawExpense.amount);
+
+            if (isNaN(amount) || amount < 0) {
+                amount = 0;
+            }
+
+            return {
+                description: description,
+                amount: roundCurrency(amount)
+            };
+        }
+
+        function buildExpenseRow(expense) {
+            var normalizedExpense = normalizeExpense(expense);
+
+            return '' +
+                '<tr class="copra-expense-row">' +
+                    '<td><input type="text" class="form-control input-sm copra-expense-description" value="' + escapeHtml(normalizedExpense.description) + '" /></td>' +
+                    '<td><input type="number" class="form-control input-sm copra-expense-amount text-right" min="0" step="0.01" style="min-width: 110px;" value="' + (normalizedExpense.amount > 0 ? normalizedExpense.amount.toFixed(2) : '') + '" /></td>' +
+                    '<td style="text-align: center;"><button type="button" class="btn btn-link text-danger copra-expense-delete" style="padding: 0 2px;" title="' + escapeHtml(deleteLabel) + '"><span class="glyphicon glyphicon-trash"></span></button></td>' +
+                '</tr>';
+        }
+
+        function updateCopraExpensePayload() {
+            if (!$('#copra_expenses_json').length) {
+                return;
+            }
+
+            $('#copra_expenses_json').val(JSON.stringify(getCopraExpenses()));
+        }
+
+        function renderCopraExpenses(expenses) {
+            if (!$('#copra_expense_body').length) {
+                return;
+            }
+
+            if (!expenses.length) {
+                $('#copra_expense_body').html(
+                    '<tr class="copra-expense-empty">' +
+                        '<td colspan="3" style="text-align: center; color: #777;">' + escapeHtml(noCopraExpensesLabel) + '</td>' +
+                    '</tr>'
+                );
+                updateCopraExpensePayload();
+
+                return;
+            }
+
+            var rows = '';
+
+            $.each(expenses, function(_, expense) {
+                rows += buildExpenseRow(expense);
+            });
+
+            $('#copra_expense_body').html(rows);
+            updateCopraExpensePayload();
+        }
+
+        function getCopraExpenses() {
+            var expenses = [];
+
+            $('#copra_expense_body .copra-expense-row').each(function() {
+                var expense = normalizeExpense({
+                    description: $(this).find('.copra-expense-description').val(),
+                    amount: $(this).find('.copra-expense-amount').val()
+                });
+
+                if (expense.description !== '' && expense.amount > 0) {
+                    expenses.push(expense);
+                }
+            });
+
+            return expenses;
+        }
+
+        function queueCopraSettingsSave() {
+            if (!copraSplitVisible || !$('#landowner_share_percent').length || !$('#tenant_share_percent').length) {
+                return;
+            }
+
+            updateCopraExpensePayload();
+
+            if (copraSaveTimer !== null) {
+                window.clearTimeout(copraSaveTimer);
+            }
+
+            copraSaveTimer = window.setTimeout(function() {
+                $.post(copraSettingsUrl, {
+                    landowner_share_percent: $('#landowner_share_percent').val(),
+                    tenant_share_percent: $('#tenant_share_percent').val(),
+                    expenses: $('#copra_expenses_json').val()
+                });
+            }, 200);
+        }
+
+        function getCopraSplitSummary(purchaseTotal) {
+            if (!copraSplitEnabled || !$('#landowner_share_percent').length || !$('#tenant_share_percent').length) {
+                return null;
+            }
+
+            var landownerSharePercent = normalizePercentage($('#landowner_share_percent').val());
+            var tenantSharePercent = normalizePercentage($('#tenant_share_percent').val());
+            var expenses = getCopraExpenses();
+            var sharedTotal = 0;
+
+            $.each(expenses, function(_, expense) {
+                sharedTotal += expense.amount;
+            });
+
+            sharedTotal = roundCurrency(sharedTotal);
+
+            var sharedTransferAmount = roundCurrency(sharedTotal / 2);
+            var baseLandownerAmount = roundCurrency(purchaseTotal * (landownerSharePercent / 100));
+            var baseTenantAmount = roundCurrency(purchaseTotal - baseLandownerAmount);
+            var landownerSuggestedAmount = roundCurrency(baseLandownerAmount - sharedTransferAmount);
+            var tenantSuggestedAmount = roundCurrency(purchaseTotal - landownerSuggestedAmount);
+            var validationMessage = '';
+            var isValid = true;
+
+            if (Math.abs((landownerSharePercent + tenantSharePercent) - 100) > 0.01) {
+                isValid = false;
+                validationMessage = invalidSplitMessages.total;
+            } else if (landownerSuggestedAmount < -0.01 || tenantSuggestedAmount < -0.01) {
+                isValid = false;
+                validationMessage = invalidSplitMessages.negative;
+            }
+
+            return {
+                landownerSharePercent: landownerSharePercent,
+                tenantSharePercent: tenantSharePercent,
+                baseLandownerAmount: baseLandownerAmount,
+                baseTenantAmount: baseTenantAmount,
+                landownerSuggestedAmount: Math.max(0, landownerSuggestedAmount),
+                tenantSuggestedAmount: Math.max(0, tenantSuggestedAmount),
+                isValid: isValid,
+                validationMessage: validationMessage
+            };
+        }
 
         function getCashInputsTotal() {
-            var supplierCash = parseFloat($('#amount_tendered').val()) || 0;
-            var partnerCash = parseFloat($('#partner_amount_tendered').val()) || 0;
+            var supplierCash = parseNumericValue($('#amount_tendered').val());
+            var partnerCash = parseNumericValue($('#partner_amount_tendered').val());
 
             if (supplierCash < 0) supplierCash = 0;
             if (partnerCash < 0) partnerCash = 0;
@@ -797,22 +1114,94 @@ if (isset($success)) {
 
         function updatePrimaryPaymentMode(cashToPay) {
             if (!$('#store_negative_loan').length || !$('#amount_tendered').length) {
+                if (copraSplitEnabled && $('#amount_tendered').length) {
+                    $('#amount_tendered, #partner_amount_tendered').prop('readonly', true).addClass('disabled');
+                }
+
                 return;
             }
 
+            if (copraSplitEnabled) {
+                $('#amount_tendered, #partner_amount_tendered').prop('readonly', true).addClass('disabled');
+
+                if ($('#store_negative_loan').is(':checked')) {
+                    setFormattedInputValue('#amount_tendered', 0);
+                }
+
+                return;
+            }
+
+            $('#partner_amount_tendered').prop('readonly', false).removeClass('disabled');
+
             if ($('#store_negative_loan').is(':checked')) {
-                $('#amount_tendered').val('0.00');
+                setFormattedInputValue('#amount_tendered', 0);
                 $('#amount_tendered').prop('readonly', true).addClass('disabled');
 
                 if ($('#partner_amount_tendered').length) {
-                    var partnerCash = parseFloat($('#partner_amount_tendered').val()) || 0;
+                    var partnerCash = parseNumericValue($('#partner_amount_tendered').val());
                     if (partnerCash > cashToPay) {
-                        $('#partner_amount_tendered').val(cashToPay.toFixed(2));
+                        setFormattedInputValue('#partner_amount_tendered', cashToPay);
                     }
                 }
             } else {
                 $('#amount_tendered').prop('readonly', false).removeClass('disabled');
             }
+        }
+
+        function updateCopraSplitUi(summary, deduction, partnerDeduction) {
+            if (!copraSplitEnabled) {
+                return null;
+            }
+
+            if (summary === null) {
+                return null;
+            }
+
+            var landownerNetCash = roundCurrency(summary.landownerSuggestedAmount - deduction);
+            var tenantNetCash = roundCurrency(summary.tenantSuggestedAmount - partnerDeduction);
+
+            $('#copra_initial_split_guide').text(
+                landownerName + ' ' + summary.landownerSharePercent.toFixed(2) + '% / ' +
+                tenantName + ' ' + summary.tenantSharePercent.toFixed(2) + '%'
+            );
+            $('#copra_initial_split_amounts').text(
+                formatCurrency(summary.baseLandownerAmount) + ' to ' + landownerName + ' / ' +
+                formatCurrency(summary.baseTenantAmount) + ' to ' + tenantName
+            );
+            $('#suggested_cash_to_landowner').text(formatCurrency(summary.landownerSuggestedAmount));
+            $('#suggested_cash_to_tenant').text(formatCurrency(summary.tenantSuggestedAmount));
+
+            if (summary.isValid) {
+                if ($('#loan_deduction').length) {
+                    $('#loan_deduction').attr('max', summary.landownerSuggestedAmount.toFixed(2));
+                }
+
+                if ($('#partner_loan_deduction').length) {
+                    $('#partner_loan_deduction').attr('max', summary.tenantSuggestedAmount.toFixed(2));
+                }
+
+                $('#copra_split_validation_row').hide();
+                $('#copra_split_validation_message').text('');
+                $('#finish_receiving_button').prop('disabled', false);
+
+                if ($('#store_negative_loan').length && $('#store_negative_loan').is(':checked')) {
+                    setFormattedInputValue('#amount_tendered', 0);
+                    setFormattedInputValue('#partner_amount_tendered', Math.max(0, tenantNetCash));
+                } else {
+                    setFormattedInputValue('#amount_tendered', Math.max(0, landownerNetCash));
+                    setFormattedInputValue('#partner_amount_tendered', Math.max(0, tenantNetCash));
+                }
+            } else {
+                $('#copra_split_validation_row').show();
+                $('#copra_split_validation_message').text(summary.validationMessage);
+                $('#finish_receiving_button').prop('disabled', true);
+                setFormattedInputValue('#amount_tendered', 0);
+                setFormattedInputValue('#partner_amount_tendered', 0);
+            }
+
+            updateCopraExpensePayload();
+
+            return summary;
         }
 
         function updateNegativeLoanSummary(cashToPay) {
@@ -825,7 +1214,7 @@ if (isset($success)) {
                 negativeLoan = Math.max(0, cashToPay - getCashInputsTotal());
             }
 
-            $('#negative_loan_amount').text(currencySymbol + negativeLoan.toFixed(2));
+            $('#negative_loan_amount').text(formatCurrency(negativeLoan));
             if ($('#store_negative_loan').is(':checked') && negativeLoan > 0) {
                 $('#negative_loan_divider').show();
                 $('#negative_loan_row').show();
@@ -836,8 +1225,8 @@ if (isset($success)) {
         }
 
         function updateCashToPay() {
-            var deduction = parseFloat($('#loan_deduction').val()) || 0;
-            var partnerDeduction = parseFloat($('#partner_loan_deduction').val()) || 0;
+            var deduction = parseNumericValue($('#loan_deduction').val());
+            var partnerDeduction = parseNumericValue($('#partner_loan_deduction').val());
 
             if (deduction < 0) deduction = 0;
             if (deduction > maxLoanDeduction) deduction = maxLoanDeduction;
@@ -849,54 +1238,169 @@ if (isset($success)) {
                 partnerDeduction = Math.max(0, receivingTotal - deduction);
             }
 
+            if (copraSplitEnabled) {
+                var copraSummary = getCopraSplitSummary(receivingTotal);
+                if (copraSummary !== null) {
+                    var maxLoanDeductionForShare = Math.max(0, Math.min(maxLoanDeduction, copraSummary.landownerSuggestedAmount));
+                    var maxPartnerDeductionForShare = Math.max(0, Math.min(maxPartnerDeduction, copraSummary.tenantSuggestedAmount));
+
+                    if (deduction > maxLoanDeductionForShare) {
+                        deduction = maxLoanDeductionForShare;
+                        $('#loan_deduction').val(deduction.toFixed(2));
+                    }
+
+                    if (partnerDeduction > maxPartnerDeductionForShare) {
+                        partnerDeduction = maxPartnerDeductionForShare;
+                        $('#partner_loan_deduction').val(partnerDeduction.toFixed(2));
+                    }
+                }
+            }
+
             var cashToPay = receivingTotal - deduction - partnerDeduction;
-            $('#cash_to_pay').text(currencySymbol + cashToPay.toFixed(2));
+            $('#cash_to_pay').text(formatCurrency(cashToPay));
             updatePrimaryPaymentMode(cashToPay);
-            updateNegativeLoanSummary(cashToPay);
 
-            if (cashToPay <= 0) {
-                $('#cash_payment_row, #amount_tendered_row').hide();
-            } else {
-                $('#cash_payment_row, #amount_tendered_row').show();
-            }
-
+            if (copraSplitEnabled) {
+                updateCopraSplitUi(copraSummary, deduction, partnerDeduction);
             <?php if ($has_partner_supplier) { ?>
-            // Auto-fill supplier cash; partner cash gets the remainder
-            if (!$('#store_negative_loan').is(':checked')) {
-                var supplierCash = parseFloat($('#amount_tendered').val()) || 0;
+            } else if (!$('#store_negative_loan').is(':checked')) {
+                var supplierCash = parseNumericValue($('#amount_tendered').val());
                 if (supplierCash > cashToPay) supplierCash = cashToPay;
-                $('#partner_amount_tendered').val((cashToPay - supplierCash).toFixed(2));
-            }
+                setFormattedInputValue('#partner_amount_tendered', cashToPay - supplierCash);
             <?php } ?>
+            }
+
+            updateNegativeLoanSummary(cashToPay);
+        }
+
+        function syncShareInputs(changedField) {
+            if (!copraSplitEnabled || shareSyncLock) {
+                return;
+            }
+
+            var landownerSharePercent = normalizePercentage($('#landowner_share_percent').val());
+            var tenantSharePercent = normalizePercentage($('#tenant_share_percent').val());
+
+            shareSyncLock = true;
+
+            if (changedField === 'landowner') {
+                tenantSharePercent = roundCurrency(100 - landownerSharePercent);
+                $('#tenant_share_percent').val(tenantSharePercent.toFixed(2));
+                $('#landowner_share_percent').val(landownerSharePercent.toFixed(2));
+            } else {
+                landownerSharePercent = roundCurrency(100 - tenantSharePercent);
+                $('#landowner_share_percent').val(landownerSharePercent.toFixed(2));
+                $('#tenant_share_percent').val(tenantSharePercent.toFixed(2));
+            }
+
+            shareSyncLock = false;
+
+            queueCopraSettingsSave();
+            updateCashToPay();
+        }
+
+        if (copraSplitVisible && $('#copra_expense_body').length) {
+            renderCopraExpenses($.isArray(initialCopraExpenses) ? initialCopraExpenses : []);
+
+            $('#add_copra_expense_button').on('click', function() {
+                var currentExpenses = getCopraExpenses();
+                currentExpenses.push({
+                    description: '',
+                    amount: 0
+                });
+
+                renderCopraExpenses(currentExpenses);
+                queueCopraSettingsSave();
+            });
+
+            $('#copra_expense_body').on('input change', '.copra-expense-description, .copra-expense-amount', function() {
+                updateCopraExpensePayload();
+                queueCopraSettingsSave();
+                updateCashToPay();
+            });
+
+            $('#copra_expense_body').on('click', '.copra-expense-delete', function() {
+                $(this).closest('.copra-expense-row').remove();
+
+                if (!$('#copra_expense_body .copra-expense-row').length) {
+                    renderCopraExpenses([]);
+                } else {
+                    updateCopraExpensePayload();
+                }
+
+                queueCopraSettingsSave();
+                updateCashToPay();
+            });
+
+            $('#landowner_share_percent').on('input change', function() {
+                syncShareInputs('landowner');
+            });
+
+            $('#tenant_share_percent').on('input change', function() {
+                syncShareInputs('tenant');
+            });
+
+            if ($('#landowner_share_percent').length) {
+                $('#landowner_share_percent').val(normalizePercentage($('#landowner_share_percent').val()).toFixed(2));
+            }
+
+            if ($('#tenant_share_percent').length) {
+                $('#tenant_share_percent').val(normalizePercentage($('#tenant_share_percent').val()).toFixed(2));
+            }
+
+            updateCopraExpensePayload();
+        } else {
+            $('#finish_receiving_button').prop('disabled', false);
         }
 
         $('#loan_deduction, #partner_loan_deduction').on('input change', updateCashToPay);
         $('#store_negative_loan').on('change', updateCashToPay);
 
         <?php if ($has_partner_supplier) { ?>
-        // When supplier cash changes, partner cash auto-fills the remainder
         $('#amount_tendered').on('input change', function() {
+            if (copraSplitEnabled) {
+                return;
+            }
+
             if ($('#store_negative_loan').is(':checked')) {
-                $(this).val('0.00');
+                setFormattedInputValue('#amount_tendered', 0);
                 return;
             }
 
             var cashToPay = parseFloat($('#cash_to_pay').text().replace(/[^0-9.-]/g, '')) || 0;
-            var supplierCash = parseFloat($(this).val()) || 0;
+            var supplierCash = parseNumericValue($(this).val());
             if (supplierCash < 0) supplierCash = 0;
             if (supplierCash > cashToPay) supplierCash = cashToPay;
-            $('#partner_amount_tendered').val((cashToPay - supplierCash).toFixed(2));
+            setFormattedInputValue('#partner_amount_tendered', cashToPay - supplierCash);
             updateNegativeLoanSummary(cashToPay);
         });
         <?php } ?>
 
         $('#amount_tendered, #partner_amount_tendered').on('input change', function() {
+            if (copraSplitEnabled) {
+                return;
+            }
+
             var cashToPay = parseFloat($('#cash_to_pay').text().replace(/[^0-9.-]/g, '')) || 0;
             updateNegativeLoanSummary(cashToPay);
         });
 
+        $('#amount_tendered, #partner_amount_tendered').on('blur', function() {
+            normalizeFormattedInput('#' + this.id);
+        });
+
+        $('#finish_receiving_form').on('submit', function() {
+            if ($('#amount_tendered').length) {
+                $('#amount_tendered').val(roundCurrency(parseNumericValue($('#amount_tendered').val())).toFixed(2));
+            }
+
+            if ($('#partner_amount_tendered').length) {
+                $('#partner_amount_tendered').val(roundCurrency(parseNumericValue($('#partner_amount_tendered').val())).toFixed(2));
+            }
+        });
+
         updateCashToPay();
-        <?php } ?>
+            <?php } ?>
 
     });
 </script>

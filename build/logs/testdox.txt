@@ -1,3 +1,93 @@
+App (Tests\Config\App)
+ [x] Get valid host returns host when valid
+ [x] Get valid host returns fallback for invalid host
+ [x] Get valid host returns localhost when no whitelist
+ [x] Get valid host handles missing http host
+ [x] Base u r l contains valid host
+ [x] Base u r l uses fallback host when invalid host provided
+
+Employee (Tests\Models\Employee)
+ [ ] Is admin returns true for person id 1
+ [ ] Is admin returns true for employee with all permissions
+ [ ] Is admin returns false when missing permissions
+ [ ] Can modify employee returns true for own account
+ [ ] Can modify employee returns true for own admin account
+ [ ] Can modify employee returns false when non admin modifies admin
+ [ ] Can modify employee returns true when admin modifies non admin
+ [ ] Can modify employee returns true when non admin modifies non admin
+ [ ] Can modify employee returns false for non admin editing admin
+ [ ] Has grant returns true for actual grant
+ [ ] Has grant returns false for missing grant
+
+Employees Controller (Tests\Controllers\EmployeesController)
+ [ ] Non admin cannot view admin account
+ [ ] Non admin cannot modify admin account
+ [ ] Non admin cannot delete admin account
+ [ ] Non admin cannot grant permissions they dont have
+ [ ] Admin can modify any account
+ [ ] Admin can delete any account
+ [ ] User can modify own account
+ [ ] Permission delegation rule
+ [ ] Admin can grant any permission
+
+Home (Tests\Controllers\Home)
+ [ ] PasswordMinLength Rejects7Characters
+ [ ] PasswordMinLength Accepts8Characters
+ [ ] PasswordMinLength RejectsEmptyString
+ [ ] PasswordMinLength RejectsWhitespaceOnly
+ [ ] PasswordMinLength AcceptsSpecialCharacters
+ [ ] PasswordMinLength RejectsPreviousBehavior
+ [ ] Non admin cannot view admin password form
+ [ ] Non admin cannot change admin password
+ [ ] User can view own password form
+ [ ] User can change own password
+ [ ] Admin can view any password form
+ [ ] Admin can change any password
+ [ ] Default employee id uses current user
+ [ ] Non admin cannot view other non admin password form
+ [ ] Non admin cannot change other non admin password
+
+Items Csv Import (Tests\Controllers\ItemsCsvImport)
+ [ ] Generate csv header basic
+ [ ] Generate csv header multiple locations
+ [ ] Generate csv header with attributes
+ [ ] Generate stock location headers
+ [ ] Generate attribute headers
+ [ ] Generate attribute headers removes negative one index
+ [ ] Get csv file basic
+ [ ] Get csv file with bom
+ [ ] Get csv file multiple rows
+ [ ] Bom exists
+ [ ] Bom not exists
+ [ ] Import item basic fields
+ [ ] Import item with quantity
+ [ ] Import item creates inventory record
+ [ ] Import item with taxes
+ [ ] Import multiple items from simulated csv
+ [ ] Import update existing item
+ [ ] Import item with attribute text
+ [ ] Import item with attribute dropdown
+ [ ] Import item quantity zero
+ [ ] Import item with negative reorder level
+ [ ] Import item with high precision prices
+ [ ] Import item with hsn code
+ [ ] Import item quantity multiple locations
+ [ ] Csv import quantity validation numeric
+ [ ] Csv import empty barcode allowed
+ [ ] Csv import item exists check
+ [ ] Full csv import flow simulated
+ [ ] Import csv invalid stock location column
+ [ ] Import csv valid stock location column
+ [ ] Import csv mixed valid and invalid locations
+ [ ] Validate csv stock locations
+ [ ] Import item quantity only for valid locations
+ [ ] Detect csv location columns
+ [ ] Validate location names case sensitivity
+
+Reports Controller (Tests\Controllers\ReportsController)
+ [x] Redirect pattern uses header and exit
+ [x] Submodule permission check occurs before controller initialization
+
 Supplier (Tests\Models\Supplier)
  [x] Get display name appends supplier role
  [x] Get loan adjustment suggestions keeps duplicate names when roles differ
@@ -5,4 +95,48 @@ Supplier (Tests\Models\Supplier)
 Tabular Helper (Tests\Helpers\TabularHelper)
  [x] Format supplier luna summary formats landowner lunas as bullets
  [x] Format supplier luna summary keeps tenant landowner context
+
+Token_lib (Tests\Libraries\Token_lib)
+ [x] Render returns input string when no tokens
+ [x] Render handles string with percent not in date format
+ [x] Render handles invalid date format percent dash percent
+ [ ] Render handles invalid date format percent y percent q percent bad
+ [x] Render handles string with percent a percent
+ [x] Render handles extremely long string
+ [x] Render handles string with multiple percent symbols
+ [x] Render handles string with only percent symbol
+ [x] Render preserves text with valid date tokens and no other tokens
+ [x] Render handles empty string
+ [x] Scan extracts tokens
+ [x] Scan extracts tokens with length
+ [x] Scan returns empty array for no tokens
+ [x] Render handles consecutive percent signs
+ [x] Render handles escaped percent signs
+ [x] Render handles unclosed braces
+ [x] Render handles unopened braces
+ [x] Render handles very long string with date
+ [x] Render handles multiple dates
+ [x] Render handles valid year format
+ [x] Render handles valid month format
+ [x] Render handles valid day format
+ [x] Render handles full date format
+ [x] Render handles percent b
+ [x] Render handles percent a
+ [x] Render handles complex percent format
+ [x] Render does not replace invalid format specifiers
+ [x] Render replaces timezone format
+ [x] Scan works with mixed content
+ [x] Render replaces composite directive percent f
+ [x] Render replaces composite directive percent d
+ [x] Render handles percent t
+ [x] Render handles percent r
+ [x] Render handles percent c
+ [x] Render handles lowercase percent c
+ [x] Render handles percent n
+ [x] Render handles lowercase percent t
+ [x] Render handles percent x
+ [x] Render handles percent h
+
+Url Helper
+ [x] Base 64url encode
 

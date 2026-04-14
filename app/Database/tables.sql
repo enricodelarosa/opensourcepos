@@ -458,6 +458,8 @@ CREATE TABLE `ospos_receivings` (
     `receiving_id` int(10) NOT NULL AUTO_INCREMENT,
     `payment_type` varchar(20) DEFAULT NULL,
     `reference` varchar(32) DEFAULT NULL,
+    `landowner_share_percent` decimal(5,2) DEFAULT NULL,
+    `tenant_share_percent` decimal(5,2) DEFAULT NULL,
     PRIMARY KEY (`receiving_id`),
     KEY `supplier_id` (`supplier_id`),
     KEY `employee_id` (`employee_id`),
@@ -493,6 +495,27 @@ CREATE TABLE `ospos_receivings_items` (
 
 --
 -- Dumping data for table `ospos_receivings_items`
+--
+
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `ospos_receiving_expenses`
+--
+
+CREATE TABLE `ospos_receiving_expenses` (
+    `id` int(10) NOT NULL AUTO_INCREMENT,
+    `receiving_id` int(10) NOT NULL,
+    `description` varchar(255) NOT NULL,
+    `amount` decimal(15,2) NOT NULL DEFAULT '0.00',
+    `sort_order` int(10) NOT NULL DEFAULT '0',
+    PRIMARY KEY (`id`),
+    KEY `receiving_id` (`receiving_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+--
+-- Dumping data for table `ospos_receiving_expenses`
 --
 
 

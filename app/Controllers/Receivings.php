@@ -11,6 +11,7 @@ use App\Models\Item;
 use App\Models\Item_kit;
 use App\Models\Luna;
 use App\Models\Receiving;
+use App\Models\Receiving_expense;
 use App\Models\Receiving_loan_snapshot;
 use App\Models\Stock_location;
 use App\Models\Supplier;
@@ -28,6 +29,7 @@ class Receivings extends Secure_Controller
     private Item_kit $item_kit;
     private Luna $luna;
     private Receiving $receiving;
+    private Receiving_expense $receiving_expense;
     private Receiving_loan_snapshot $receiving_loan_snapshot;
     private Stock_location $stock_location;
     private Supplier $supplier;
@@ -46,6 +48,7 @@ class Receivings extends Secure_Controller
         $this->item                    = model(Item::class);
         $this->luna                    = model(Luna::class);
         $this->receiving               = model(Receiving::class);
+        $this->receiving_expense       = model(Receiving_expense::class);
         $this->receiving_loan_snapshot = model(Receiving_loan_snapshot::class);
         $this->stock_location          = model(Stock_location::class);
         $this->supplier                = model(Supplier::class);
@@ -85,6 +88,13 @@ class Receivings extends Secure_Controller
         return $this->response->setJSON($suggestions);
     }
 
+    public function getSupplierSearch(): ResponseInterface
+    {
+        $search = (string) $this->request->getGet('term');
+
+        return $this->response->setJSON($this->supplier->get_receiving_suggestions($search));
+    }
+
     /**
      * Set supplier if it exists in the database. Used in app/Views/receivings/receiving.php
      *
@@ -92,12 +102,18 @@ class Receivings extends Secure_Controller
      */
     public function postSelectSupplier(): string
     {
-        $supplier_id = $this->request->getPost('supplier', FILTER_SANITIZE_NUMBER_INT);
-        if ($this->supplier->exists($supplier_id)) {
-            if ((int) $supplier_id !== $this->receiving_lib->get_supplier()) {
+        $supplier_id = (int) $this->request->getPost('supplier', FILTER_SANITIZE_NUMBER_INT);
+        if ($supplier_id > 0 && $this->supplier->exists($supplier_id)) {
+            $supplier_info = $this->supplier->get_info($supplier_id);
+            if ($this->supplier->is_allowed_receiving_category((int) ($supplier_info->category ?? GOODS_SUPPLIER))) {
+                if ($supplier_id !== $this->receiving_lib->get_supplier()) {
+                    $this->receiving_lib->clear_copra_split();
+                    $this->receiving_lib->clear_copra_expenses();
+                }
+
                 $this->receiving_lib->set_luna_id(-1);
+                $this->receiving_lib->set_supplier($supplier_id);
             }
-            $this->receiving_lib->set_supplier($supplier_id);
         }
 
         return $this->_reload();    // TODO: Hungarian notation
@@ -185,6 +201,39 @@ class Receivings extends Secure_Controller
     public function postSetReference(): ResponseInterface
     {
         $this->receiving_lib->set_reference($this->request->getPost('recv_reference', FILTER_SANITIZE_FULL_SPECIAL_CHARS));
+
+        return $this->response->setJSON(['success' => true]);
+    }
+
+    public function postSetCopraSettings(): ResponseInterface
+    {
+        $supplier_id = $this->receiving_lib->get_supplier();
+
+        if ($supplier_id === -1) {
+            $this->receiving_lib->clear_copra_split();
+            $this->receiving_lib->clear_copra_expenses();
+
+            return $this->response->setJSON(['success' => false]);
+        }
+
+        $supplier_info = $this->supplier->get_info($supplier_id);
+        if (empty($supplier_info->person_id) || (int) ($supplier_info->category ?? GOODS_SUPPLIER) !== LAND_OWNER_SUPPLIER) {
+            $this->receiving_lib->clear_copra_split();
+            $this->receiving_lib->clear_copra_expenses();
+
+            return $this->response->setJSON(['success' => false]);
+        }
+
+        $landowner_share_percent = round(max(0, min(100, (float) $this->request->getPost('landowner_share_percent'))), 2);
+        $tenant_share_percent    = round(max(0, min(100, (float) $this->request->getPost('tenant_share_percent'))), 2);
+
+        $expenses = json_decode((string) $this->request->getPost('expenses'), true);
+        if (! is_array($expenses)) {
+            $expenses = [];
+        }
+
+        $this->receiving_lib->set_copra_split($landowner_share_percent, $tenant_share_percent);
+        $this->receiving_lib->set_copra_expenses($this->receiving_expense->normalize_expenses($expenses));
 
         return $this->response->setJSON(['success' => true]);
     }
@@ -371,8 +420,16 @@ class Receivings extends Secure_Controller
         $data['employee'] = $employee_info->first_name . ' ' . $employee_info->last_name;
 
         $supplier_id = $this->receiving_lib->get_supplier();
+        $supplier_category = GOODS_SUPPLIER;
         if ($supplier_id !== -1) {
             $supplier_info            = $this->supplier->get_info($supplier_id);
+            if (! $this->supplier->is_allowed_receiving_category((int) ($supplier_info->category ?? GOODS_SUPPLIER))) {
+                $data['error'] = lang('Receivings.invalid_supplier_category');
+
+                return $this->_reload($data);
+            }
+
+            $supplier_category        = (int) ($supplier_info->category ?? GOODS_SUPPLIER);
             $data['supplier']         = $supplier_info->first_name . ' ' . $supplier_info->last_name;    // TODO: duplicated code
             $data['first_name']       = $supplier_info->first_name;
             $data['last_name']        = $supplier_info->last_name;
@@ -384,6 +441,7 @@ class Receivings extends Secure_Controller
                 $data['supplier_location'] = '';
             }
         }
+        $data['supplier_category'] = $supplier_category;
 
         $selected_luna_id = (int) ($this->request->getPost('selected_luna_id', FILTER_SANITIZE_NUMBER_INT) ?: $this->receiving_lib->get_luna_id());
         $luna             = null;
@@ -405,6 +463,36 @@ class Receivings extends Secure_Controller
         if ($luna !== null && ! empty($luna->tenant_name)) {
             $data['partner_supplier_name'] = $luna->tenant_name;
         }
+
+        $data['copra_split']    = $this->receiving_lib->get_copra_split();
+        $data['copra_expenses'] = $this->receiving_expense->normalize_expenses($this->receiving_lib->get_copra_expenses());
+
+        if ($supplier_category === LAND_OWNER_SUPPLIER) {
+            if (
+                $this->request->getPost('landowner_share_percent') !== null
+                && $this->request->getPost('tenant_share_percent') !== null
+            ) {
+                $landowner_share_percent = round(max(0, min(100, (float) $this->request->getPost('landowner_share_percent'))), 2);
+                $tenant_share_percent    = round(max(0, min(100, (float) $this->request->getPost('tenant_share_percent'))), 2);
+
+                $data['copra_split'] = [
+                    'landowner_share_percent' => $landowner_share_percent,
+                    'tenant_share_percent'    => $tenant_share_percent,
+                ];
+                $this->receiving_lib->set_copra_split($landowner_share_percent, $tenant_share_percent);
+            }
+
+            $posted_expenses = json_decode((string) $this->request->getPost('copra_expenses_json'), true);
+            if (is_array($posted_expenses)) {
+                $data['copra_expenses'] = $this->receiving_expense->normalize_expenses($posted_expenses);
+                $this->receiving_lib->set_copra_expenses($data['copra_expenses']);
+            }
+        }
+
+        $data['show_copra_split_tools']    = $supplier_category === LAND_OWNER_SUPPLIER;
+        $data['copra_split_partner_ready'] = $data['show_copra_split_tools'] && $partner_supplier_id !== null;
+        $data['landowner_share_percent']   = $data['copra_split_partner_ready'] ? (float) $data['copra_split']['landowner_share_percent'] : null;
+        $data['tenant_share_percent']      = $data['copra_split_partner_ready'] ? (float) $data['copra_split']['tenant_share_percent'] : null;
 
         $customer_loan = model(Customer_loan::class);
 
@@ -441,6 +529,22 @@ class Receivings extends Secure_Controller
         }
         $data['partner_loan_deduction'] = $partner_loan_deduction;
 
+        $copra_split_summary = null;
+        if ($data['copra_split_partner_ready']) {
+            $copra_split_summary = $this->calculateCopraSplitSummary(
+                (float) $data['total'],
+                (float) $data['copra_split']['landowner_share_percent'],
+                (float) $data['copra_split']['tenant_share_percent'],
+                $data['copra_expenses'],
+            );
+
+            if (! $copra_split_summary['is_valid']) {
+                $data['error'] = lang('Receivings.invalid_copra_split');
+
+                return $this->_reload($data);
+            }
+        }
+
         // Validate primary loan deduction
         if ($loan_deduction > 0 && $supplier_id !== -1) {
             if ($linked_customer_id !== null && $current_balance !== null) {
@@ -452,12 +556,32 @@ class Receivings extends Secure_Controller
                     return $this->_reload($data);
                 }
             }
+
+            if (
+                $data['copra_split_partner_ready']
+                && $copra_split_summary !== null
+                && $loan_deduction > ((float) $copra_split_summary['landowner_suggested_amount'] + 0.01)
+            ) {
+                $data['error'] = lang('Receivings.loan_deduction_exceeds_suggested_cash');
+
+                return $this->_reload($data);
+            }
         }
 
         // Validate partner loan deduction
         if ($partner_loan_deduction > 0 && $supplier_id !== -1) {
             if ($partner_loan_deduction > (float) ($partner_balance ?? 0.0)) {
                 $data['error'] = lang('Receivings.partner_loan_deduction_exceeds');
+
+                return $this->_reload($data);
+            }
+
+            if (
+                $data['copra_split_partner_ready']
+                && $copra_split_summary !== null
+                && $partner_loan_deduction > ((float) $copra_split_summary['tenant_suggested_amount'] + 0.01)
+            ) {
+                $data['error'] = lang('Receivings.partner_loan_deduction_exceeds_suggested_cash');
 
                 return $this->_reload($data);
             }
@@ -474,7 +598,22 @@ class Receivings extends Secure_Controller
         $cash_amount = $data['total'] - $loan_deduction - $partner_loan_deduction;
 
         $data['amount_tendered'] = 0;
-        if (
+        if ($data['copra_split_partner_ready'] && $copra_split_summary !== null) {
+            $landowner_cash_after_loans = round(
+                max(0.0, (float) $copra_split_summary['landowner_suggested_amount'] - $loan_deduction),
+                2,
+            );
+            $tenant_cash_after_loans = round(
+                max(0.0, (float) $copra_split_summary['tenant_suggested_amount'] - $partner_loan_deduction),
+                2,
+            );
+
+            if ($store_negative_loan) {
+                $data['amount_tendered'] = 0.0;
+            } else {
+                $data['amount_tendered'] = $landowner_cash_after_loans;
+            }
+        } elseif (
             ! $store_negative_loan
             && $this->request->getPost('amount_tendered') !== null
             && $this->request->getPost('amount_tendered') !== ''
@@ -483,7 +622,9 @@ class Receivings extends Secure_Controller
         }
 
         $partner_amount_tendered = 0;
-        if ($this->request->getPost('partner_amount_tendered') !== null && $this->request->getPost('partner_amount_tendered') !== '') {
+        if ($data['copra_split_partner_ready'] && $copra_split_summary !== null) {
+            $partner_amount_tendered = $tenant_cash_after_loans;
+        } elseif ($this->request->getPost('partner_amount_tendered') !== null && $this->request->getPost('partner_amount_tendered') !== '') {
             $partner_amount_tendered = parse_decimals($this->request->getPost('partner_amount_tendered'));
         }
         $data['partner_amount_tendered'] = $partner_amount_tendered;
@@ -521,9 +662,15 @@ class Receivings extends Secure_Controller
                 return $this->_reload($data);
             }
 
-            $data['negative_loan_amount'] = $store_negative_loan
-                ? max(0.0, $cash_amount - $partner_amount_tendered)
-                : 0.0;
+            if ($data['copra_split_partner_ready'] && $copra_split_summary !== null) {
+                $data['negative_loan_amount'] = $store_negative_loan
+                    ? round(max(0.0, (float) $copra_split_summary['landowner_suggested_amount'] - $loan_deduction), 2)
+                    : 0.0;
+            } else {
+                $data['negative_loan_amount'] = $store_negative_loan
+                    ? max(0.0, $cash_amount - $partner_amount_tendered)
+                    : 0.0;
+            }
             $data['amount_change'] = to_currency(0);
 
             if ($data['negative_loan_amount'] > 0) {
@@ -546,12 +693,19 @@ class Receivings extends Secure_Controller
             $data['payment_type'],
             $data['stock_location'],
             $selected_luna_id > 0 ? $selected_luna_id : null,
+            $data['copra_split_partner_ready'] ? (float) $data['copra_split']['landowner_share_percent'] : null,
+            $data['copra_split_partner_ready'] ? (float) $data['copra_split']['tenant_share_percent'] : null,
         );
         $data['receiving_id'] = 'RECV ' . $receiving_id_num;
 
         if ($data['receiving_id'] === 'RECV -1') {
             $data['error_message'] = lang('Receivings.transaction_failed');
         } else {
+            $this->receiving_expense->save_for_receiving(
+                $receiving_id_num,
+                $data['copra_split_partner_ready'] ? $data['copra_expenses'] : [],
+            );
+
             if ($selected_luna_id > 0) {
                 $data['selected_luna'] = $this->luna->get_info($selected_luna_id);
             }
@@ -711,6 +865,18 @@ class Receivings extends Secure_Controller
         $data['barcode']              = $this->barcode_lib->generate_receipt_barcode($data['receiving_id']);
         $employee_info                = $this->employee->get_info($receiving_info['employee_id']);
         $data['employee']             = $employee_info->first_name . ' ' . $employee_info->last_name;
+        $data['landowner_share_percent'] = $receiving_info['landowner_share_percent'] !== null && $receiving_info['landowner_share_percent'] !== ''
+            ? (float) $receiving_info['landowner_share_percent']
+            : null;
+        $data['tenant_share_percent']    = $receiving_info['tenant_share_percent'] !== null && $receiving_info['tenant_share_percent'] !== ''
+            ? (float) $receiving_info['tenant_share_percent']
+            : null;
+        $data['copra_expenses']          = $this->receiving_expense->get_by_receiving((int) $receiving_id);
+        $data['loan_deduction']         = 0.0;
+        $data['partner_loan_deduction'] = 0.0;
+        $data['amount_tendered']        = 0.0;
+        $data['partner_amount_tendered'] = 0.0;
+        $data['negative_loan_amount']   = 0.0;
 
         $supplier_id = $this->receiving_lib->get_supplier();    // TODO: Duplicated code
         if ($supplier_id !== -1) {
@@ -732,6 +898,34 @@ class Receivings extends Secure_Controller
         if (! empty($receiving_info['luna_id'])) {
             $data['selected_luna_id'] = (int) $receiving_info['luna_id'];
             $data['selected_luna']    = $this->luna->get_info((int) $receiving_info['luna_id']);
+            if ($data['selected_luna'] !== null && ! empty($data['selected_luna']->tenant_name)) {
+                $data['partner_supplier_name'] = $data['selected_luna']->tenant_name;
+            }
+        }
+
+        $tenant_supplier_id = $data['selected_luna'] !== null && ! empty($data['selected_luna']->tenant_id)
+            ? (int) $data['selected_luna']->tenant_id
+            : null;
+        $receipt_context = $this->receiving_loan_snapshot->get_report_context([(int) $receiving_id]);
+
+        foreach ($receipt_context[(int) $receiving_id]['rows'] ?? [] as $context_row) {
+            $context_supplier_id = (int) ($context_row['supplier_id'] ?? 0);
+            $cash_amount         = (float) ($context_row['cash_amount'] ?? 0);
+            $loan_amount         = (float) ($context_row['loan_deduction_amount'] ?? 0);
+
+            if ($context_supplier_id === $supplier_id) {
+                $data['amount_tendered']    = $cash_amount;
+                $data['loan_deduction']     = $loan_amount;
+                $data['loan_balance_after'] = $context_row['loan_balance_after'] !== null
+                    ? (float) $context_row['loan_balance_after']
+                    : null;
+            } elseif ($tenant_supplier_id !== null && $context_supplier_id === $tenant_supplier_id) {
+                $data['partner_amount_tendered'] = $cash_amount;
+                $data['partner_loan_deduction']  = $loan_amount;
+                $data['partner_loan_balance_after'] = $context_row['loan_balance_after'] !== null
+                    ? (float) $context_row['loan_balance_after']
+                    : null;
+            }
         }
 
         $data['print_after_sale'] = false;
@@ -775,6 +969,11 @@ class Receivings extends Secure_Controller
         $data['partner_supplier_name'] = '';
         $data['partner_loan_balance']  = '0.00';
         $data['partner_customer_id']   = null;
+        $data['supplier_category']     = GOODS_SUPPLIER;
+        $data['copra_split']           = $this->receiving_lib->get_copra_split();
+        $data['copra_expenses']        = $this->receiving_expense->normalize_expenses($this->receiving_lib->get_copra_expenses());
+        $data['show_copra_split_tools'] = false;
+        $data['copra_split_partner_ready'] = false;
         $data['loan_deduction'] ??= '';
         $data['partner_loan_deduction'] ??= '';
         $data['amount_tendered'] ??= '';
@@ -784,6 +983,14 @@ class Receivings extends Secure_Controller
 
         if ($supplier_id !== -1) {    // TODO: Duplicated Code... replace -1 with a constant
             $supplier_info            = $this->supplier->get_info($supplier_id);
+            if (! $this->supplier->is_allowed_receiving_category((int) ($supplier_info->category ?? GOODS_SUPPLIER))) {
+                $this->receiving_lib->remove_supplier();
+
+                return $this->_reload($data);
+            }
+
+            $data['supplier_category']        = (int) ($supplier_info->category ?? GOODS_SUPPLIER);
+            $data['show_copra_split_tools']   = $data['supplier_category'] === LAND_OWNER_SUPPLIER;
             $data['supplier']         = $supplier_info->first_name . ' ' . $supplier_info->last_name;
             $data['first_name']       = $supplier_info->first_name;
             $data['last_name']        = $supplier_info->last_name;
@@ -837,10 +1044,24 @@ class Receivings extends Secure_Controller
                             $data['partner_customer_id']  = $partner_customer_id;
                         }
                     }
+
+                    if ($data['supplier_category'] === LAND_OWNER_SUPPLIER) {
+                        $data['copra_split_partner_ready'] = $data['has_partner_supplier'];
+                    }
                 }
             } else {
                 $this->receiving_lib->set_luna_id(-1);
             }
+        }
+
+        if ($data['supplier_category'] !== LAND_OWNER_SUPPLIER) {
+            $this->receiving_lib->clear_copra_split();
+            $this->receiving_lib->clear_copra_expenses();
+            $data['copra_split']    = [
+                'landowner_share_percent' => 50.0,
+                'tenant_share_percent'    => 50.0,
+            ];
+            $data['copra_expenses'] = [];
         }
 
         $data['print_after_sale'] = $this->receiving_lib->is_print_after_sale();
@@ -860,24 +1081,40 @@ class Receivings extends Secure_Controller
 
         $current_employee_id   = $this->employee->get_logged_in_employee_info()->person_id;
         $submitted_employee_id = $this->request->getPost('employee_id', FILTER_SANITIZE_NUMBER_INT);
+        $existing_receiving    = $this->receiving->get_info($receiving_id)->getRowArray();
 
         if (! $this->employee->has_grant('employees', $current_employee_id)) {
-            $existing_receiving = $this->receiving->get_info($receiving_id)->getRowArray();
             $employee_id        = $existing_receiving['employee_id'];
         } else {
             $employee_id = $submitted_employee_id;
         }
 
+        $submitted_supplier_id   = $this->request->getPost('supplier_id') ? $this->request->getPost('supplier_id', FILTER_SANITIZE_NUMBER_INT) : null;
+        $submitted_supplier_info = $submitted_supplier_id ? $this->supplier->get_info((int) $submitted_supplier_id) : null;
+        $clear_copra_context     = $submitted_supplier_id === null
+            || (int) $submitted_supplier_id !== (int) ($existing_receiving['supplier_id'] ?? 0)
+            || empty($submitted_supplier_info->person_id)
+            || (int) ($submitted_supplier_info->category ?? GOODS_SUPPLIER) !== LAND_OWNER_SUPPLIER;
+
         $receiving_data = [
             'receiving_time' => $receiving_time,
-            'supplier_id'    => $this->request->getPost('supplier_id') ? $this->request->getPost('supplier_id', FILTER_SANITIZE_NUMBER_INT) : null,
+            'supplier_id'    => $submitted_supplier_id,
             'employee_id'    => $employee_id,
             'comment'        => $this->request->getPost('comment', FILTER_SANITIZE_FULL_SPECIAL_CHARS),
             'reference'      => $this->request->getPost('reference') !== '' ? $this->request->getPost('reference', FILTER_SANITIZE_FULL_SPECIAL_CHARS) : null,
         ];
 
+        if ($clear_copra_context) {
+            $receiving_data['landowner_share_percent'] = null;
+            $receiving_data['tenant_share_percent']    = null;
+        }
+
         $this->inventory->update('RECV ' . $receiving_id, ['trans_date' => $receiving_time]);
         if ($this->receiving->update($receiving_id, $receiving_data)) {
+            if ($clear_copra_context) {
+                $this->receiving_expense->save_for_receiving($receiving_id, []);
+            }
+
             return $this->response->setJSON([
                 'success' => true,
                 'message' => lang('Receivings.successfully_updated'),
@@ -902,5 +1139,41 @@ class Receivings extends Secure_Controller
         $this->receiving_lib->clear_all();
 
         return $this->_reload();    // TODO: Hungarian Notation
+    }
+
+    private function calculateCopraSplitSummary(
+        float $cash_amount,
+        float $landowner_share_percent,
+        float $tenant_share_percent,
+        array $expenses,
+    ): array {
+        $shared_total = 0.0;
+
+        foreach ($this->receiving_expense->normalize_expenses($expenses) as $expense) {
+            $amount = (float) ($expense['amount'] ?? 0);
+            $shared_total += $amount;
+        }
+
+        $shared_transfer_amount     = round($shared_total / 2, 2);
+        $base_landowner_amount      = round($cash_amount * ($landowner_share_percent / 100), 2);
+        $base_tenant_amount         = round($cash_amount - $base_landowner_amount, 2);
+        $landowner_share_after_split = round($base_landowner_amount - $shared_transfer_amount, 2);
+        $tenant_share_after_split    = round($base_tenant_amount + $shared_transfer_amount, 2);
+        $landowner_suggested_amount  = $landowner_share_after_split;
+        $tenant_suggested_amount     = $tenant_share_after_split;
+
+        return [
+            'shared_total'                 => $shared_total,
+            'shared_transfer_amount'       => $shared_transfer_amount,
+            'base_landowner_amount'        => $base_landowner_amount,
+            'base_tenant_amount'           => $base_tenant_amount,
+            'landowner_share_after_split'  => $landowner_share_after_split,
+            'tenant_share_after_split'     => $tenant_share_after_split,
+            'landowner_suggested_amount'   => $landowner_suggested_amount,
+            'tenant_suggested_amount'      => $tenant_suggested_amount,
+            'is_valid'                     => abs(($landowner_share_percent + $tenant_share_percent) - 100.0) <= 0.01
+                && $landowner_suggested_amount >= -0.01
+                && $tenant_suggested_amount >= -0.01,
+        ];
     }
 }

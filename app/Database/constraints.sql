@@ -70,6 +70,12 @@ ALTER TABLE `ospos_receivings_items`
     ADD CONSTRAINT `ospos_receivings_items_ibfk_2` FOREIGN KEY (`receiving_id`) REFERENCES `ospos_receivings` (`receiving_id`);
 
 --
+-- Constraints for table `ospos_receiving_expenses`
+--
+ALTER TABLE `ospos_receiving_expenses`
+    ADD CONSTRAINT `ospos_receiving_expenses_ibfk_receiving` FOREIGN KEY (`receiving_id`) REFERENCES `ospos_receivings` (`receiving_id`) ON DELETE CASCADE;
+
+--
 -- Constraints for table `ospos_sales`
 --
 ALTER TABLE `ospos_sales`
