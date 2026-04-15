@@ -2,11 +2,13 @@
 
 namespace App\Controllers;
 
+use App\Libraries\CashOnHandService;
 use App\Models\Cashup;
 use App\Models\Expense;
 use App\Models\Loan_adjustment;
 use App\Models\Receiving;
 use App\Models\Sale;
+use CodeIgniter\HTTP\ResponseInterface;
 use Config\OSPOS;
 
 class Cash_summary extends Secure_Controller
@@ -38,6 +40,13 @@ class Cash_summary extends Secure_Controller
         $data['sessions'] = $this->_build_sessions($date);
 
         return view('cash_summary/manage', $data);
+    }
+
+    public function getCurrent(): ResponseInterface
+    {
+        $cashOnHandService = new CashOnHandService();
+
+        return $this->response->setJSON($cashOnHandService->getCurrentCashData());
     }
 
     /**

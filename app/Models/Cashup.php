@@ -204,6 +204,38 @@ class Cashup extends Model
         return $this->getEmptyObject('cash_up');
     }
 
+    public function getLatestPendingClose(): ?object
+    {
+        $builder = $this->db->table('cash_up');
+        $builder->where('deleted', 0);
+        $builder->where('closed_amount_cash', 0);
+        $builder->where('closed_amount_due', 0);
+        $builder->where('closed_amount_card', 0);
+        $builder->where('closed_amount_check', 0);
+        $builder->orderBy('open_date', 'DESC');
+
+        $row = $builder->get(1)->getRow();
+
+        return $row ?: null;
+    }
+
+    public function getLatestClosed(): ?object
+    {
+        $builder = $this->db->table('cash_up');
+        $builder->where('deleted', 0);
+        $builder->groupStart();
+        $builder->where('closed_amount_cash !=', 0);
+        $builder->orWhere('closed_amount_due !=', 0);
+        $builder->orWhere('closed_amount_card !=', 0);
+        $builder->orWhere('closed_amount_check !=', 0);
+        $builder->groupEnd();
+        $builder->orderBy('close_date', 'DESC');
+
+        $row = $builder->get(1)->getRow();
+
+        return $row ?: null;
+    }
+
     /**
      * Initializes an empty object based on database definitions
      */
