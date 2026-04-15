@@ -7,6 +7,7 @@
 ?>
 
 <?= view('partial/header') ?>
+<?= view('partial/print_receipt', ['print_after_sale' => false, 'selected_printer' => 'takings_printer']) ?>
 
 <style>
 .ledger-section { margin-bottom: 30px; }
