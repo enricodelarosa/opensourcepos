@@ -27,24 +27,22 @@ class CashOnHandService
 
     public function getCurrentCashData(): array
     {
-        $openCashup = $this->cashup->getLatestPendingClose();
+        $latestCashup = $this->cashup->getLatest();
 
-        if ($openCashup !== null) {
-            return $this->buildOpenCashupResponse($openCashup);
+        if ($latestCashup === null) {
+            return [
+                'status'       => 'no_cashup_found',
+                'cashup_id'    => null,
+                'cash_on_hand' => null,
+                'as_of'        => date('Y-m-d H:i:s'),
+            ];
         }
 
-        $closedCashup = $this->cashup->getLatestClosed();
-
-        if ($closedCashup !== null) {
-            return $this->buildClosedCashupResponse($closedCashup);
+        if ($this->isPendingCloseCashup($latestCashup)) {
+            return $this->buildOpenCashupResponse($latestCashup);
         }
 
-        return [
-            'status'       => 'no_cashup_found',
-            'cashup_id'    => null,
-            'cash_on_hand' => null,
-            'as_of'        => date('Y-m-d H:i:s'),
-        ];
+        return $this->buildClosedCashupResponse($latestCashup);
     }
 
     private function getCashSalesTotal(string $startDateTime, string $endDateTime): float
@@ -130,6 +128,14 @@ class CashOnHandService
             'cash_difference'      => (float) ($cashup->closed_amount_total ?? 0),
             'as_of'                => $cashup->close_date,
         ];
+    }
+
+    private function isPendingCloseCashup(object $cashup): bool
+    {
+        return (float) ($cashup->closed_amount_cash ?? 0) === 0.0
+            && (float) ($cashup->closed_amount_due ?? 0) === 0.0
+            && (float) ($cashup->closed_amount_card ?? 0) === 0.0
+            && (float) ($cashup->closed_amount_check ?? 0) === 0.0;
     }
 
     private function filterRowsByWindow(array $rows, string $windowStart, string $windowEnd): array

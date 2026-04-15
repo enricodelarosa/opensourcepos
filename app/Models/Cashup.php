@@ -219,6 +219,18 @@ class Cashup extends Model
         return $row ?: null;
     }
 
+    public function getLatest(): ?object
+    {
+        $builder = $this->db->table('cash_up');
+        $builder->where('deleted', 0);
+        $builder->orderBy('open_date', 'DESC');
+        $builder->orderBy('cashup_id', 'DESC');
+
+        $row = $builder->get(1)->getRow();
+
+        return $row ?: null;
+    }
+
     public function getLatestClosed(): ?object
     {
         $builder = $this->db->table('cash_up');
