@@ -21,6 +21,34 @@
 .session-title { font-size: 1.2em; font-weight: bold; margin: 15px 0 8px; text-align: center; text-transform: uppercase; }
 .session-times { margin-bottom: 8px; text-align: center; color: #666; }
 .no-sessions { color: #999; text-align: center; padding: 30px; }
+
+@media print {
+    .ledger-section {
+        break-inside: auto;
+        page-break-inside: auto;
+    }
+
+    .session-title,
+    .session-times {
+        break-after: avoid;
+        page-break-after: avoid;
+    }
+
+    .ledger-table thead {
+        display: table-header-group;
+    }
+
+    .ledger-table tfoot {
+        display: table-row-group;
+    }
+
+    .ledger-table tr,
+    .ledger-table td,
+    .ledger-table th {
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
+}
 </style>
 
 <script type="text/javascript">
