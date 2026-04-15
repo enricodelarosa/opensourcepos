@@ -16,7 +16,7 @@ abstract class Summary_report extends Report
         // TODO: convert to using QueryBuilder. Use App/Models/Reports/Summary_taxes.php getData() as a reference template
         $where = '';    // TODO: Duplicated code
 
-        if (empty($config['date_or_time_format'])) {
+        if (empty($inputs['use_time_range']) && empty($config['date_or_time_format'])) {
             $where .= 'DATE(sale_time) BETWEEN ' . $this->db->escape($inputs['start_date']) . ' AND ' . $this->db->escape($inputs['end_date']);
         } else {
             $where .= 'sale_time BETWEEN ' . $this->db->escape(rawurldecode($inputs['start_date'])) . ' AND ' . $this->db->escape(rawurldecode($inputs['end_date']));
@@ -111,7 +111,7 @@ abstract class Summary_report extends Report
         $config = config(OSPOS::class)->settings;
 
         // TODO: Probably going to need to rework these since you can't reference $builder without it's instantiation.
-        if (empty($config['date_or_time_format'])) {    // TODO: Duplicated code
+        if (empty($inputs['use_time_range']) && empty($config['date_or_time_format'])) {    // TODO: Duplicated code
             $builder->where('DATE(sales.sale_time) BETWEEN ' . $this->db->escape($inputs['start_date']) . ' AND ' . $this->db->escape($inputs['end_date']));
         } else {
             $builder->where('sales.sale_time BETWEEN ' . $this->db->escape(rawurldecode($inputs['start_date'])) . ' AND ' . $this->db->escape(rawurldecode($inputs['end_date'])));

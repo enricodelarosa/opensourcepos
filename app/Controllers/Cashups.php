@@ -279,28 +279,28 @@ class Cashups extends Secure_Controller
             $breakdown['expenses_cash'] += (float) $row['amount'];
         }
 
-        $breakdown['loan_adjustments'] = $this->loan_adjustment->get_cash_total_for_period($inputs['start_date'], $inputs['end_date']);
-        $breakdown['receivings_cash']  = $this->receiving->get_cash_total_for_period($inputs['start_date'], $inputs['end_date']);
+        $breakdown['loan_adjustments'] = $this->loan_adjustment->get_cash_total_for_period(
+            $inputs['start_date'],
+            $inputs['end_date'],
+            ! empty($inputs['use_time_range']),
+        );
+        $breakdown['receivings_cash']  = $this->receiving->get_cash_total_for_period(
+            $inputs['start_date'],
+            $inputs['end_date'],
+            ! empty($inputs['use_time_range']),
+        );
 
         return $breakdown;
     }
 
     private function buildCashBreakdownInputs(string $openDate, string $closeDate): array
     {
-        if (empty($this->config['date_or_time_format'])) {
-            return [
-                'start_date'  => substr($openDate, 0, 10),
-                'end_date'    => substr($closeDate, 0, 10),
-                'sale_type'   => 'complete',
-                'location_id' => 'all',
-            ];
-        }
-
         return [
-            'start_date'  => $openDate,
-            'end_date'    => $closeDate,
-            'sale_type'   => 'complete',
-            'location_id' => 'all',
+            'start_date'      => $openDate,
+            'end_date'        => $closeDate,
+            'sale_type'       => 'complete',
+            'location_id'     => 'all',
+            'use_time_range'  => true,
         ];
     }
 

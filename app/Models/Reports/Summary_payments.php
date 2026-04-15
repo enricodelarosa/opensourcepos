@@ -44,7 +44,7 @@ class Summary_payments extends Summary_report
         $where = '';    // TODO: Duplicated code
 
         // TODO: this needs to be converted to ternary notation
-        if (empty($config['date_or_time_format'])) {
+        if (empty($inputs['use_time_range']) && empty($config['date_or_time_format'])) {
             $where .= 'DATE(sale_time) BETWEEN ' . $this->db->escape($inputs['start_date']) . ' AND ' . $this->db->escape($inputs['end_date']);
         } else {
             $where .= 'sale_time BETWEEN ' . $this->db->escape(rawurldecode($inputs['start_date'])) . ' AND ' . $this->db->escape(rawurldecode($inputs['end_date']));

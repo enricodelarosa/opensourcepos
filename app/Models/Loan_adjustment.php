@@ -204,14 +204,14 @@ class Loan_adjustment extends Model
      *   Positive sum = net cash went OUT  → subtract from cashup cash
      *   Negative sum = net cash came IN   → subtract a negative = add to cashup cash
      */
-    public function get_cash_total_for_period(string $start_date, string $end_date): float
+    public function get_cash_total_for_period(string $start_date, string $end_date, bool $use_time_range = false): float
     {
         $config  = config(OSPOS::class)->settings;
         $builder = $this->db->table('loan_adjustments');
         $builder->selectSum('loan_amount', 'total');
         $builder->where('deleted', 0);
 
-        if (empty($config['date_or_time_format'])) {
+        if (! $use_time_range && empty($config['date_or_time_format'])) {
             $builder->where('DATE_FORMAT(adjustment_time, "%Y-%m-%d") BETWEEN ' . $this->db->escape($start_date) . ' AND ' . $this->db->escape($end_date));
         } else {
             $builder->where('adjustment_time BETWEEN ' . $this->db->escape(rawurldecode($start_date)) . ' AND ' . $this->db->escape(rawurldecode($end_date)));
@@ -225,7 +225,7 @@ class Loan_adjustment extends Model
     /**
      * Returns individual cash-adjustment rows with optional luna labels for cash summary.
      */
-    public function get_cash_rows_for_period(string $start_date, string $end_date): array
+    public function get_cash_rows_for_period(string $start_date, string $end_date, bool $use_time_range = false): array
     {
         $config  = config(OSPOS::class)->settings;
         $builder = $this->db->table('loan_adjustments AS loan_adjustments');
@@ -242,7 +242,7 @@ class Loan_adjustment extends Model
         $builder->join('lunas AS lunas', 'lunas.luna_id = customer_loans.luna_id', 'LEFT');
         $builder->where('loan_adjustments.deleted', 0);
 
-        if (empty($config['date_or_time_format'])) {
+        if (! $use_time_range && empty($config['date_or_time_format'])) {
             $builder->where('DATE_FORMAT(loan_adjustments.adjustment_time, "%Y-%m-%d") BETWEEN ' . $this->db->escape($start_date) . ' AND ' . $this->db->escape($end_date));
         } else {
             $builder->where('loan_adjustments.adjustment_time BETWEEN ' . $this->db->escape(rawurldecode($start_date)) . ' AND ' . $this->db->escape(rawurldecode($end_date)));

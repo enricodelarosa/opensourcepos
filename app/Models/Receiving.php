@@ -287,14 +287,14 @@ class Receiving extends Model
     /**
      * Returns the total cash paid for receivings within a date range.
      */
-    public function get_cash_total_for_period(string $start_date, string $end_date): float
+    public function get_cash_total_for_period(string $start_date, string $end_date, bool $use_time_range = false): float
     {
         if (! $this->db->tableExists('receiving_payments')) {
             $builder = $this->db->table('receivings AS receivings');
             $builder->select('SUM(' . $this->getReceivingLineTotalExpression('receivings_items') . ') AS total', false);
             $builder->join('receivings_items AS receivings_items', 'receivings_items.receiving_id = receivings.receiving_id');
             $builder->where('receivings.payment_type', lang('Sales.cash'));
-            $this->applyReceivingDateRange($builder, $start_date, $end_date);
+            $this->applyReceivingDateRange($builder, $start_date, $end_date, $use_time_range);
 
             $result = $builder->get()->getRow();
 
@@ -304,11 +304,11 @@ class Receiving extends Model
         $payments_builder = $this->db->table('receiving_payments AS receiving_payments');
         $payments_builder->select('SUM(receiving_payments.cash_amount) AS total');
         $payments_builder->join('receivings AS receivings', 'receivings.receiving_id = receiving_payments.receiving_id');
-        $this->applyReceivingDateRange($payments_builder, $start_date, $end_date);
+        $this->applyReceivingDateRange($payments_builder, $start_date, $end_date, $use_time_range);
 
         $payments_total = (float) ($payments_builder->get()->getRow()->total ?? 0);
 
-        return $payments_total + $this->get_unassigned_cash_total_for_period($start_date, $end_date);
+        return $payments_total + $this->get_unassigned_cash_total_for_period($start_date, $end_date, $use_time_range);
     }
 
     /**
@@ -357,9 +357,9 @@ class Receiving extends Model
         return $this->format_cash_receiving_rows($rows);
     }
 
-    private function get_unassigned_cash_total_for_period(string $start_date, string $end_date): float
+    private function get_unassigned_cash_total_for_period(string $start_date, string $end_date, bool $use_time_range = false): float
     {
-        $builder = $this->build_unassigned_cash_receivings_builder($start_date, $end_date);
+        $builder = $this->build_unassigned_cash_receivings_builder($start_date, $end_date, $use_time_range);
         $builder->select('SUM(' . $this->getReceivingLineTotalExpression('receivings_items') . ') AS total', false);
 
         return (float) ($builder->get()->getRow()->total ?? 0);
@@ -382,7 +382,7 @@ class Receiving extends Model
         return $builder->get()->getResultArray();
     }
 
-    private function build_unassigned_cash_receivings_builder(string $start_date, string $end_date): BaseBuilder
+    private function build_unassigned_cash_receivings_builder(string $start_date, string $end_date, bool $use_time_range = false): BaseBuilder
     {
         $has_luna_context = $this->hasLunaContext();
         $builder = $this->db->table('receivings AS receivings');
@@ -394,7 +394,7 @@ class Receiving extends Model
         $builder->where('receivings.supplier_id IS NULL', null, false);
         $builder->where('receiving_payments.id IS NULL', null, false);
         $builder->where('receivings.payment_type', lang('Sales.cash'));
-        $this->applyReceivingDateRange($builder, $start_date, $end_date);
+        $this->applyReceivingDateRange($builder, $start_date, $end_date, $use_time_range);
 
         return $builder;
     }
@@ -462,10 +462,19 @@ class Receiving extends Model
             . ' - ' . $itemsAlias . '.discount END)';
     }
 
-    private function applyReceivingDateRange(BaseBuilder $builder, string $start_date, string $end_date): void
+    private function applyReceivingDateRange(BaseBuilder $builder, string $start_date, string $end_date, bool $use_time_range = false): void
     {
-        $builder->where('DATE(receivings.receiving_time) >= ' . $this->db->escape($start_date), null, false);
-        $builder->where('DATE(receivings.receiving_time) <= ' . $this->db->escape($end_date), null, false);
+        $config = config(OSPOS::class)->settings;
+
+        if (! $use_time_range && empty($config['date_or_time_format'])) {
+            $builder->where('DATE(receivings.receiving_time) >= ' . $this->db->escape($start_date), null, false);
+            $builder->where('DATE(receivings.receiving_time) <= ' . $this->db->escape($end_date), null, false);
+
+            return;
+        }
+
+        $builder->where('receivings.receiving_time >= ' . $this->db->escape(rawurldecode($start_date)), null, false);
+        $builder->where('receivings.receiving_time <= ' . $this->db->escape(rawurldecode($end_date)), null, false);
     }
 
     private function hasLunaContext(): bool
