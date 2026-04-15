@@ -1148,23 +1148,33 @@ class Receivings extends Secure_Controller
         array $expenses,
     ): array {
         $shared_total = 0.0;
+        $landowner_add_back_total = 0.0;
+        $tenant_add_back_total = 0.0;
 
         foreach ($this->receiving_expense->normalize_expenses($expenses) as $expense) {
             $amount = (float) ($expense['amount'] ?? 0);
             $shared_total += $amount;
+
+            if (($expense['add_back_to'] ?? Receiving_expense::ADD_BACK_TO_TENANT) === Receiving_expense::ADD_BACK_TO_SUPPLIER) {
+                $landowner_add_back_total += $amount;
+            } else {
+                $tenant_add_back_total += $amount;
+            }
         }
 
         $shared_transfer_amount     = round($shared_total / 2, 2);
         $base_landowner_amount      = round($cash_amount * ($landowner_share_percent / 100), 2);
         $base_tenant_amount         = round($cash_amount - $base_landowner_amount, 2);
-        $landowner_share_after_split = round($base_landowner_amount - $shared_transfer_amount, 2);
-        $tenant_share_after_split    = round($base_tenant_amount + $shared_transfer_amount, 2);
+        $landowner_share_after_split = round($base_landowner_amount - $shared_transfer_amount + $landowner_add_back_total, 2);
+        $tenant_share_after_split    = round($base_tenant_amount - $shared_transfer_amount + $tenant_add_back_total, 2);
         $landowner_suggested_amount  = $landowner_share_after_split;
         $tenant_suggested_amount     = $tenant_share_after_split;
 
         return [
             'shared_total'                 => $shared_total,
             'shared_transfer_amount'       => $shared_transfer_amount,
+            'landowner_add_back_total'     => round($landowner_add_back_total, 2),
+            'tenant_add_back_total'        => round($tenant_add_back_total, 2),
             'base_landowner_amount'        => $base_landowner_amount,
             'base_tenant_amount'           => $base_tenant_amount,
             'landowner_share_after_split'  => $landowner_share_after_split,

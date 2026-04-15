@@ -6,6 +6,10 @@ use CodeIgniter\Model;
 
 class Receiving_expense extends Model
 {
+    public const ADD_BACK_TO_TENANT = 'tenant';
+    public const ADD_BACK_TO_LANDOWNER = 'landowner';
+    public const ADD_BACK_TO_SUPPLIER = self::ADD_BACK_TO_LANDOWNER;
+
     protected $table            = 'receiving_expenses';
     protected $primaryKey       = 'id';
     protected $useAutoIncrement = true;
@@ -14,6 +18,7 @@ class Receiving_expense extends Model
         'receiving_id',
         'description',
         'amount',
+        'add_back_to',
         'sort_order',
     ];
 
@@ -40,6 +45,7 @@ class Receiving_expense extends Model
                 'receiving_id' => $receiving_id,
                 'description'  => $expense['description'],
                 'amount'       => $expense['amount'],
+                'add_back_to'  => $expense['add_back_to'],
                 'sort_order'   => $index,
             ]);
         }
@@ -64,6 +70,7 @@ class Receiving_expense extends Model
             $normalized[] = [
                 'description' => $description,
                 'amount'      => $amount,
+                'add_back_to' => $this->normalizeAddBackTo($expense['add_back_to'] ?? null),
             ];
         }
 
@@ -75,6 +82,14 @@ class Receiving_expense extends Model
         return [
             'description' => trim((string) ($row['description'] ?? '')),
             'amount'      => round(max(0, (float) ($row['amount'] ?? 0)), 2),
+            'add_back_to' => $this->normalizeAddBackTo($row['add_back_to'] ?? null),
         ];
+    }
+
+    private function normalizeAddBackTo(mixed $value): string
+    {
+        return in_array($value, [self::ADD_BACK_TO_LANDOWNER, 'supplier'], true)
+            ? self::ADD_BACK_TO_LANDOWNER
+            : self::ADD_BACK_TO_TENANT;
     }
 }

@@ -509,6 +509,7 @@ CREATE TABLE `ospos_receiving_expenses` (
     `receiving_id` int(10) NOT NULL,
     `description` varchar(255) NOT NULL,
     `amount` decimal(15,2) NOT NULL DEFAULT '0.00',
+    `add_back_to` varchar(20) NOT NULL DEFAULT 'tenant',
     `sort_order` int(10) NOT NULL DEFAULT '0',
     PRIMARY KEY (`id`),
     KEY `receiving_id` (`receiving_id`)

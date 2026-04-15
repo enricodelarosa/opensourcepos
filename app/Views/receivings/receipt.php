@@ -45,11 +45,15 @@ $show_copra_expenses        = $show_copra_split_breakdown && ! empty($copra_expe
 $landowner_base_share       = null;
 $tenant_base_share          = null;
 $shared_total               = 0.0;
+$landowner_add_back_total   = 0.0;
+$tenant_add_back_total      = 0.0;
 $shared_transfer_amount     = 0.0;
 $net_amount_for_split       = null;
 $landowner_split_share      = null;
 $tenant_split_share         = null;
 $has_shared_expense_transfer = false;
+$has_landowner_add_back     = false;
+$has_tenant_add_back        = false;
 $landowner_share_after_split  = null;
 $tenant_share_after_split     = null;
 
@@ -69,17 +73,25 @@ if ($show_copra_split_breakdown) {
     foreach ($copra_expenses as $expense) {
         $amount = (float) ($expense['amount'] ?? 0);
         $shared_total += $amount;
+
+        if (($expense['add_back_to'] ?? 'tenant') === 'landowner' || ($expense['add_back_to'] ?? 'tenant') === 'supplier') {
+            $landowner_add_back_total += $amount;
+        } else {
+            $tenant_add_back_total += $amount;
+        }
     }
 
     $shared_transfer_amount       = round($shared_total / 2, 2);
     $has_shared_expense_transfer  = $shared_transfer_amount > 0.009;
+    $has_landowner_add_back       = $landowner_add_back_total > 0.009;
+    $has_tenant_add_back          = $tenant_add_back_total > 0.009;
     $landowner_base_share         = round($total * ($landowner_share_percent / 100), 2);
     $tenant_base_share            = round($total - $landowner_base_share, 2);
-    $landowner_share_after_split  = round($landowner_base_share - $shared_transfer_amount, 2);
-    $tenant_share_after_split     = round($tenant_base_share + $shared_transfer_amount, 2);
+    $landowner_share_after_split  = round($landowner_base_share - $shared_transfer_amount + $landowner_add_back_total, 2);
+    $tenant_share_after_split     = round($tenant_base_share - $shared_transfer_amount + $tenant_add_back_total, 2);
     $net_amount_for_split         = round($total - $shared_total, 2);
-    $landowner_split_share        = $landowner_share_after_split;
-    $tenant_split_share           = round($tenant_share_after_split - $shared_total, 2);
+    $landowner_split_share        = round($landowner_share_after_split - $landowner_add_back_total, 2);
+    $tenant_split_share           = round($tenant_share_after_split - $tenant_add_back_total, 2);
 }
 ?>
 
@@ -216,11 +228,20 @@ if ($show_copra_split_breakdown) {
                                 <td style="text-align: right;"><?= to_currency((float) $landowner_split_share) ?></td>
                                 <td style="text-align: right;"><?= to_currency((float) $tenant_split_share) ?></td>
                             </tr>
-                            <tr>
-                                <td><?= lang('Receivings.shared_expense_added_to_tenant') ?></td>
-                                <td style="text-align: right;"><?= to_currency(0) ?></td>
-                                <td style="text-align: right;"><?= esc($format_adjustment($shared_total)) ?></td>
-                            </tr>
+                            <?php if ($has_landowner_add_back) { ?>
+                                <tr>
+                                    <td><?= lang('Receivings.shared_expense_added_to_landowner') ?></td>
+                                    <td style="text-align: right;"><?= esc($format_adjustment($landowner_add_back_total)) ?></td>
+                                    <td style="text-align: right;"><?= to_currency(0) ?></td>
+                                </tr>
+                            <?php } ?>
+                            <?php if ($has_tenant_add_back) { ?>
+                                <tr>
+                                    <td><?= lang('Receivings.shared_expense_added_to_tenant') ?></td>
+                                    <td style="text-align: right;"><?= to_currency(0) ?></td>
+                                    <td style="text-align: right;"><?= esc($format_adjustment($tenant_add_back_total)) ?></td>
+                                </tr>
+                            <?php } ?>
                         <?php } else { ?>
                             <tr>
                                 <td><?= lang('Receivings.base_share') ?></td>
@@ -263,13 +284,15 @@ if ($show_copra_split_breakdown) {
         <?php } ?>
         <?php if ($show_copra_expenses) { ?>
             <tr>
-                <td colspan="3" style="text-align: right;"><strong><?= lang('Receivings.copra_expenses') ?></strong></td>
+                <td colspan="2" style="text-align: right;"><strong><?= lang('Receivings.copra_expenses') ?></strong></td>
+                <td style="text-align: right;"><strong><?= lang('Receivings.expense_add_back_to') ?></strong></td>
                 <td></td>
             </tr>
             <?php foreach ($copra_expenses as $expense) { ?>
                 <?php $expense_description = trim((string) ($expense['description'] ?? '')); ?>
                 <tr>
-                    <td colspan="3" style="text-align: right;"><?= esc($expense_description) ?></td>
+                    <td colspan="2" style="text-align: right;"><?= esc($expense_description) ?></td>
+                    <td style="text-align: right;"><?= esc(((($expense['add_back_to'] ?? 'tenant') === 'landowner') || (($expense['add_back_to'] ?? 'tenant') === 'supplier')) ? lang('Receivings.add_back_to_landowner') : lang('Receivings.add_back_to_tenant')) ?></td>
                     <td>
                         <div class="total-value"><?= to_currency((float) ($expense['amount'] ?? 0)) ?></div>
                     </td>

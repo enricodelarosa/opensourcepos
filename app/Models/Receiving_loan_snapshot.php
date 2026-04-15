@@ -220,6 +220,7 @@ class Receiving_loan_snapshot extends Model
             'receiving_id',
             'description',
             'amount',
+            'add_back_to',
         ]);
         $builder->whereIn('receiving_id', $receiving_ids);
         $builder->orderBy('receiving_id', 'asc');
@@ -232,6 +233,9 @@ class Receiving_loan_snapshot extends Model
             $rows[(int) $row['receiving_id']][] = [
                 'description' => trim((string) ($row['description'] ?? '')),
                 'amount'      => round(max(0, (float) ($row['amount'] ?? 0)), 2),
+                'add_back_to' => ($row['add_back_to'] ?? Receiving_expense::ADD_BACK_TO_TENANT) === Receiving_expense::ADD_BACK_TO_SUPPLIER
+                    ? Receiving_expense::ADD_BACK_TO_LANDOWNER
+                    : Receiving_expense::ADD_BACK_TO_TENANT,
             ];
         }
 

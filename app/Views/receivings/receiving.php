@@ -35,6 +35,16 @@
 
 <?= view('partial/header') ?>
 
+<style>
+    #register_wrapper {
+        width: 55%;
+    }
+
+    #overall_sale {
+        width: 40%;
+    }
+</style>
+
 <?php
 if (isset($error)) {
     echo '<div class="alert alert-dismissible alert-danger">' . esc($error) . '</div>';
@@ -122,13 +132,11 @@ if (isset($success)) {
         <thead>
             <tr>
                 <th style="width: 5%;"><?= lang('Common.delete') ?></th>
-                <th style="width: 15%;"><?= lang('Sales.item_number') ?></th>
-                <th style="width: 23%;"><?= lang(ucfirst($controller_name) . '.item_name') ?></th>
-                <th style="width: 10%;"><?= lang(ucfirst($controller_name) . '.cost') ?></th>
-                <th style="width: 8%;"><?= lang(ucfirst($controller_name) . '.quantity') ?></th>
-                <th style="width: 10%;"><?= lang(ucfirst($controller_name) . '.ship_pack') ?></th>
-                <th style="width: 14%;"><?= lang(ucfirst($controller_name) . '.discount') ?></th>
-                <th style="width: 10%;"><?= lang(ucfirst($controller_name) . '.total') ?></th>
+                <th style="width: 18%;"><?= lang('Sales.item_number') ?></th>
+                <th style="width: 30%;"><?= lang(ucfirst($controller_name) . '.item_name') ?></th>
+                <th style="width: 14%;"><?= lang(ucfirst($controller_name) . '.cost') ?></th>
+                <th style="width: 10%;"><?= lang(ucfirst($controller_name) . '.quantity') ?></th>
+                <th style="width: 18%;"><?= lang(ucfirst($controller_name) . '.total') ?></th>
                 <th style="width: 5%;"><?= lang(ucfirst($controller_name) . '.update') ?></th>
             </tr>
         </thead>
@@ -136,7 +144,7 @@ if (isset($success)) {
         <tbody id="cart_contents">
             <?php if (count($cart) === 0) { ?>
                 <tr>
-                    <td colspan="9">
+                    <td colspan="6">
                         <div class="alert alert-dismissible alert-info"><?= lang('Sales.no_items_in_cart') ?></div>
                     </td>
                 </tr>
@@ -175,39 +183,9 @@ if (isset($success)) {
                         <td>
                             <?= form_input(['name' => 'quantity', 'class' => 'form-control input-sm', 'value' => to_quantity_decimals($item['quantity']), 'onClick' => 'this.select();']) ?>
                         </td>
-                        <td>
-                            <?= form_dropdown(
-                                'receiving_quantity',
-                                $item['receiving_quantity_choices'],
-                                $item['receiving_quantity'],
-                                ['class' => 'form-control input-sm'],
-                            ) ?>
-                        </td>
-
-                        <?php if ($items_module_allowed && $mode !== 'requisition') { ?>
-                            <td>
-                                <div class="input-group">
-                                    <?= form_input(['name' => 'discount', 'class' => 'form-control input-sm', 'value' => $item['discount_type'] ? to_currency_no_money($item['discount']) : to_decimals($item['discount']), 'onClick' => 'this.select();']) ?>
-                                    <span class="input-group-btn">
-                                        <?= form_checkbox([
-                                            'id'           => 'discount_toggle',
-                                            'name'         => 'discount_toggle',
-                                            'value'        => 1,
-                                            'data-toggle'  => 'toggle',
-                                            'data-size'    => 'small',
-                                            'data-onstyle' => 'success',
-                                            'data-on'      => '<b>' . $config['currency_symbol'] . '</b>',
-                                            'data-off'     => '<b>%</b>',
-                                            'data-line'    => $line,
-                                            'checked'      => $item['discount_type'] === 1,
-                                        ]) ?>
-                                    </span>
-                                </div>
-                            </td>
-                        <?php } else { ?>
-                            <td><?= $item['discount'] ?></td>
-                            <?= form_hidden('discount', (string) $item['discount']) ?>
-                        <?php } ?>
+                        <?= form_hidden('receiving_quantity', (string) $item['receiving_quantity']) ?>
+                        <?= form_hidden('discount', (string) $item['discount']) ?>
+                        <?= form_hidden('discount_type', (string) $item['discount_type']) ?>
                         <td>
                             <?= to_currency(($item['discount_type'] === PERCENT) ? $item['price'] * $item['quantity'] * $item['receiving_quantity'] - $item['price'] * $item['quantity'] * $item['receiving_quantity'] * $item['discount'] / 100 : $item['price'] * $item['quantity'] * $item['receiving_quantity'] - $item['discount']) ?>
                         </td>
@@ -241,7 +219,7 @@ if (isset($success)) {
                                 }
                     ?>
                         </td>
-                        <td colspan="7"></td>
+                        <td colspan="4"></td>
                     </tr>
 
                     <?= form_close() ?>
@@ -528,8 +506,9 @@ if (isset($success)) {
                                                     <table class="table table-condensed table-bordered" style="margin-bottom: 8px;">
                                                         <thead>
                                                             <tr>
-                                                                <th style="width: 70%;"><?= esc(lang('Receivings.expense_description')) ?></th>
-                                                                <th style="width: 24%; text-align: right;"><?= esc(lang('Receivings.expense_amount')) ?></th>
+                                                                <th style="width: 46%;"><?= esc(lang('Receivings.expense_description')) ?></th>
+                                                                <th style="width: 20%; text-align: right;"><?= esc(lang('Receivings.expense_amount')) ?></th>
+                                                                <th style="width: 28%;"><?= esc(lang('Receivings.expense_add_back_to')) ?></th>
                                                                 <th style="width: 6%; text-align: center;"><?= esc(lang('Common.delete')) ?></th>
                                                             </tr>
                                                         </thead>
@@ -874,12 +853,6 @@ if (isset($success)) {
             $(this).parents("tr").prevAll("form:first").submit()
         });
 
-        $('[name="discount_toggle"]').change(function() {
-            var input = $("<input>").attr("type", "hidden").attr("name", "discount_type").val(($(this).prop('checked')) ? 1 : 0);
-            $('#cart_' + $(this).attr('data-line')).append($(input));
-            $('#cart_' + $(this).attr('data-line')).submit();
-        });
-
         <?php if ($has_linked_customer || ($partner_customer_id && $partner_loan_balance > 0) || $has_partner_supplier) { ?>
         var receivingTotal = <?= json_encode((float) $total) ?>;
         var maxLoanDeduction = Math.max(0, Math.min(<?= json_encode((float) ($loan_balance ?? 0)) ?>, receivingTotal));
@@ -892,6 +865,8 @@ if (isset($success)) {
         var initialCopraExpenses = <?= json_encode($copra_expenses) ?>;
         var copraSettingsUrl = <?= json_encode(site_url("{$controller_name}/setCopraSettings")) ?>;
         var deleteLabel = <?= json_encode(lang('Common.delete')) ?>;
+        var addBackToTenantLabel = <?= json_encode(lang('Receivings.add_back_to_tenant')) ?>;
+        var addBackToLandownerLabel = <?= json_encode(lang('Receivings.add_back_to_landowner')) ?>;
         var invalidSplitMessages = {
             total: <?= json_encode(lang('Receivings.copra_split_total_invalid')) ?>,
             negative: <?= json_encode(lang('Receivings.copra_split_negative_result')) ?>
@@ -965,6 +940,9 @@ if (isset($success)) {
         function normalizeExpense(rawExpense) {
             var description = $.trim((rawExpense && rawExpense.description) || '');
             var amount = parseNumericValue(rawExpense && rawExpense.amount);
+            var addBackTo = ((rawExpense && rawExpense.add_back_to) === 'landowner' || (rawExpense && rawExpense.add_back_to) === 'supplier')
+                ? 'landowner'
+                : 'tenant';
 
             if (isNaN(amount) || amount < 0) {
                 amount = 0;
@@ -972,7 +950,8 @@ if (isset($success)) {
 
             return {
                 description: description,
-                amount: roundCurrency(amount)
+                amount: roundCurrency(amount),
+                add_back_to: addBackTo
             };
         }
 
@@ -983,6 +962,10 @@ if (isset($success)) {
                 '<tr class="copra-expense-row">' +
                     '<td><input type="text" class="form-control input-sm copra-expense-description" value="' + escapeHtml(normalizedExpense.description) + '" /></td>' +
                     '<td><input type="number" class="form-control input-sm copra-expense-amount text-right" min="0" step="0.01" style="min-width: 110px;" value="' + (normalizedExpense.amount > 0 ? normalizedExpense.amount.toFixed(2) : '') + '" /></td>' +
+                    '<td><select class="form-control input-sm copra-expense-add-back-to">'
+                        + '<option value="tenant"' + (normalizedExpense.add_back_to === 'tenant' ? ' selected' : '') + '>' + escapeHtml(addBackToTenantLabel) + '</option>'
+                        + '<option value="landowner"' + (normalizedExpense.add_back_to === 'landowner' ? ' selected' : '') + '>' + escapeHtml(addBackToLandownerLabel) + '</option>'
+                    + '</select></td>' +
                     '<td style="text-align: center;"><button type="button" class="btn btn-link text-danger copra-expense-delete" style="padding: 0 2px;" title="' + escapeHtml(deleteLabel) + '"><span class="glyphicon glyphicon-trash"></span></button></td>' +
                 '</tr>';
         }
@@ -1003,7 +986,7 @@ if (isset($success)) {
             if (!expenses.length) {
                 $('#copra_expense_body').html(
                     '<tr class="copra-expense-empty">' +
-                        '<td colspan="3" style="text-align: center; color: #777;">' + escapeHtml(noCopraExpensesLabel) + '</td>' +
+                        '<td colspan="4" style="text-align: center; color: #777;">' + escapeHtml(noCopraExpensesLabel) + '</td>' +
                     '</tr>'
                 );
                 updateCopraExpensePayload();
@@ -1027,7 +1010,8 @@ if (isset($success)) {
             $('#copra_expense_body .copra-expense-row').each(function() {
                 var expense = normalizeExpense({
                     description: $(this).find('.copra-expense-description').val(),
-                    amount: $(this).find('.copra-expense-amount').val()
+                    amount: $(this).find('.copra-expense-amount').val(),
+                    add_back_to: $(this).find('.copra-expense-add-back-to').val()
                 });
 
                 if (expense.description !== '' && expense.amount > 0) {
@@ -1067,18 +1051,28 @@ if (isset($success)) {
             var tenantSharePercent = normalizePercentage($('#tenant_share_percent').val());
             var expenses = getCopraExpenses();
             var sharedTotal = 0;
+            var landownerAddBackTotal = 0;
+            var tenantAddBackTotal = 0;
 
             $.each(expenses, function(_, expense) {
                 sharedTotal += expense.amount;
+
+                if (expense.add_back_to === 'landowner') {
+                    landownerAddBackTotal += expense.amount;
+                } else {
+                    tenantAddBackTotal += expense.amount;
+                }
             });
 
             sharedTotal = roundCurrency(sharedTotal);
+            landownerAddBackTotal = roundCurrency(landownerAddBackTotal);
+            tenantAddBackTotal = roundCurrency(tenantAddBackTotal);
 
             var sharedTransferAmount = roundCurrency(sharedTotal / 2);
             var baseLandownerAmount = roundCurrency(purchaseTotal * (landownerSharePercent / 100));
             var baseTenantAmount = roundCurrency(purchaseTotal - baseLandownerAmount);
-            var landownerSuggestedAmount = roundCurrency(baseLandownerAmount - sharedTransferAmount);
-            var tenantSuggestedAmount = roundCurrency(purchaseTotal - landownerSuggestedAmount);
+            var landownerSuggestedAmount = roundCurrency(baseLandownerAmount - sharedTransferAmount + landownerAddBackTotal);
+            var tenantSuggestedAmount = roundCurrency(baseTenantAmount - sharedTransferAmount + tenantAddBackTotal);
             var validationMessage = '';
             var isValid = true;
 
@@ -1095,6 +1089,8 @@ if (isset($success)) {
                 tenantSharePercent: tenantSharePercent,
                 baseLandownerAmount: baseLandownerAmount,
                 baseTenantAmount: baseTenantAmount,
+                landownerAddBackTotal: landownerAddBackTotal,
+                tenantAddBackTotal: tenantAddBackTotal,
                 landownerSuggestedAmount: Math.max(0, landownerSuggestedAmount),
                 tenantSuggestedAmount: Math.max(0, tenantSuggestedAmount),
                 isValid: isValid,
@@ -1306,14 +1302,15 @@ if (isset($success)) {
                 var currentExpenses = getCopraExpenses();
                 currentExpenses.push({
                     description: '',
-                    amount: 0
+                    amount: 0,
+                    add_back_to: 'tenant'
                 });
 
                 renderCopraExpenses(currentExpenses);
                 queueCopraSettingsSave();
             });
 
-            $('#copra_expense_body').on('input change', '.copra-expense-description, .copra-expense-amount', function() {
+            $('#copra_expense_body').on('input change', '.copra-expense-description, .copra-expense-amount, .copra-expense-add-back-to', function() {
                 updateCopraExpensePayload();
                 queueCopraSettingsSave();
                 updateCashToPay();

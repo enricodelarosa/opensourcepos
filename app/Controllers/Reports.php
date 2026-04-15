@@ -6,6 +6,7 @@ use App\Models\Attribute;
 use App\Models\Customer;
 use App\Models\Customer_loan;
 use App\Models\Receiving_loan_snapshot;
+use App\Models\Receiving_expense;
 use App\Models\Reports\Customer_loans_report;
 use App\Models\Reports\Detailed_receivings;
 use App\Models\Reports\Detailed_sales;
@@ -1913,20 +1914,28 @@ class Reports extends Secure_Controller
         }
 
         $shared_total = 0.0;
+        $landowner_add_back_total = 0.0;
+        $tenant_add_back_total = 0.0;
 
         foreach ($receiving_context['expenses'] ?? [] as $expense) {
             $amount = (float) ($expense['amount'] ?? 0);
             $shared_total += $amount;
+
+            if (($expense['add_back_to'] ?? Receiving_expense::ADD_BACK_TO_TENANT) === Receiving_expense::ADD_BACK_TO_SUPPLIER) {
+                $landowner_add_back_total += $amount;
+            } else {
+                $tenant_add_back_total += $amount;
+            }
         }
 
         $landowner_name = trim((string) ($receiving_context['landowner_name'] ?? ''));
         $tenant_name    = trim((string) ($receiving_context['tenant_name'] ?? ''));
 
-        $shared_transfer_amount     = round($shared_total / 2, 2);
-        $landowner_base_share       = round($total * (((float) $landowner_share_percent) / 100), 2);
-        $tenant_base_share          = round($total - $landowner_base_share, 2);
-        $landowner_share_after_split = round($landowner_base_share - $shared_transfer_amount, 2);
-        $tenant_share_after_split    = round($tenant_base_share + $shared_transfer_amount, 2);
+        $shared_transfer_amount      = round($shared_total / 2, 2);
+        $landowner_base_share        = round($total * (((float) $landowner_share_percent) / 100), 2);
+        $tenant_base_share           = round($total - $landowner_base_share, 2);
+        $landowner_share_after_split = round($landowner_base_share - $shared_transfer_amount + $landowner_add_back_total, 2);
+        $tenant_share_after_split    = round($tenant_base_share - $shared_transfer_amount + $tenant_add_back_total, 2);
 
         return [
             'landowner_name'              => $landowner_name !== '' ? $landowner_name : lang('Reports.landowner'),
@@ -1936,8 +1945,11 @@ class Reports extends Secure_Controller
             'landowner_base_share'        => to_currency($landowner_base_share),
             'tenant_base_share'           => to_currency($tenant_base_share),
             'has_shared_expense_transfer' => $shared_transfer_amount > 0.009,
+            'has_landowner_add_back'      => $landowner_add_back_total > 0.009,
+            'has_tenant_add_back'         => $tenant_add_back_total > 0.009,
             'shared_transfer_amount'      => $this->formatCurrencyAdjustment(-$shared_transfer_amount),
-            'shared_total'                => $this->formatCurrencyAdjustment($shared_total),
+            'landowner_add_back_total'    => $this->formatCurrencyAdjustment($landowner_add_back_total),
+            'tenant_add_back_total'       => $this->formatCurrencyAdjustment($tenant_add_back_total),
             'landowner_share_after_split' => to_currency($landowner_share_after_split),
             'tenant_share_after_split'    => to_currency($tenant_share_after_split),
         ];
@@ -1955,6 +1967,9 @@ class Reports extends Secure_Controller
             $rows[] = [
                 'description' => trim((string) ($expense['description'] ?? '')),
                 'amount'      => to_currency((float) ($expense['amount'] ?? 0)),
+                'add_back_to' => (($expense['add_back_to'] ?? Receiving_expense::ADD_BACK_TO_TENANT) === Receiving_expense::ADD_BACK_TO_SUPPLIER)
+                    ? lang('Receivings.add_back_to_landowner')
+                    : lang('Receivings.add_back_to_tenant'),
             ];
         }
 

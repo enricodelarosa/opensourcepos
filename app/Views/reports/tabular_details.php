@@ -86,11 +86,16 @@
                     + '<td class="text-right">' + escapeHtml(split.shared_transfer_amount) + '</td>'
                     + '<td class="text-right">' + escapeHtml(split.shared_transfer_amount) + '</td>'
                     + '</tr>'
-                    + '<tr>'
-                    + '<td><?= esc(lang('Receivings.shared_expense_added_to_tenant')) ?></td>'
-                    + '<td class="text-right"><?= esc(to_currency(0)) ?></td>'
-                    + '<td class="text-right">' + escapeHtml(split.shared_total) + '</td>'
-                    + '</tr>' : '')
+                    + (split.has_landowner_add_back ? '<tr>'
+                        + '<td><?= esc(lang('Receivings.shared_expense_added_to_landowner')) ?></td>'
+                        + '<td class="text-right">' + escapeHtml(split.landowner_add_back_total) + '</td>'
+                        + '<td class="text-right"><?= esc(to_currency(0)) ?></td>'
+                        + '</tr>' : '')
+                    + (split.has_tenant_add_back ? '<tr>'
+                        + '<td><?= esc(lang('Receivings.shared_expense_added_to_tenant')) ?></td>'
+                        + '<td class="text-right"><?= esc(to_currency(0)) ?></td>'
+                        + '<td class="text-right">' + escapeHtml(split.tenant_add_back_total) + '</td>'
+                        + '</tr>' : '') : '')
                 + '<tr>'
                 + '<td><strong><?= esc(lang('Receivings.share_after_split')) ?></strong></td>'
                 + '<td class="text-right"><strong>' + escapeHtml(split.landowner_share_after_split) + '</strong></td>'
@@ -110,6 +115,7 @@
             $.each(expenses, function(index, expenseRow) {
                 rowsHtml += '<tr>'
                     + '<td>' + escapeHtml(expenseRow.description) + '</td>'
+                    + '<td>' + escapeHtml(expenseRow.add_back_to) + '</td>'
                     + '<td class="text-right">' + escapeHtml(expenseRow.amount) + '</td>'
                     + '</tr>';
             });
@@ -119,6 +125,7 @@
                 + '<thead>'
                 + '<tr>'
                 + '<th><?= esc(lang('Receivings.expense_description')) ?></th>'
+                + '<th><?= esc(lang('Receivings.expense_add_back_to')) ?></th>'
                 + '<th class="text-right"><?= esc(lang('Receivings.expense_amount')) ?></th>'
                 + '</tr>'
                 + '</thead>'
