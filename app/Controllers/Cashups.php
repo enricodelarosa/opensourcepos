@@ -100,6 +100,8 @@ class Cashups extends Secure_Controller
             $cash_ups_info->close_date        = $cash_ups_info->open_date;
             $cash_ups_info->open_employee_id  = $this->employee->get_logged_in_employee_info()->person_id;
             $cash_ups_info->close_employee_id = $this->employee->get_logged_in_employee_info()->person_id;
+            $cash_ups_info->expected_amount_cash = (float) $cash_ups_info->open_amount_cash + (float) $cash_ups_info->transfer_amount_cash;
+            $cash_ups_info->closed_amount_total  = round((float) $cash_ups_info->closed_amount_cash - (float) $cash_ups_info->expected_amount_cash, 2);
         } elseif ($cash_ups_info->open_date !== null && $cash_ups_info->close_date !== null) {
             $is_pending_close = $this->isPendingCloseCashup($cash_ups_info);
 
@@ -109,27 +111,25 @@ class Cashups extends Secure_Controller
 
             $cash_breakdown         = $this->buildCashBreakdown($cash_ups_info->open_date, $cash_ups_info->close_date);
             $data['cash_breakdown'] = $cash_breakdown;
+            $expected_amount_cash   = $this->calculateExpectedClosingCash(
+                (float) $cash_ups_info->open_amount_cash,
+                (float) $cash_ups_info->transfer_amount_cash,
+                $cash_breakdown,
+            );
+            $cash_ups_info->expected_amount_cash = $expected_amount_cash;
 
             if ($is_pending_close) {
-                $cash_ups_info->closed_amount_cash = (float) $cash_ups_info->open_amount_cash
-                    + (float) $cash_ups_info->transfer_amount_cash
-                    + (float) $cash_breakdown['sales_cash']
-                    - (float) $cash_breakdown['expenses_cash']
-                    - (float) $cash_breakdown['loan_adjustments']
-                    - (float) $cash_breakdown['receivings_cash'];
+                $cash_ups_info->closed_amount_cash = $expected_amount_cash;
 
                 $cash_ups_info->closed_amount_due   = (float) $cash_breakdown['sales_due'];
                 $cash_ups_info->closed_amount_card  = (float) $cash_breakdown['sales_card'];
                 $cash_ups_info->closed_amount_check = (float) $cash_breakdown['sales_check'];
-                $cash_ups_info->closed_amount_total = $this->_calculate_total(
-                    (float) $cash_ups_info->open_amount_cash,
-                    (float) $cash_ups_info->transfer_amount_cash,
-                    (float) $cash_ups_info->closed_amount_cash,
-                    (float) $cash_ups_info->closed_amount_due,
-                    (float) $cash_ups_info->closed_amount_card,
-                    (float) $cash_ups_info->closed_amount_check,
-                );
             }
+
+            $cash_ups_info->closed_amount_total = $this->_calculate_total(
+                (float) $cash_ups_info->closed_amount_cash,
+                $expected_amount_cash,
+            );
         }
 
         $data['cash_ups_info'] = $cash_ups_info;
@@ -203,13 +203,15 @@ class Cashups extends Secure_Controller
         $open_amount_cash     = parse_decimals($this->request->getPost('open_amount_cash'));
         $transfer_amount_cash = parse_decimals($this->request->getPost('transfer_amount_cash'));
         $closed_amount_cash   = parse_decimals($this->request->getPost('closed_amount_cash'));
-        $closed_amount_due    = parse_decimals($this->request->getPost('closed_amount_due'));
-        $closed_amount_card   = parse_decimals($this->request->getPost('closed_amount_card'));
-        $closed_amount_check  = parse_decimals($this->request->getPost('closed_amount_check'));
+        $cash_movement        = parse_decimals($this->request->getPost('cash_movement'));
+        $expected_amount_cash = round($open_amount_cash + $transfer_amount_cash + $cash_movement, 2);
 
-        $total = $this->_calculate_total($open_amount_cash, $transfer_amount_cash, $closed_amount_cash, $closed_amount_due, $closed_amount_card, $closed_amount_check);    // TODO: hungarian notation
+        $total = $this->_calculate_total($closed_amount_cash, $expected_amount_cash);
 
-        return $this->response->setJSON(['total' => to_currency_no_money($total)]);
+        return $this->response->setJSON([
+            'total'                => to_currency_no_money($total),
+            'expected_amount_cash' => to_currency_no_money($expected_amount_cash),
+        ]);
     }
 
     /**
@@ -217,9 +219,9 @@ class Cashups extends Secure_Controller
      *
      * @param mixed $closed_amount_check
      */
-    private function _calculate_total(float $open_amount_cash, float $transfer_amount_cash, float $closed_amount_cash, float $closed_amount_due, float $closed_amount_card, $closed_amount_check): float    // TODO: need to get rid of hungarian notation here. Also, the signature is pretty long.  Perhaps they need to go into an object or array?
+    private function _calculate_total(float $closed_amount_cash, float $expected_amount_cash): float
     {
-        return $closed_amount_cash - $open_amount_cash - $transfer_amount_cash + $closed_amount_due + $closed_amount_card + $closed_amount_check;
+        return round($closed_amount_cash - $expected_amount_cash, 2);
     }
 
     private function isPendingCloseCashup(object $cashup): bool
@@ -300,5 +302,18 @@ class Cashups extends Secure_Controller
             'sale_type'   => 'complete',
             'location_id' => 'all',
         ];
+    }
+
+    private function calculateExpectedClosingCash(float $openAmountCash, float $transferAmountCash, array $cashBreakdown): float
+    {
+        return round(
+            $openAmountCash
+            + $transferAmountCash
+            + (float) ($cashBreakdown['sales_cash'] ?? 0)
+            - (float) ($cashBreakdown['expenses_cash'] ?? 0)
+            - (float) ($cashBreakdown['loan_adjustments'] ?? 0)
+            - (float) ($cashBreakdown['receivings_cash'] ?? 0),
+            2,
+        );
     }
 }

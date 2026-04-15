@@ -5,6 +5,7 @@
  * @var string $controller_name
  * @var array $config
  * @var array|null $cash_breakdown
+ * @var float|null $expected_amount_cash
  */
 ?>
 
@@ -136,6 +137,27 @@
             </div>
         </div>
         <?php endif; ?>
+
+        <div class="form-group form-group-sm">
+            <?= form_label(lang('Cashups.expected_amount_cash'), 'expected_amount_cash', ['class' => 'control-label col-xs-3']) ?>
+            <div class="col-xs-4">
+                <div class="input-group input-group-sm">
+                    <?php if (!is_right_side_currency_symbol()): ?>
+                        <span class="input-group-addon input-sm"><b><?= esc($config['currency_symbol']) ?></b></span>
+                    <?php endif; ?>
+                    <?= form_input([
+                        'name'     => 'expected_amount_cash',
+                        'id'       => 'expected_amount_cash',
+                        'readonly' => 'true',
+                        'class'    => 'form-control input-sm',
+                        'value'    => to_currency_no_money((float) ($cash_ups_info->expected_amount_cash ?? 0))
+                    ]) ?>
+                    <?php if (is_right_side_currency_symbol()): ?>
+                        <span class="input-group-addon input-sm"><b><?= esc($config['currency_symbol']) ?></b></span>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
 
         <div class="form-group form-group-sm">
             <?= form_label(lang('Cashups.closed_amount_cash'), 'closed_amount_cash', ['class' => 'control-label col-xs-3']) ?>
@@ -323,21 +345,39 @@
             language: '<?= current_language_code() ?>'
         });
 
-        $('#open_amount_cash, #transfer_amount_cash, #closed_amount_cash, #closed_amount_due, #closed_amount_card, #closed_amount_check').keyup(function() {
-            $.post("<?= esc("$controller_name/ajax_cashup_total") ?>", {
-                    'open_amount_cash': $('#open_amount_cash').val(),
-                    'transfer_amount_cash': $('#transfer_amount_cash').val(),
-                    'closed_amount_due': $('#closed_amount_due').val(),
-                    'closed_amount_cash': $('#closed_amount_cash').val(),
-                    'closed_amount_card': $('#closed_amount_card').val(),
-                    'closed_amount_check': $('#closed_amount_check').val()
-                },
-                function(response) {
-                    $('#closed_amount_total').val(response.total);
-                },
-                'json'
-            );
-        });
+        var cashMovement = <?= json_encode(
+            (float) (($cash_breakdown['sales_cash'] ?? 0)
+            - ($cash_breakdown['expenses_cash'] ?? 0)
+            - ($cash_breakdown['loan_adjustments'] ?? 0)
+            - ($cash_breakdown['receivings_cash'] ?? 0))
+        ) ?>;
+
+        function parseMoneyValue(value) {
+            var parsedValue = parseFloat(String(value || '').replace(/,/g, ''));
+
+            return isNaN(parsedValue) ? 0 : parsedValue;
+        }
+
+        function formatMoneyValue(value) {
+            return (Math.round(value * 100) / 100).toLocaleString('en-US', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        }
+
+        function updateCashupTotals() {
+            var openAmountCash = parseMoneyValue($('#open_amount_cash').val());
+            var transferAmountCash = parseMoneyValue($('#transfer_amount_cash').val());
+            var closedAmountCash = parseMoneyValue($('#closed_amount_cash').val());
+            var expectedAmountCash = openAmountCash + transferAmountCash + cashMovement;
+            var overShortAmount = closedAmountCash - expectedAmountCash;
+
+            $('#expected_amount_cash').val(formatMoneyValue(expectedAmountCash));
+            $('#closed_amount_total').val(formatMoneyValue(overShortAmount));
+        }
+
+        $('#open_amount_cash, #transfer_amount_cash, #closed_amount_cash').on('input change', updateCashupTotals);
+        updateCashupTotals();
 
         var submit_form = function() {
             $(this).ajaxSubmit({
