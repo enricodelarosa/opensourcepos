@@ -522,7 +522,7 @@ class Sale_lib
         $total_units          = 0.0;
 
         foreach ($this->get_cart() as $item) {
-            if ($item['stock_type'] === HAS_STOCK) {
+            if ((int) $item['stock_type'] === HAS_STOCK) {
                 $item_count++;
                 $total_units += $item['quantity'];
             }
@@ -801,7 +801,7 @@ class Sale_lib
         if ($price_mode === PRICE_MODE_KIT) {
             if (! ($kit_price_option === PRICE_OPTION_ALL
                 || $kit_price_option === PRICE_OPTION_KIT && $item_type === ITEM_KIT
-                || $kit_price_option === PRICE_OPTION_KIT_STOCK && $stock_type === HAS_STOCK)) {    // TODO: === ?
+                || $kit_price_option === PRICE_OPTION_KIT_STOCK && (int) $stock_type === HAS_STOCK)) {
                 $price            = '0.00';
                 $applied_discount = '0.00';
             }
@@ -936,7 +936,7 @@ class Sale_lib
         if ($item_id !== -1) {    // TODO: !== ?.  Also Replace -1 with a constant
             $item_info = $this->item->get_info_by_id_or_number($item_id);
 
-            if ($item_info->stock_type === HAS_STOCK) {    // TODO: === ?
+            if ((int) $item_info->stock_type === HAS_STOCK) {
                 $item_quantity  = $this->item_quantity->get_item_quantity($item_id, $item_location)->quantity;
                 $quantity_added = $this->get_quantity_already_added($item_id, $item_location);
 

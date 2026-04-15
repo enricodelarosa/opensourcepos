@@ -511,7 +511,7 @@ class Sale extends Model
      */
     public function save_value(
         int $sale_id,
-        string &$sale_status,
+        int $sale_status,
         array &$items,
         int $customer_id,
         int $employee_id,
@@ -626,7 +626,7 @@ class Sale extends Model
             $builder = $this->db->table('sales_items');
             $builder->insert($sales_items_data);
 
-            if ($cur_item_info->stock_type === HAS_STOCK && $sale_status === COMPLETED) {    // TODO: === ?
+            if ((int) $cur_item_info->stock_type === HAS_STOCK && $sale_status === COMPLETED) {
                 // Update stock quantity if item type is a standard stock item and the sale is a standard sale
                 $item_quantity_data = $item_quantity->get_item_quantity($item_data['item_id'], $item_data['item_location']);
 
@@ -810,7 +810,7 @@ class Sale extends Model
             foreach ($items as $item_data) {
                 $cur_item_info = $item->get_info($item_data['item_id']);
 
-                if ($cur_item_info->stock_type === HAS_STOCK) {
+                if ((int) $cur_item_info->stock_type === HAS_STOCK) {
                     // Create query to update inventory tracking
                     $inv_data = [
                         'trans_date'      => date('Y-m-d H:i:s'),
