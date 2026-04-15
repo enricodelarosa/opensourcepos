@@ -743,7 +743,7 @@ class Sales extends Secure_Controller
         $data['quote_number']           = $quote_number;
         $customer_info                  = $this->_load_customer_data($customer_id, $data);
 
-        if ($customer_info !== null) {
+        if (is_object($customer_info)) {
             $data['customer_comments'] = $customer_info->comments;
             $data['tax_id']            = $customer_info->tax_id;
         }
@@ -1126,9 +1126,9 @@ class Sales extends Secure_Controller
         return $this->response->setJSON(['success' => $result, 'message' => $message, 'id' => $sale_id]);
     }
 
-    private function _load_customer_data(int $customer_id, array &$data, bool $stats = false): array|stdClass|string|null    // TODO: Hungarian notation
+    private function _load_customer_data(int $customer_id, array &$data, bool $stats = false): array|stdClass|null    // TODO: Hungarian notation
     {
-        $customer_info                      = '';
+        $customer_info                      = null;
         $data['lunas']                      = [];
         $data['selected_luna_id']           = -1;
         $data['selected_luna']              = null;
