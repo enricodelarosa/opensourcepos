@@ -1510,8 +1510,19 @@ class Sale extends Model
     {
         $builder   = $this->db->table('sales');
         $db_prefix = $this->db->getPrefix();
+
+        $itemLabelsBuilder = $this->db->table('sales_items AS sales_items');
+        $itemLabelsBuilder->select([
+            'sales_items.sale_id',
+            "GROUP_CONCAT(COALESCE(NULLIF(sales_items.description, ''), items.name) ORDER BY sales_items.line SEPARATOR ', ') AS item_labels",
+        ]);
+        $itemLabelsBuilder->join('items AS items', 'items.item_id = sales_items.item_id', 'LEFT');
+        $itemLabelsBuilder->groupBy('sales_items.sale_id');
+        $itemLabelsQuery = $itemLabelsBuilder->getCompiledSelect();
+
         $builder->select([
             "CONCAT(COALESCE({$db_prefix}people.first_name, ''), ' ', COALESCE({$db_prefix}people.last_name, '')) AS customer_name",
+            'sale_item_labels.item_labels',
             'lunas.area_name',
             'lunas.barangay',
             "{$db_prefix}sales_payments.payment_amount AS amount",
@@ -1519,6 +1530,7 @@ class Sale extends Model
         ]);
         $builder->join('sales_payments', 'sales_payments.sale_id = sales.sale_id');
         $builder->join('people', 'people.person_id = sales.customer_id', 'LEFT');
+        $builder->join("($itemLabelsQuery) AS sale_item_labels", "sale_item_labels.sale_id = {$db_prefix}sales.sale_id", 'LEFT', false);
         $builder->join('customer_loans', 'customer_loans.sale_id = sales.sale_id', 'LEFT');
         $builder->join('lunas', 'lunas.luna_id = customer_loans.luna_id', 'LEFT');
         $builder->where('sale_status', COMPLETED);
@@ -1530,6 +1542,15 @@ class Sale extends Model
 
         return array_map(static function (array $row): array {
             $particular = trim($row['customer_name']);
+            $item_labels = trim((string) ($row['item_labels'] ?? ''));
+
+            if ($particular === '' && $item_labels !== '') {
+                $particular = $item_labels;
+            }
+
+            if ($particular === '') {
+                $particular = lang('Common.unknown') . ' ' . lang('Customers.customer');
+            }
 
             if (! empty($row['area_name'])) {
                 $particular .= ' - ' . $row['area_name'];
