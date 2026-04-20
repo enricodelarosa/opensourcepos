@@ -228,6 +228,8 @@ return [
     'luna'                             => 'Luna',
     'select_luna'                      => 'Select Luna',
     'no_luna'                          => 'No Luna',
+    'luna_required'                    => 'Please select a luna before completing this sale.',
+    'luna_required_no_lunas'           => 'This customer is a landowner or tenant and requires a luna before completing a sale. Add or assign a luna first.',
     'luna_loan_balance'                => 'Loan Balance (This Luna)',
     'loan_deduction'                   => 'Loan Deduction',
     'loan_recorded'                    => 'Loan of {0} recorded for customer {1}.',

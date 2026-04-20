@@ -39,6 +39,7 @@
  * @var array       $config
  * @var string      $customer_loan_balance
  * @var array       $lunas
+ * @var bool        $sale_luna_required
  * @var int         $selected_luna_id
  * @var object|null $selected_luna
  * @var string      $customer_luna_loan_balance
@@ -365,7 +366,7 @@ if ($employee->has_grant('reports_sales', session('person_id'))) {
 
                 <?php if (! empty($lunas)) { ?>
                     <?php
-        $luna_options = ['' => '-- ' . lang('Sales.no_luna') . ' --'];
+        $luna_options = ['' => '-- ' . lang(! empty($sale_luna_required) ? 'Sales.select_luna' : 'Sales.no_luna') . ' --'];
 
                     foreach ($lunas as $luna_row) {
                         $label = $luna_row['area_name'];
@@ -382,13 +383,17 @@ if ($employee->has_grant('reports_sales', session('person_id'))) {
                     <?= form_open("{$controller_name}/selectLuna", ['id' => 'select_luna_form', 'class' => 'form-horizontal', 'style' => 'margin-bottom: 10px;']) ?>
                         <table class="sales_table_100">
                             <tr>
-                                <th style="width: 55%;"><?= lang('Sales.select_luna') ?></th>
+                                <th style="width: 55%;"<?= ! empty($sale_luna_required) ? ' class="required"' : '' ?>><?= lang('Sales.select_luna') ?></th>
                                 <td style="width: 45%; text-align: right;">
                                     <?= form_dropdown('luna_id', $luna_options, $selected_luna_id > 0 ? $selected_luna_id : '', ['class' => 'form-control input-sm', 'id' => 'luna_id_selector']) ?>
                                 </td>
                             </tr>
                         </table>
                     <?= form_close() ?>
+                <?php } elseif (! empty($sale_luna_required)) { ?>
+                    <div class="alert alert-dismissible alert-warning">
+                        <?= esc(lang('Sales.luna_required_no_lunas')) ?>
+                    </div>
                 <?php } ?>
 
                 <?= anchor(
@@ -710,6 +715,18 @@ if ($employee->has_grant('reports_sales', session('person_id'))) {
             $('.sale-luna-id').val(selectedLunaId);
         };
 
+        var saleLunaRequired = <?= ! empty($sale_luna_required) ? 'true' : 'false' ?>;
+        var requireSaleLuna = function() {
+            if (!saleLunaRequired || ($('#luna_id_selector').length && $('#luna_id_selector').val())) {
+                return true;
+            }
+
+            alert("<?= esc(lang('Sales.luna_required'), 'js') ?>");
+            $('#luna_id_selector').focus();
+
+            return false;
+        };
+
         syncLunaSelection();
 
         $('#item, #customer').click(clear_fields).dblclick(function(event) {
@@ -789,12 +806,18 @@ if ($employee->has_grant('reports_sales', session('person_id'))) {
 
         $('#finish_sale_button').click(function() {
             syncLunaSelection();
+            if (!requireSaleLuna()) {
+                return false;
+            }
             $('#buttons_form').attr('action', "<?= "{$controller_name}/complete" ?>");
             $('#buttons_form').submit();
         });
 
         $('#finish_invoice_quote_button').click(function() {
             syncLunaSelection();
+            if (!requireSaleLuna()) {
+                return false;
+            }
             $('#buttons_form').attr('action', "<?= "{$controller_name}/complete" ?>");
             $('#buttons_form').submit();
         });

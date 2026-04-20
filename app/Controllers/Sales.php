@@ -743,6 +743,10 @@ class Sales extends Secure_Controller
         $data['quote_number']           = $quote_number;
         $customer_info                  = $this->_load_customer_data($customer_id, $data);
 
+        if (! $this->ensureRequiredSaleLuna($customer_id, $data)) {
+            return $this->_reload($data);
+        }
+
         if (is_object($customer_info)) {
             $data['customer_comments'] = $customer_info->comments;
             $data['tax_id']            = $customer_info->tax_id;
@@ -952,6 +956,12 @@ class Sales extends Secure_Controller
         };
     }
 
+    private function saleRequiresLuna(?object $supplier_info): bool
+    {
+        return $supplier_info !== null
+            && in_array((int) ($supplier_info->category ?? 0), [LAND_OWNER_SUPPLIER, TENANT_SUPPLIER], true);
+    }
+
     private function _get_valid_sale_luna(int $customer_id, int $luna_id, ?object $supplier_info = null, array $lunas = []): ?object
     {
         if ($luna_id <= 0) {
@@ -984,6 +994,42 @@ class Sales extends Secure_Controller
             TENANT_SUPPLIER     => (int) ($selected_luna->tenant_id ?? 0) === $supplier_id ? $selected_luna : null,
             default             => null,
         };
+    }
+
+    private function ensureRequiredSaleLuna(int $customer_id, array &$data): bool
+    {
+        $supplier_info = $this->_get_sale_supplier_info($customer_id);
+
+        if (! $this->saleRequiresLuna($supplier_info)) {
+            return true;
+        }
+
+        $lunas          = $this->_get_sale_lunas($supplier_info);
+        $posted_luna_id = (int) $this->request->getPost('luna_id', FILTER_SANITIZE_NUMBER_INT);
+        $active_luna_id = $posted_luna_id > 0 ? $posted_luna_id : $this->sale_lib->get_luna_id();
+        $selected_luna  = $this->_get_valid_sale_luna($customer_id, $active_luna_id, $supplier_info, $lunas);
+
+        $data['sale_luna_required'] = true;
+        $data['lunas']              = $lunas;
+
+        if ($selected_luna === null) {
+            $this->sale_lib->set_luna_id(-1);
+            $data['selected_luna_id']           = -1;
+            $data['selected_luna']              = null;
+            $data['customer_luna_loan_balance'] = '0.00';
+            $data['error']                      = empty($lunas)
+                ? lang('Sales.luna_required_no_lunas')
+                : lang('Sales.luna_required');
+
+            return false;
+        }
+
+        $this->sale_lib->set_luna_id((int) $selected_luna->luna_id);
+        $data['selected_luna_id']           = (int) $selected_luna->luna_id;
+        $data['selected_luna']              = $selected_luna;
+        $data['customer_luna_loan_balance'] = model(Customer_loan::class)->get_loan_balance_for_luna($customer_id, (int) $selected_luna->luna_id);
+
+        return true;
     }
 
     private function restorePostedLunaSelection(): void
@@ -1130,6 +1176,7 @@ class Sales extends Secure_Controller
     {
         $customer_info                      = null;
         $data['lunas']                      = [];
+        $data['sale_luna_required']         = false;
         $data['selected_luna_id']           = -1;
         $data['selected_luna']              = null;
         $data['customer_luna_loan_balance'] = '0.00';
@@ -1180,7 +1227,8 @@ class Sales extends Secure_Controller
 
             $supplier_info = $this->_get_sale_supplier_info($customer_id);
             if ($supplier_info !== null) {
-                $data['lunas'] = $this->_get_sale_lunas($supplier_info);
+                $data['sale_luna_required'] = $this->saleRequiresLuna($supplier_info);
+                $data['lunas']              = $this->_get_sale_lunas($supplier_info);
 
                 if (! empty($data['lunas'])) {
                     $selected_luna = $this->_get_valid_sale_luna($customer_id, $this->sale_lib->get_luna_id(), $supplier_info, $data['lunas']);
