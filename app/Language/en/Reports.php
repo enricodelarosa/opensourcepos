@@ -28,7 +28,7 @@ return [
     'loans'                                   => 'Customer Loan Ledger',
     'loan_breakdown'                          => 'Loan Breakdown',
     'loan_history'                            => 'Loan History',
-    'loan_adjustment'                         => 'Loan Adjustment',
+    'loan_adjustment'                         => 'Cash Advance (CA)',
     'loan_transaction_type'                   => 'Type',
     'loan_reference'                          => 'Reference',
     'loan_amount'                             => 'Amount',

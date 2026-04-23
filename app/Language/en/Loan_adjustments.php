@@ -2,15 +2,15 @@
 
 return [
     // Module
-    'register' => 'Loan Adjustments',
+    'register' => 'Cash Advances (CA)',
 
     // Manage page
-    'new'        => 'New Adjustment',
+    'new'        => 'New Cash Advance',
     'is_deleted' => 'Show Deleted',
 
     // Form labels
-    'info'                       => 'Adjustment Info',
-    'adjustment_id'              => 'Adjustment #',
+    'info'                       => 'Cash Advance Info',
+    'adjustment_id'              => 'CA #',
     'date'                       => 'Date',
     'supplier'                   => 'Supplier',
     'start_typing_supplier_name' => 'Start typing supplier name...',
@@ -38,12 +38,12 @@ return [
     'employee_col' => 'Employee',
 
     // Type labels (used in table rows)
-    'type_increase' => 'Cash Out (Loan +)',
-    'type_decrease' => 'Cash In (Loan -)',
+    'type_increase' => 'Cash Advance (Loan +)',
+    'type_decrease' => 'CA Payment (Loan -)',
 
     // Comments auto-added to customer_loans entry
-    'comment_increase' => 'Manual Loan Increase',
-    'comment_decrease' => 'Manual Loan Decrease',
+    'comment_increase' => 'Manual CA Increase',
+    'comment_decrease' => 'Manual CA Decrease',
 
     // Validation messages
     'supplier_required' => 'Please select a supplier.',
@@ -56,12 +56,12 @@ return [
     'amount_positive'   => 'Amount must be greater than zero.',
 
     // Success / error messages
-    'successful_adding'        => 'Loan adjustment successfully added.',
-    'successful_updating'      => 'Loan adjustment successfully updated.',
+    'successful_adding'        => 'CA successfully added.',
+    'successful_updating'      => 'CA successfully updated.',
     'successful_deleted'       => 'Successfully deleted',
-    'one_or_multiple'          => 'loan adjustment(s).',
-    'cannot_be_deleted'        => 'Loan adjustment could not be deleted.',
-    'error_adding_updating'    => 'Loan adjustment could not be saved.',
+    'one_or_multiple'          => 'Cash Advance(s).',
+    'cannot_be_deleted'        => 'CA could not be deleted.',
+    'error_adding_updating'    => 'CA could not be saved.',
     'error_no_linked_customer' => 'Selected supplier does not have a linked customer account. Please link a customer first.',
     'error_invalid_luna'       => 'Selected luna is not valid for the chosen supplier.',
     'editing_disabled'         => 'Editing loan adjustments is disabled.',
