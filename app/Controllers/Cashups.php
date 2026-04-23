@@ -2,6 +2,7 @@
 
 namespace App\Controllers;
 
+use App\Models\Cash_movement;
 use App\Models\Cashup;
 use App\Models\Expense;
 use App\Models\Loan_adjustment;
@@ -13,6 +14,7 @@ use Config\OSPOS;
 class Cashups extends Secure_Controller
 {
     private Cashup $cashup;
+    private Cash_movement $cash_movement;
     private Expense $expense;
     private Loan_adjustment $loan_adjustment;
     private Receiving $receiving;
@@ -24,6 +26,7 @@ class Cashups extends Secure_Controller
         parent::__construct('cashups');
 
         $this->cashup           = model(Cashup::class);
+        $this->cash_movement    = model(Cash_movement::class);
         $this->expense          = model(Expense::class);
         $this->loan_adjustment  = model(Loan_adjustment::class);
         $this->receiving        = model(Receiving::class);
@@ -242,6 +245,7 @@ class Cashups extends Secure_Controller
             'sales_due'        => 0.0,
             'sales_card'       => 0.0,
             'sales_check'      => 0.0,
+            'cash_movements'   => 0.0,
             'expenses_cash'    => 0.0,
             'loan_adjustments' => 0.0,
             'receivings_cash'  => 0.0,
@@ -279,12 +283,17 @@ class Cashups extends Secure_Controller
             $breakdown['expenses_cash'] += (float) $row['amount'];
         }
 
+        $breakdown['cash_movements'] = $this->cash_movement->get_cash_total_for_period(
+            $inputs['start_date'],
+            $inputs['end_date'],
+            ! empty($inputs['use_time_range']),
+        );
         $breakdown['loan_adjustments'] = $this->loan_adjustment->get_cash_total_for_period(
             $inputs['start_date'],
             $inputs['end_date'],
             ! empty($inputs['use_time_range']),
         );
-        $breakdown['receivings_cash']  = $this->receiving->get_cash_total_for_period(
+        $breakdown['receivings_cash'] = $this->receiving->get_cash_total_for_period(
             $inputs['start_date'],
             $inputs['end_date'],
             ! empty($inputs['use_time_range']),
@@ -310,6 +319,7 @@ class Cashups extends Secure_Controller
             $openAmountCash
             + $transferAmountCash
             + (float) ($cashBreakdown['sales_cash'] ?? 0)
+            + (float) ($cashBreakdown['cash_movements'] ?? 0)
             - (float) ($cashBreakdown['expenses_cash'] ?? 0)
             - (float) ($cashBreakdown['loan_adjustments'] ?? 0)
             - (float) ($cashBreakdown['receivings_cash'] ?? 0),

@@ -103,7 +103,11 @@
 $action_header = static function () use ($date): void { ?>
     <tr class="action-row print_hide">
         <th></th>
-        <th></th>
+        <th class="action-header">
+            <button class="btn btn-info btn-sm modal-dlg column-action" data-btn-submit="<?= lang('Common.submit') ?>" data-href="<?= 'cash_movements/view?date=' . rawurlencode($date) ?>" title="<?= lang('Cash_movements.new') ?>">
+                <span class="glyphicon glyphicon-plus"></span><?= lang('Cash_summary.add_cash_in') ?>
+            </button>
+        </th>
         <th class="action-header">
             <button class="btn btn-info btn-sm modal-dlg column-action" data-btn-submit="<?= lang('Common.submit') ?>" data-href="<?= 'loan_adjustments/view?date=' . rawurlencode($date) ?>" title="<?= lang('Loan_adjustments.new') ?>">
                 <span class="glyphicon glyphicon-plus"></span><?= lang('Cash_summary.add_cash_advance') ?>

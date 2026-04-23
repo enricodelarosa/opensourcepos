@@ -4,6 +4,7 @@ return [
     "amount"                     => "Amount",
     "breakdown"                  => "Transaction Breakdown",
     "sales_cash"                 => "Sales (Cash)",
+    "cash_movements"             => "Cash In",
     "expenses_cash"              => "Expenses (Cash)",
     "loan_adjustments"           => "Cash Advance",
     "receivings_cash"            => "Purchases (Cash)",

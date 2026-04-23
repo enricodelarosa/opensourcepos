@@ -2,6 +2,7 @@
 
 namespace App\Libraries;
 
+use App\Models\Cash_movement;
 use App\Models\Cashup;
 use App\Models\Expense;
 use App\Models\Loan_adjustment;
@@ -11,6 +12,7 @@ use App\Models\Sale;
 class CashOnHandService
 {
     private Cashup $cashup;
+    private Cash_movement $cashMovement;
     private Expense $expense;
     private Loan_adjustment $loanAdjustment;
     private Receiving $receiving;
@@ -19,6 +21,7 @@ class CashOnHandService
     public function __construct()
     {
         $this->cashup         = model(Cashup::class);
+        $this->cashMovement   = model(Cash_movement::class);
         $this->expense        = model(Expense::class);
         $this->loanAdjustment = model(Loan_adjustment::class);
         $this->receiving      = model(Receiving::class);
@@ -81,6 +84,7 @@ class CashOnHandService
         $cashBeginning       = (float) ($cashup->open_amount_cash ?? 0);
         $transferAmountCash  = (float) ($cashup->transfer_amount_cash ?? 0);
         $cashSales           = $this->getCashSalesTotal($cashup->open_date, $asOf);
+        $cashMovements       = $this->cashMovement->get_cash_total_for_period($cashup->open_date, $asOf, true);
         $cashAdvances        = $this->loanAdjustment->get_cash_total_for_period($cashup->open_date, $asOf, true);
         $cashPurchases       = $this->receiving->get_cash_total_for_period($cashup->open_date, $asOf, true);
         $cashExpenses        = $this->getCashExpensesTotal($cashup->open_date, $asOf);
@@ -88,6 +92,7 @@ class CashOnHandService
             $cashBeginning
             + $transferAmountCash
             + $cashSales
+            + $cashMovements
             - $cashAdvances
             - $cashPurchases
             - $cashExpenses,
@@ -104,6 +109,7 @@ class CashOnHandService
             'cash_beginning'       => $cashBeginning,
             'transfer_amount_cash' => $transferAmountCash,
             'cash_sales'           => round($cashSales, 2),
+            'cash_movements'       => round($cashMovements, 2),
             'cash_advances'        => round($cashAdvances, 2),
             'cash_purchases'       => round($cashPurchases, 2),
             'cash_expenses'        => round($cashExpenses, 2),

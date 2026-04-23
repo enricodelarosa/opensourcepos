@@ -13,6 +13,7 @@ return [
     'cash_ending' => 'Cash Ending',
 
     // Actions
+    'add_cash_in'           => 'Add CN',
     'add_cash_advance'      => 'Add CA',
     'add_operating_expense' => 'Add OE',
 

@@ -121,6 +121,10 @@
                             <td class="text-right"><?= to_currency($cash_breakdown['sales_cash']) ?></td>
                         </tr>
                         <tr>
+                            <td><?= lang('Cashups.cash_movements') ?></td>
+                            <td class="text-right"><?= to_currency($cash_breakdown['cash_movements']) ?></td>
+                        </tr>
+                        <tr>
                             <td><?= lang('Cashups.expenses_cash') ?></td>
                             <td class="text-right">-<?= to_currency($cash_breakdown['expenses_cash']) ?></td>
                         </tr>
@@ -347,6 +351,7 @@
 
         var cashMovement = <?= json_encode(
             (float) (($cash_breakdown['sales_cash'] ?? 0)
+            + ($cash_breakdown['cash_movements'] ?? 0)
             - ($cash_breakdown['expenses_cash'] ?? 0)
             - ($cash_breakdown['loan_adjustments'] ?? 0)
             - ($cash_breakdown['receivings_cash'] ?? 0))

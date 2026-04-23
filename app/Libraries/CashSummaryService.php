@@ -2,6 +2,7 @@
 
 namespace App\Libraries;
 
+use App\Models\Cash_movement;
 use App\Models\Cashup;
 use App\Models\Expense;
 use App\Models\Loan_adjustment;
@@ -11,6 +12,7 @@ use App\Models\Sale;
 class CashSummaryService
 {
     private Cashup $cashup;
+    private Cash_movement $cashMovement;
     private Expense $expense;
     private Loan_adjustment $loanAdjustment;
     private Receiving $receiving;
@@ -19,6 +21,7 @@ class CashSummaryService
     public function __construct()
     {
         $this->cashup         = model(Cashup::class);
+        $this->cashMovement   = model(Cash_movement::class);
         $this->expense        = model(Expense::class);
         $this->loanAdjustment = model(Loan_adjustment::class);
         $this->receiving      = model(Receiving::class);
@@ -42,7 +45,7 @@ class CashSummaryService
         $cashups        = $this->cashup->search('', $filters, 0, 0, 'open_date', 'asc')->getResult();
         $cashupSessions = [];
         $allRows        = [
-            'cn' => $this->getCnRows($date, $date),
+            'cn' => $this->getCnRows($date, $date, $dayStart, $dayEnd),
             'ca' => $this->getCaRows($dayStart, $dayEnd),
             'cp' => $this->getCpRows($date, $date),
             'oe' => $this->getOeRows($dayStart, $dayEnd, true),
@@ -78,9 +81,16 @@ class CashSummaryService
         return $this->interleaveOutsideCashupSessions($allRows, $cashupSessions, $dayStart, $dayEnd);
     }
 
-    private function getCnRows(string $start, string $end): array
+    private function getCnRows(string $start, string $end, string $dayStart, string $dayEnd): array
     {
-        return $this->sale->get_cash_sales_for_period($start, $end);
+        $rows = array_merge(
+            $this->sale->get_cash_sales_for_period($start, $end),
+            $this->cashMovement->get_cash_rows_for_period($dayStart, $dayEnd, true),
+        );
+
+        usort($rows, static fn (array $left, array $right): int => strcmp((string) ($left['trans_time'] ?? ''), (string) ($right['trans_time'] ?? '')));
+
+        return $rows;
     }
 
     private function getCaRows(string $startDate, string $endDate): array
@@ -183,8 +193,7 @@ class CashSummaryService
         string $windowEnd,
         bool $includeStart = true,
         bool $includeEnd = true,
-    ): array
-    {
+    ): array {
         return [
             'cn' => $this->filterRowsByWindow($rowsByType['cn'], $windowStart, $windowEnd, $includeStart, $includeEnd),
             'ca' => $this->filterRowsByWindow($rowsByType['ca'], $windowStart, $windowEnd, $includeStart, $includeEnd),
