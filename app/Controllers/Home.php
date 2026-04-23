@@ -42,7 +42,7 @@ class Home extends Secure_Controller
     public function getChangePassword(int $employeeId = NEW_ENTRY)
     {
         $loggedInEmployee = $this->employee->get_logged_in_employee_info();
-        $currentPersonId = $loggedInEmployee->person_id;
+        $currentPersonId = (int) $loggedInEmployee->person_id;
 
         $employeeId = $employeeId === NEW_ENTRY ? $currentPersonId : $employeeId;
 
@@ -67,10 +67,11 @@ class Home extends Secure_Controller
     public function postSave(int $employeeId = NEW_ENTRY): ResponseInterface
     {
         $currentUser = $this->employee->get_logged_in_employee_info();
+        $currentPersonId = (int) $currentUser->person_id;
 
-        $employeeId = $employeeId === NEW_ENTRY ? $currentUser->person_id : $employeeId;
+        $employeeId = $employeeId === NEW_ENTRY ? $currentPersonId : $employeeId;
 
-        if (!$this->employee->isAdmin($currentUser->person_id) && $employeeId !== $currentUser->person_id) {
+        if (!$this->employee->isAdmin($currentPersonId) && $employeeId !== $currentPersonId) {
             return $this->response->setStatusCode(403)->setJSON([
                 'success' => false,
                 'message' => lang('Employees.unauthorized_modify')
