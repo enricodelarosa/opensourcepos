@@ -18,6 +18,8 @@
 .ledger-table .column-action { display: inline-flex; align-items: center; justify-content: center; min-width: 72px; }
 .ledger-table .column-action .glyphicon { margin-right: 4px; }
 .ledger-table td.amount { text-align: right; }
+.ledger-table .particular-note { color: #777; }
+.ledger-table .copra-session-summary { color: #555; text-align: right; }
 .ledger-table tr.cash-rem td { font-weight: bold; background: #fafafa; }
 .ledger-table tr.totals td { font-weight: bold; border-top: 2px solid #333; background: #f0f0f0; }
 .ledger-table tr.cash-ending td { font-weight: bold; }
@@ -172,7 +174,12 @@ $column_header = static function () use ($action_header): void { ?>
                 </tr>
                 <?php foreach ($session['rows'] as $row): ?>
                 <tr>
-                    <td><?= esc($row['particular']) ?></td>
+                    <td>
+                        <?= esc($row['particular']) ?>
+                        <?php if (! empty($row['particular_note'])): ?>
+                            <span class="particular-note"><?= esc($row['particular_note']) ?></span>
+                        <?php endif; ?>
+                    </td>
                     <td class="amount"><?= $row['cn'] !== null ? to_currency($row['cn']) : '' ?></td>
                     <td class="amount"><?= $row['ca'] !== null ? to_currency($row['ca']) : '' ?></td>
                     <td class="amount"><?= $row['cp'] !== null ? to_currency($row['cp']) : '' ?></td>
@@ -191,9 +198,11 @@ $column_header = static function () use ($action_header): void { ?>
                 <tr class="cash-ending">
                     <td><?= lang('Cash_summary.cash_ending') ?></td>
                     <td class="amount"><?= to_currency($session['cash_ending']) ?></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
+                    <td colspan="3" class="copra-session-summary">
+                        <?php if (! empty($session['copra_summary_display'])): ?>
+                            <?= esc(lang('Cash_summary.copra_summary')) ?>: <?= esc($session['copra_summary_display']) ?>
+                        <?php endif; ?>
+                    </td>
                 </tr>
             </tfoot>
         </table>

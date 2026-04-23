@@ -11,6 +11,8 @@ use App\Models\Sale;
 
 class CashSummaryService
 {
+    private const COPRA_ITEM_ID = 4;
+
     private Cashup $cashup;
     private Cash_movement $cashMovement;
     private Expense $expense;
@@ -59,6 +61,7 @@ class CashSummaryService
             }
 
             $sessionRows = $this->filterTransactionRowsByWindow($allRows, $sessionWindow['start'], $sessionWindow['end']);
+            $copraSummary = $this->getCopraPurchaseSummary($sessionWindow['start'], $sessionWindow['end']);
 
             $cashBeginning = (float) ($cashup->open_amount_cash);
 
@@ -74,7 +77,7 @@ class CashSummaryService
                 'is_open'              => $sessionWindow['is_open'],
                 'cash_beginning'       => $cashBeginning,
                 'transfer_amount_cash' => (float) ($cashup->transfer_amount_cash ?? 0),
-                ...$this->buildSessionTotals($sessionRows, $cashBeginning),
+                ...$this->buildSessionTotals($sessionRows, $cashBeginning, $copraSummary),
             ];
         }
 
@@ -173,6 +176,8 @@ class CashSummaryService
 
     private function buildOutsideCashupSession(array $rowsByType, string $windowStart, string $windowEnd): array
     {
+        $copraSummary = $this->getCopraPurchaseSummary($windowStart, $windowEnd);
+
         return [
             'cashup_id'            => null,
             'label'                => lang('Cash_summary.outside_cashup'),
@@ -183,7 +188,7 @@ class CashSummaryService
             'is_open'              => false,
             'cash_beginning'       => 0.0,
             'transfer_amount_cash' => 0.0,
-            ...$this->buildSessionTotals($rowsByType, 0.0),
+            ...$this->buildSessionTotals($rowsByType, 0.0, $copraSummary),
         ];
     }
 
@@ -202,17 +207,17 @@ class CashSummaryService
         ];
     }
 
-    private function buildSessionTotals(array $rowsByType, float $cashBeginning): array
+    private function buildSessionTotals(array $rowsByType, float $cashBeginning, array $copraSummary): array
     {
         $cnTotal = array_sum(array_column($rowsByType['cn'], 'amount'));
         $caTotal = array_sum(array_column($rowsByType['ca'], 'amount'));
         $cpTotal = array_sum(array_column($rowsByType['cp'], 'amount'));
         $oeTotal = array_sum(array_column($rowsByType['oe'], 'amount'));
         $rows    = array_merge(
-            array_map(static fn ($row) => ['particular' => $row['particular'], 'trans_time' => $row['trans_time'], 'cn' => $row['amount'], 'ca' => null, 'cp' => null, 'oe' => null], $rowsByType['cn']),
-            array_map(static fn ($row) => ['particular' => $row['particular'], 'trans_time' => $row['trans_time'], 'cn' => null, 'ca' => $row['amount'], 'cp' => null, 'oe' => null], $rowsByType['ca']),
-            array_map(static fn ($row) => ['particular' => $row['particular'], 'trans_time' => $row['trans_time'], 'cn' => null, 'ca' => null, 'cp' => $row['amount'], 'oe' => null], $rowsByType['cp']),
-            array_map(static fn ($row) => ['particular' => $row['particular'], 'trans_time' => $row['trans_time'], 'cn' => null, 'ca' => null, 'cp' => null, 'oe' => $row['amount']], $rowsByType['oe']),
+            array_map(fn ($row) => $this->buildSessionRow($row, 'cn'), $rowsByType['cn']),
+            array_map(fn ($row) => $this->buildSessionRow($row, 'ca'), $rowsByType['ca']),
+            array_map(fn ($row) => $this->buildSessionRow($row, 'cp'), $rowsByType['cp']),
+            array_map(fn ($row) => $this->buildSessionRow($row, 'oe'), $rowsByType['oe']),
         );
         usort($rows, static fn (array $left, array $right): int => strcmp((string) ($left['trans_time'] ?? ''), (string) ($right['trans_time'] ?? '')));
 
@@ -223,7 +228,67 @@ class CashSummaryService
             'cp_total'    => $cpTotal,
             'oe_total'    => $oeTotal,
             'cash_ending' => $cashBeginning + $cnTotal - $caTotal - $cpTotal - $oeTotal,
+            'copra_kilos' => $copraSummary['kilos'],
+            'copra_avg_price_per_kilo' => $copraSummary['avg_price_per_kilo'],
+            'copra_summary_display'    => $this->formatCopraSummary($copraSummary),
         ];
+    }
+
+    private function getCopraPurchaseSummary(string $start, string $end): array
+    {
+        return $this->receiving->get_copra_purchase_summary_for_period(self::COPRA_ITEM_ID, $start, $end, true);
+    }
+
+    private function formatCopraSummary(array $copraSummary): string
+    {
+        $kilos = (float) ($copraSummary['kilos'] ?? 0);
+        $avgPricePerKilo = (float) ($copraSummary['avg_price_per_kilo'] ?? 0);
+
+        if ($kilos <= 0) {
+            return '';
+        }
+
+        $summary = $this->trimInsignificantDecimals(to_quantity_decimals((string) $kilos)) . ' kg';
+
+        if ($avgPricePerKilo > 0) {
+            $summary .= ' @ ' . $this->trimInsignificantDecimals(to_currency_no_money((string) $avgPricePerKilo)) . '/kg (average)';
+        }
+
+        return $summary;
+    }
+
+    private function buildSessionRow(array $row, string $column): array
+    {
+        $particularNote = (string) ($row['particular_note'] ?? '');
+        $particularDisplay = trim($row['particular'] . ' ' . $particularNote);
+
+        return [
+            'particular'         => $row['particular'],
+            'particular_note'    => $particularNote,
+            'particular_display' => $particularDisplay,
+            'trans_time'         => $row['trans_time'],
+            'cn'                 => $column === 'cn' ? $row['amount'] : null,
+            'ca'                 => $column === 'ca' ? $row['amount'] : null,
+            'cp'                 => $column === 'cp' ? $row['amount'] : null,
+            'oe'                 => $column === 'oe' ? $row['amount'] : null,
+        ];
+    }
+
+    private function trimInsignificantDecimals(string $number): string
+    {
+        $decimalPosition = strrpos($number, '.');
+
+        if ($decimalPosition === false) {
+            return $number;
+        }
+
+        $decimalPart = substr($number, $decimalPosition + 1);
+
+        if ($decimalPart === '' || ! ctype_digit($decimalPart)) {
+            return $number;
+        }
+
+        return rtrim(rtrim($number, '0'), '.');
     }
 
     private function hasTransactionRows(array $rowsByType): bool

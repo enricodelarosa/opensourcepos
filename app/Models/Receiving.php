@@ -338,9 +338,13 @@ class Receiving extends Model
         $builder->select("CONCAT(COALESCE(people.first_name, ''), ' ', COALESCE(people.last_name, '')) AS supplier_name", false);
         $builder->select($has_luna_context ? 'lunas.area_name' : "'' AS area_name", false);
         $builder->select($has_luna_context ? 'lunas.barangay' : "'' AS barangay", false);
+        $builder->select('payment_suppliers.category AS supplier_category', false);
         $builder->select('receiving_payments.cash_amount AS amount', false);
+        $builder->select($this->getReceivingKilosSubqueryExpression() . ' AS copra_kilos', false);
+        $builder->select($this->getReceivingUnitPriceSubqueryExpression() . ' AS copra_unit_price', false);
         $builder->select('receivings.receiving_time AS trans_time', false);
         $builder->join('receivings AS receivings', 'receivings.receiving_id = receiving_payments.receiving_id');
+        $builder->join('suppliers AS payment_suppliers', 'payment_suppliers.person_id = receiving_payments.supplier_id', 'LEFT');
         $builder->join('people AS people', 'people.person_id = receiving_payments.supplier_id', 'LEFT');
         if ($has_luna_context) {
             $builder->join('lunas AS lunas', 'lunas.luna_id = receivings.luna_id', 'LEFT');
@@ -355,6 +359,26 @@ class Receiving extends Model
         usort($rows, static fn (array $left, array $right): int => strcmp((string) ($left['trans_time'] ?? ''), (string) ($right['trans_time'] ?? '')));
 
         return $this->format_cash_receiving_rows($rows);
+    }
+
+    /**
+     * Returns total purchased kilos and weighted average unit price for one item.
+     */
+    public function get_copra_purchase_summary_for_period(int $item_id, string $start_date, string $end_date, bool $use_time_range = false): array
+    {
+        $builder = $this->db->table('receivings AS receivings');
+        $builder->select($this->getReceivingKilosExpression('receivings_items') . ' AS kilos', false);
+        $builder->select($this->getReceivingUnitPriceExpression('receivings_items') . ' AS avg_price_per_kilo', false);
+        $builder->join('receivings_items AS receivings_items', 'receivings_items.receiving_id = receivings.receiving_id');
+        $builder->where('receivings_items.item_id', $item_id);
+        $this->applyReceivingDateRange($builder, $start_date, $end_date, $use_time_range);
+
+        $result = $builder->get()->getRowArray();
+
+        return [
+            'kilos'              => (float) ($result['kilos'] ?? 0),
+            'avg_price_per_kilo' => (float) ($result['avg_price_per_kilo'] ?? 0),
+        ];
     }
 
     private function get_unassigned_cash_total_for_period(string $start_date, string $end_date, bool $use_time_range = false): float
@@ -375,7 +399,10 @@ class Receiving extends Model
         $builder->select("'' AS supplier_name", false);
         $builder->select($has_luna_context ? 'MAX(lunas.area_name) AS area_name' : "'' AS area_name", false);
         $builder->select($has_luna_context ? 'MAX(lunas.barangay) AS barangay' : "'' AS barangay", false);
+        $builder->select('NULL AS supplier_category', false);
         $builder->select('SUM(' . $this->getReceivingLineTotalExpression('receivings_items') . ') AS amount', false);
+        $builder->select($this->getReceivingKilosExpression('receivings_items') . ' AS copra_kilos', false);
+        $builder->select($this->getReceivingUnitPriceExpression('receivings_items') . ' AS copra_unit_price', false);
         $builder->select('MAX(receivings.receiving_time) AS trans_time', false);
         $builder->groupBy('receivings.receiving_id');
 
@@ -409,9 +436,13 @@ class Receiving extends Model
         $builder->select("CONCAT(COALESCE(people.first_name, ''), ' ', COALESCE(people.last_name, '')) AS supplier_name", false);
         $builder->select($has_luna_context ? 'MAX(lunas.area_name) AS area_name' : "'' AS area_name", false);
         $builder->select($has_luna_context ? 'MAX(lunas.barangay) AS barangay' : "'' AS barangay", false);
+        $builder->select('MAX(suppliers.category) AS supplier_category', false);
         $builder->select('SUM(' . $this->getReceivingLineTotalExpression('receivings_items') . ') AS amount', false);
+        $builder->select($this->getReceivingKilosExpression('receivings_items') . ' AS copra_kilos', false);
+        $builder->select($this->getReceivingUnitPriceExpression('receivings_items') . ' AS copra_unit_price', false);
         $builder->select('MAX(receivings.receiving_time) AS trans_time', false);
         $builder->join('receivings_items AS receivings_items', 'receivings_items.receiving_id = receivings.receiving_id');
+        $builder->join('suppliers AS suppliers', 'suppliers.person_id = receivings.supplier_id', 'left');
         $builder->join('people AS people', 'people.person_id = receivings.supplier_id', 'left');
         if ($has_luna_context) {
             $builder->join('lunas AS lunas', 'lunas.luna_id = receivings.luna_id', 'left');
@@ -426,7 +457,7 @@ class Receiving extends Model
 
     /**
      * @param array<int, array<string, mixed>> $rows
-     * @return array<int, array{particular: string, amount: float, trans_time: string}>
+     * @return array<int, array{particular: string, particular_note: string, amount: float, trans_time: string, copra_kilos: float, copra_unit_price: float, supplier_category: ?int}>
      */
     private function format_cash_receiving_rows(array $rows): array
     {
@@ -445,12 +476,44 @@ class Receiving extends Model
                 }
             }
 
+            $copraKilos = (float) ($row['copra_kilos'] ?? 0);
+            $copraUnitPrice = (float) ($row['copra_unit_price'] ?? 0);
+            $particularNote = '';
+            $supplierCategory = $row['supplier_category'] ?? null;
+            if ($copraKilos > 0 && in_array((int) $supplierCategory, [LAND_OWNER_SUPPLIER, TENANT_SUPPLIER], true)) {
+                $particular .= ' | ' . $this->trimInsignificantDecimals(to_quantity_decimals((string) $copraKilos)) . ' kg';
+                if ($copraUnitPrice > 0) {
+                    $particularNote = '@ ' . $this->trimInsignificantDecimals(to_currency_no_money((string) $copraUnitPrice)) . '/kg';
+                }
+            }
+
             return [
-                'particular' => $particular,
-                'amount'     => (float) ($row['amount'] ?? 0),
-                'trans_time' => (string) ($row['trans_time'] ?? ''),
+                'particular'         => $particular,
+                'particular_note'    => $particularNote,
+                'amount'             => (float) ($row['amount'] ?? 0),
+                'trans_time'         => (string) ($row['trans_time'] ?? ''),
+                'copra_kilos'        => (float) ($row['copra_kilos'] ?? 0),
+                'copra_unit_price'   => (float) ($row['copra_unit_price'] ?? 0),
+                'supplier_category'  => $supplierCategory === null ? null : (int) $supplierCategory,
             ];
         }, $rows);
+    }
+
+    private function trimInsignificantDecimals(string $number): string
+    {
+        $decimalPosition = strrpos($number, '.');
+
+        if ($decimalPosition === false) {
+            return $number;
+        }
+
+        $decimalPart = substr($number, $decimalPosition + 1);
+
+        if ($decimalPart === '' || ! ctype_digit($decimalPart)) {
+            return $number;
+        }
+
+        return rtrim(rtrim($number, '0'), '.');
     }
 
     private function getReceivingLineTotalExpression(string $itemsAlias): string
@@ -460,6 +523,37 @@ class Receiving extends Model
             . ' - ' . $itemsAlias . '.item_unit_price * ' . $itemsAlias . '.quantity_purchased * ' . $itemsAlias . '.receiving_quantity * ' . $itemsAlias . '.discount / 100'
             . ' ELSE ' . $itemsAlias . '.item_unit_price * ' . $itemsAlias . '.quantity_purchased * ' . $itemsAlias . '.receiving_quantity'
             . ' - ' . $itemsAlias . '.discount END)';
+    }
+
+    private function getReceivingKilosExpression(string $itemsAlias): string
+    {
+        return 'SUM(' . $itemsAlias . '.quantity_purchased)';
+    }
+
+    private function getReceivingUnitPriceExpression(string $itemsAlias): string
+    {
+        return '(CASE WHEN SUM(' . $itemsAlias . '.quantity_purchased) <> 0'
+            . ' THEN SUM(' . $itemsAlias . '.item_unit_price * ' . $itemsAlias . '.quantity_purchased)'
+            . ' / SUM(' . $itemsAlias . '.quantity_purchased)'
+            . ' ELSE NULL END)';
+    }
+
+    private function getReceivingKilosSubqueryExpression(): string
+    {
+        $receivingItemsTable = $this->db->prefixTable('receivings_items');
+
+        return '(SELECT ' . $this->getReceivingKilosExpression('receiving_items_for_kilos')
+            . ' FROM ' . $receivingItemsTable . ' AS receiving_items_for_kilos'
+            . ' WHERE receiving_items_for_kilos.receiving_id = receivings.receiving_id)';
+    }
+
+    private function getReceivingUnitPriceSubqueryExpression(): string
+    {
+        $receivingItemsTable = $this->db->prefixTable('receivings_items');
+
+        return '(SELECT ' . $this->getReceivingUnitPriceExpression('receiving_items_for_price')
+            . ' FROM ' . $receivingItemsTable . ' AS receiving_items_for_price'
+            . ' WHERE receiving_items_for_price.receiving_id = receivings.receiving_id)';
     }
 
     private function applyReceivingDateRange(BaseBuilder $builder, string $start_date, string $end_date, bool $use_time_range = false): void
