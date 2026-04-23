@@ -26,6 +26,10 @@
 .no-sessions { color: #999; text-align: center; padding: 30px; }
 
 @media print {
+    #cash-summary-print-area {
+        font-size: 75%;
+    }
+
     .ledger-section {
         break-inside: auto;
         page-break-inside: auto;
@@ -95,10 +99,6 @@
     </div>
 </div>
 
-<div style="text-align:center; margin: 10px 0 5px; font-weight: bold; font-size: 1.1em;">
-    <?= to_date(strtotime($date)) ?>
-</div>
-
 <?php
 $action_header = static function () use ($date): void { ?>
     <tr class="action-row print_hide">
@@ -130,6 +130,11 @@ $column_header = static function () use ($action_header): void { ?>
         </tr>
     </thead>
 <?php }; ?>
+
+<div id="cash-summary-print-area">
+    <div style="text-align:center; margin: 10px 0 5px; font-weight: bold; font-size: 1.1em;">
+        <?= to_date(strtotime($date)) ?>
+    </div>
 
 <?php if (empty($sessions)): ?>
     <div class="ledger-section">
@@ -191,5 +196,6 @@ $column_header = static function () use ($action_header): void { ?>
     </div>
     <?php endforeach; ?>
 <?php endif; ?>
+</div>
 
 <?= view('partial/footer') ?>
