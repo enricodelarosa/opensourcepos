@@ -118,8 +118,12 @@ class Expenses extends Secure_Controller
         $data['expense_categories'] = $expense_categories;
 
         if ($expense_id == NEW_ENTRY) {
-            $data['expenses_info']->date = date('Y-m-d H:i:s');
+            $data['expenses_info']->date = $this->getDefaultDateTimeFromRequest();
             $data['expenses_info']->employee_id = $current_employee_id;
+
+            if ($this->request->getGet('payment_type', FILTER_SANITIZE_FULL_SPECIAL_CHARS) === 'cash') {
+                $data['expenses_info']->payment_type = lang('Sales.cash');
+            }
         }
 
         $data['payments'] = [];
@@ -135,6 +139,17 @@ class Expenses extends Secure_Controller
         $data['payment_options'] = $this->expense->get_payment_options();
 
         return view("expenses/form", $data);
+    }
+
+    private function getDefaultDateTimeFromRequest(): string
+    {
+        $date = $this->request->getGet('date', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+
+        if (is_string($date) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $date) === 1) {
+            return $date . ' ' . date('H:i:s');
+        }
+
+        return date('Y-m-d H:i:s');
     }
 
     /**

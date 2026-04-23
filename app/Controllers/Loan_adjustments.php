@@ -108,7 +108,7 @@ class Loan_adjustments extends Secure_Controller
         $data['can_assign_employee'] = $can_assign_employee;
 
         if ($adjustment_id === NEW_ENTRY) {
-            $adjustment_info->adjustment_time = date('Y-m-d H:i:s');
+            $adjustment_info->adjustment_time = $this->getDefaultDateTimeFromRequest();
             $adjustment_info->employee_id     = $current_employee_id;
         }
 
@@ -127,6 +127,17 @@ class Loan_adjustments extends Secure_Controller
         }
 
         return view('loan_adjustments/form', $data);
+    }
+
+    private function getDefaultDateTimeFromRequest(): string
+    {
+        $date = $this->request->getGet('date', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+
+        if (is_string($date) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $date) === 1) {
+            return $date . ' ' . date('H:i:s');
+        }
+
+        return date('Y-m-d H:i:s');
     }
 
     /**
