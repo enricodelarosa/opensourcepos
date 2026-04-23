@@ -94,19 +94,24 @@ class Cashups extends Secure_Controller
             $cash_ups_info->{$property} = $value;
         }
 
+        $is_new_cashup    = $cash_ups_info->cashup_id === NEW_ENTRY;
+        $is_pending_close = false;
+        $is_closed_cashup = false;
+
         // Open cashup
-        if ($cash_ups_info->cashup_id === NEW_ENTRY) {
-            $cash_ups_info->open_date         = date('Y-m-d H:i:s');
-            $cash_ups_info->close_date        = $cash_ups_info->open_date;
-            $cash_ups_info->open_employee_id  = $this->employee->get_logged_in_employee_info()->person_id;
-            $cash_ups_info->close_employee_id = $this->employee->get_logged_in_employee_info()->person_id;
+        if ($is_new_cashup) {
+            $cash_ups_info->open_date            = date('Y-m-d H:i:s');
+            $cash_ups_info->close_date           = $this->getEndOfDay($cash_ups_info->open_date);
+            $cash_ups_info->open_employee_id     = $this->employee->get_logged_in_employee_info()->person_id;
+            $cash_ups_info->close_employee_id    = $this->employee->get_logged_in_employee_info()->person_id;
             $cash_ups_info->expected_amount_cash = (float) $cash_ups_info->open_amount_cash + (float) $cash_ups_info->transfer_amount_cash;
             $cash_ups_info->closed_amount_total  = round((float) $cash_ups_info->closed_amount_cash - (float) $cash_ups_info->expected_amount_cash, 2);
         } elseif ($cash_ups_info->open_date !== null && $cash_ups_info->close_date !== null) {
             $is_pending_close = $this->isPendingCloseCashup($cash_ups_info);
+            $is_closed_cashup = ! $is_pending_close;
 
             if ($is_pending_close) {
-                $cash_ups_info->close_date = date('Y-m-d H:i:s');
+                $cash_ups_info->close_date = $this->getEndOfDay($cash_ups_info->open_date);
             }
 
             $cash_breakdown         = $this->buildCashBreakdown($cash_ups_info->open_date, $cash_ups_info->close_date);
@@ -132,7 +137,10 @@ class Cashups extends Secure_Controller
             );
         }
 
-        $data['cash_ups_info'] = $cash_ups_info;
+        $data['cash_ups_info']    = $cash_ups_info;
+        $data['is_new_cashup']    = $is_new_cashup;
+        $data['is_pending_close'] = $is_pending_close;
+        $data['is_closed_cashup'] = $is_closed_cashup;
 
         return view('cashups/form', $data);
     }
@@ -153,15 +161,29 @@ class Cashups extends Secure_Controller
         $close_date           = $this->request->getPost('close_date');
         $close_date_formatter = date_create_from_format($this->config['dateformat'] . ' ' . $this->config['timeformat'], $close_date);
 
+        $closed_amount_cash  = parse_decimals($this->request->getPost('closed_amount_cash'));
+        $closed_amount_due   = parse_decimals($this->request->getPost('closed_amount_due'));
+        $closed_amount_card  = parse_decimals($this->request->getPost('closed_amount_card'));
+        $closed_amount_check = parse_decimals($this->request->getPost('closed_amount_check'));
+
+        $existing_cashup = $cashup_id === NEW_ENTRY ? null : $this->cashup->get_info($cashup_id);
+        if (
+            $existing_cashup !== null
+            && $this->isPendingCloseCashup($existing_cashup)
+            && ! $this->isPendingCloseAmounts($closed_amount_cash, $closed_amount_due, $closed_amount_card, $closed_amount_check)
+        ) {
+            $close_date_formatter = date_create();
+        }
+
         $cash_up_data = [
             'open_date'            => $open_date_formatter->format('Y-m-d H:i:s'),
             'close_date'           => $close_date_formatter->format('Y-m-d H:i:s'),
             'open_amount_cash'     => parse_decimals($this->request->getPost('open_amount_cash')),
             'transfer_amount_cash' => parse_decimals($this->request->getPost('transfer_amount_cash')),
-            'closed_amount_cash'   => parse_decimals($this->request->getPost('closed_amount_cash')),
-            'closed_amount_due'    => parse_decimals($this->request->getPost('closed_amount_due')),
-            'closed_amount_card'   => parse_decimals($this->request->getPost('closed_amount_card')),
-            'closed_amount_check'  => parse_decimals($this->request->getPost('closed_amount_check')),
+            'closed_amount_cash'   => $closed_amount_cash,
+            'closed_amount_due'    => $closed_amount_due,
+            'closed_amount_card'   => $closed_amount_card,
+            'closed_amount_check'  => $closed_amount_check,
             'closed_amount_total'  => parse_decimals($this->request->getPost('closed_amount_total')),
             'note'                 => $this->request->getPost('note') !== null,
             'description'          => $this->request->getPost('description', FILTER_SANITIZE_FULL_SPECIAL_CHARS),
@@ -232,6 +254,19 @@ class Cashups extends Secure_Controller
             && (float) ($cashup->closed_amount_check) === 0.0;
     }
 
+    private function isPendingCloseAmounts(float $cash, float $due, float $card, float $check): bool
+    {
+        return $cash === 0.0
+            && $due === 0.0
+            && $card === 0.0
+            && $check === 0.0;
+    }
+
+    private function getEndOfDay(string $dateTime): string
+    {
+        return date('Y-m-d 23:59:59', strtotime($dateTime));
+    }
+
     private function buildCashBreakdown(string $openDate, string $closeDate): array
     {
         $inputs = $this->buildCashBreakdownInputs($openDate, $closeDate);
@@ -284,7 +319,7 @@ class Cashups extends Secure_Controller
             $inputs['end_date'],
             ! empty($inputs['use_time_range']),
         );
-        $breakdown['receivings_cash']  = $this->receiving->get_cash_total_for_period(
+        $breakdown['receivings_cash'] = $this->receiving->get_cash_total_for_period(
             $inputs['start_date'],
             $inputs['end_date'],
             ! empty($inputs['use_time_range']),
@@ -296,11 +331,11 @@ class Cashups extends Secure_Controller
     private function buildCashBreakdownInputs(string $openDate, string $closeDate): array
     {
         return [
-            'start_date'      => $openDate,
-            'end_date'        => $closeDate,
-            'sale_type'       => 'complete',
-            'location_id'     => 'all',
-            'use_time_range'  => true,
+            'start_date'     => $openDate,
+            'end_date'       => $closeDate,
+            'sale_type'      => 'complete',
+            'location_id'    => 'all',
+            'use_time_range' => true,
         ];
     }
 

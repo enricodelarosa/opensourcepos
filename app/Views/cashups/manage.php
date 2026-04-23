@@ -1,10 +1,10 @@
 <?php
 /**
- * @var string $controller_name
- * @var string $table_headers
- * @var array $filters
- * @var array $selected_filters
- * @var array $config
+ * @var string      $controller_name
+ * @var string      $table_headers
+ * @var array       $filters
+ * @var array       $selected_filters
+ * @var array       $config
  * @var string|null $start_date
  * @var string|null $end_date
  */
@@ -58,8 +58,8 @@
     <button onclick="javascript:printdoc()" class="btn btn-info btn-sm pull-right">
         <span class="glyphicon glyphicon-print">&nbsp;</span><?= lang('Common.print') ?>
     </button>
-    <button class="btn btn-info btn-sm pull-right modal-dlg" data-btn-submit="<?= lang('Common.submit') ?>" data-href="<?= "$controller_name/view" ?>" title="<?= lang(ucfirst($controller_name) . ".new") ?>">
-        <span class="glyphicon glyphicon-tags">&nbsp;</span><?= lang(esc(ucfirst($controller_name)) . '.new')    // TODO: String Interpolation ?>
+    <button class="btn btn-info btn-sm pull-right modal-dlg" data-btn-submit="<?= lang('Cashups.add_beginning_cash') ?>" data-href="<?= "{$controller_name}/view" ?>" title="<?= lang(ucfirst($controller_name) . '.new') ?>">
+        <span class="glyphicon glyphicon-tags">&nbsp;</span><?= lang(esc(ucfirst($controller_name)) . '.new')    // TODO: String Interpolation?>
     </button>
 </div>
 
@@ -75,7 +75,7 @@
             'class'                     => 'selectpicker show-menu-arrow',
             'data-selected-text-format' => 'count > 1',
             'data-style'                => 'btn-default btn-sm',
-            'data-width'                => 'fit'
+            'data-width'                => 'fit',
         ]) ?>
     </div>
 </div>

@@ -1144,7 +1144,22 @@ function get_cashups_manage_table_headers(): string
  */
 function get_cash_up_data_row(object $cash_up): array
 {
-    $controller = get_controller();
+    $controller       = get_controller();
+    $is_pending_close = (float) $cash_up->closed_amount_cash === 0.0
+        && (float) $cash_up->closed_amount_due === 0.0
+        && (float) $cash_up->closed_amount_card === 0.0
+        && (float) $cash_up->closed_amount_check === 0.0;
+
+    $action_label   = $is_pending_close ? lang('Cashups.close_cashup') : lang('Cashups.view');
+    $action_icon    = $is_pending_close ? 'glyphicon-log-out' : 'glyphicon-eye-open';
+    $action_options = [
+        'class' => 'modal-dlg',
+        'title' => $action_label,
+    ];
+
+    if ($is_pending_close) {
+        $action_options['data-btn-submit'] = lang('Cashups.close_cashup');
+    }
 
     return [
         'cashup_id'            => $cash_up->cashup_id,
@@ -1162,12 +1177,8 @@ function get_cash_up_data_row(object $cash_up): array
         'closed_amount_total'  => to_currency($cash_up->closed_amount_total),
         'edit'                 => anchor(
             "{$controller}/view/{$cash_up->cashup_id}",
-            '<span class="glyphicon glyphicon-edit"></span>',
-            [
-                'class'           => 'modal-dlg',
-                'data-btn-submit' => lang('Common.submit'),
-                'title'           => lang(ucfirst($controller) . '.update'),
-            ],
+            '<span class="glyphicon ' . $action_icon . '"></span>&nbsp;' . $action_label,
+            $action_options,
         ),
     ];
 }
