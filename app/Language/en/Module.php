@@ -32,7 +32,7 @@ return [
   "migrate_desc"               => "Update the OSPOS Database.",
   "office"                     => "Office",
   "office_desc"                => "List office menu modules.",
-  "cash_summary"               => "Cash Summary",
+  "cash_summary"               => "Disbursements",
   "cash_summary_desc"          => "View daily session cash totals.",
   "loan_adjustments"           => "Cash Advances (CA)",
   "loan_adjustments_desc"      => "Manually adjust supplier loan balances and track cash impact.",
