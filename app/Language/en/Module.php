@@ -34,6 +34,8 @@ return [
   "office_desc"                => "List office menu modules.",
   "cash_summary"               => "Disbursements",
   "cash_summary_desc"          => "View daily session cash totals.",
+  "copra_reports"              => "Copra Report",
+  "copra_reports_desc"         => "View daily, weekly, and monthly copra purchase totals.",
   "loan_adjustments"           => "Cash Advances (CA)",
   "loan_adjustments_desc"      => "Manually adjust supplier loan balances and track cash impact.",
   "lunas"                      => "Lunas",
