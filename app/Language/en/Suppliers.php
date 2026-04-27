@@ -30,6 +30,8 @@ return [
     'starting_loan_amount'       => 'Starting Loan Amount',
     'luna'                       => 'Luna',
     'lunas'                      => 'Lunas',
+    'luna_cannot_be_deleted'     => 'Could not delete the selected luna.',
+    'luna_has_loan_balance'      => 'This luna cannot be deleted while it still has an outstanding loan balance.',
     'area_name'                  => 'Area Name',
     'barangay'                   => 'Barangay',
     'add_luna'                   => 'Add Luna',
@@ -38,6 +40,7 @@ return [
     'last_harvest'               => 'Last Harvest',
     'next_expected_harvest'      => 'Next Expected Harvest',
     'no_harvest_recorded'        => 'No harvest recorded',
+    'outstanding_balance'        => 'Outstanding Balance',
     'loan_details'               => 'Loan Details',
     'no_linked_customer_account' => 'This supplier does not have a linked customer loan account.',
 ];

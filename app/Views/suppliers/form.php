@@ -112,6 +112,7 @@
                                         <th><?= $luna_panel_mode === 'landowner' ? lang('Suppliers.tenant') : lang('Suppliers.land_owner') ?></th>
                                         <th><?= lang('Suppliers.last_harvest') ?></th>
                                         <th><?= lang('Suppliers.next_expected_harvest') ?></th>
+                                        <th class="text-right"><?= lang('Suppliers.outstanding_balance') ?></th>
                                         <?php if ($luna_panel_mode === 'landowner'): ?>
                                             <th class="text-right"><?= lang('Common.delete') ?></th>
                                         <?php endif; ?>
@@ -119,7 +120,7 @@
                                 </thead>
                                 <tbody id="lunas_table_body">
                                     <tr>
-                                        <td colspan="<?= $luna_panel_mode === 'landowner' ? 6 : 5 ?>"><?= lang('Suppliers.no_lunas') ?></td>
+                                        <td colspan="<?= $luna_panel_mode === 'landowner' ? 7 : 6 ?>"><?= lang('Suppliers.no_lunas') ?></td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -269,10 +270,24 @@
         var landOwnerCategory = <?= json_encode((string) LAND_OWNER_SUPPLIER) ?>;
         var tenantCategory = <?= json_encode((string) TENANT_SUPPLIER) ?>;
         var noHarvestRecordedText = <?= json_encode(lang('Suppliers.no_harvest_recorded')) ?>;
-        var noLunasColspan = <?= json_encode($luna_panel_mode === 'landowner' ? 6 : 5) ?>;
+        var noLunasColspan = <?= json_encode($luna_panel_mode === 'landowner' ? 7 : 6) ?>;
+        var currencySymbol = <?= json_encode($config['currency_symbol']) ?>;
+        var currencySymbolOnRight = <?= json_encode(is_right_side_currency_symbol()) ?>;
 
         function escapeHtml(value) {
             return $('<div>').text(value || '').html();
+        }
+
+        function formatCurrency(amount) {
+            var value = parseFloat(amount || 0);
+            var formatted = Math.abs(value).toFixed(2);
+            var sign = value < 0 ? '-' : '';
+
+            if (currencySymbolOnRight) {
+                return sign + formatted + currencySymbol;
+            }
+
+            return sign + currencySymbol + formatted;
         }
 
         function arrangeSupplierSections() {
@@ -351,6 +366,10 @@
                 var relatedPartyName = canManageLunas
                     ? (luna.tenant_name || <?= json_encode(lang('Suppliers.no_tenant_assigned')) ?>)
                     : (luna.landowner_name || '');
+                var loanBalance = parseFloat(luna.loan_balance || 0);
+                var loanBalanceClass = loanBalance > 0
+                    ? ' text-danger'
+                    : (loanBalance < 0 ? ' text-success' : '');
                 var deleteButton = canManageLunas
                     ? '<td class="text-right">' +
                         '<button type="button" class="btn btn-danger btn-xs luna-delete" data-luna-id="' + escapeHtml(luna.luna_id) + '">' +
@@ -366,6 +385,7 @@
                         '<td>' + escapeHtml(relatedPartyName) + '</td>' +
                         '<td>' + escapeHtml(luna.last_harvest_date || noHarvestRecordedText) + '</td>' +
                         '<td>' + escapeHtml(luna.next_expected_harvest_date || noHarvestRecordedText) + '</td>' +
+                        '<td class="text-right' + loanBalanceClass + '">' + escapeHtml(formatCurrency(loanBalance)) + '</td>' +
                         deleteButton +
                     '</tr>'
                 );

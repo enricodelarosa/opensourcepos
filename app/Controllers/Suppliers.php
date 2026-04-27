@@ -386,14 +386,23 @@ class Suppliers extends Persons
     {
         $luna = $this->luna->get_info($luna_id);
         if ($luna === null) {
-            return $this->response->setJSON(['success' => false, 'message' => lang('Suppliers.cannot_be_deleted')]);
+            return $this->response->setJSON(['success' => false, 'message' => lang('Suppliers.luna_cannot_be_deleted')]);
+        }
+
+        if ($this->luna->has_loan_balance($luna_id)) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => lang('Suppliers.luna_has_loan_balance'),
+                'lunas'   => $this->luna->get_lunas_for_landowner((int) $luna->landowner_id),
+            ]);
         }
 
         $deleted = $this->luna->delete_luna($luna_id);
+        $deleted = $deleted || $this->luna->get_info($luna_id) === null;
 
         return $this->response->setJSON([
             'success' => $deleted,
-            'message' => $deleted ? '' : lang('Suppliers.cannot_be_deleted'),
+            'message' => $deleted ? '' : lang('Suppliers.luna_cannot_be_deleted'),
             'lunas'   => $this->luna->get_lunas_for_landowner((int) $luna->landowner_id),
         ]);
     }

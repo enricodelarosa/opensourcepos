@@ -33,9 +33,14 @@ class Luna extends Model
             'tenant_people.first_name AS tenant_first_name',
             'tenant_people.last_name AS tenant_last_name',
             'TRIM(CONCAT(COALESCE(tenant_people.first_name, ""), " ", COALESCE(tenant_people.last_name, ""))) AS tenant_name',
-            'harvests.last_harvest_at',
         ]);
+        $builder->select(implode(', ', [
+            'harvests.last_harvest_at',
+            'COALESCE(loan_balances.loan_balance, 0) AS loan_balance',
+            'COALESCE(loan_balances.loan_balance_count, 0) AS loan_balance_count',
+        ]), false);
         $this->addHarvestJoin($builder);
+        $this->addLunaLoanBalanceJoin($builder);
         $builder->join('suppliers AS tenant_suppliers', 'tenant_suppliers.person_id = lunas.tenant_id AND tenant_suppliers.deleted = 0', 'left');
         $builder->join('people AS tenant_people', 'tenant_people.person_id = tenant_suppliers.person_id', 'left');
         $builder->where('lunas.landowner_id', $landowner_id);
@@ -60,9 +65,14 @@ class Luna extends Model
             'landowner_people.first_name AS landowner_first_name',
             'landowner_people.last_name AS landowner_last_name',
             'TRIM(CONCAT(COALESCE(landowner_people.first_name, ""), " ", COALESCE(landowner_people.last_name, ""))) AS landowner_name',
-            'harvests.last_harvest_at',
         ]);
+        $builder->select(implode(', ', [
+            'harvests.last_harvest_at',
+            'COALESCE(loan_balances.loan_balance, 0) AS loan_balance',
+            'COALESCE(loan_balances.loan_balance_count, 0) AS loan_balance_count',
+        ]), false);
         $this->addHarvestJoin($builder);
+        $this->addLunaLoanBalanceJoin($builder);
         $builder->join('suppliers AS landowner_suppliers', 'landowner_suppliers.person_id = lunas.landowner_id AND landowner_suppliers.deleted = 0');
         $builder->join('people AS landowner_people', 'landowner_people.person_id = landowner_suppliers.person_id');
         $builder->where('lunas.tenant_id', $tenant_id);
@@ -89,8 +99,8 @@ class Luna extends Model
             'tenant_people.first_name AS tenant_first_name',
             'tenant_people.last_name AS tenant_last_name',
             'TRIM(CONCAT(COALESCE(tenant_people.first_name, ""), " ", COALESCE(tenant_people.last_name, ""))) AS tenant_name',
-            'harvests.last_harvest_at',
         ]);
+        $builder->select('harvests.last_harvest_at', false);
         $this->addHarvestJoin($builder);
         $builder->join('suppliers AS tenant_suppliers', 'tenant_suppliers.person_id = lunas.tenant_id AND tenant_suppliers.deleted = 0', 'left');
         $builder->join('people AS tenant_people', 'tenant_people.person_id = tenant_suppliers.person_id', 'left');
@@ -242,6 +252,21 @@ class Luna extends Model
     }
 
     /**
+     * Determines if any customer still has a non-zero loan balance on this luna.
+     */
+    public function has_loan_balance(int $luna_id): bool
+    {
+        $builder = $this->db->table('customer_loans');
+        $builder->select('customer_id');
+        $builder->where('luna_id', $luna_id);
+        $builder->groupBy('customer_id');
+        $builder->having('ABS(SUM(loan_amount)) > 0.00001', null, false);
+        $builder->limit(1);
+
+        return $builder->get()->getNumRows() > 0;
+    }
+
+    /**
      * Determines if a luna exists and is active.
      */
     public function exists(int $luna_id): bool
@@ -263,6 +288,16 @@ class Luna extends Model
         );
     }
 
+    private function addLunaLoanBalanceJoin(BaseBuilder $builder): void
+    {
+        $builder->join(
+            '(' . $this->getLunaLoanBalanceSubquery() . ') AS loan_balances',
+            'loan_balances.luna_id = ' . $this->db->prefixTable('lunas') . '.luna_id',
+            'left',
+            false,
+        );
+    }
+
     private function getHarvestSubquery(): string
     {
         $builder = $this->db->table('receivings');
@@ -271,6 +306,23 @@ class Luna extends Model
         $builder->groupBy('luna_id');
 
         return $builder->getCompiledSelect();
+    }
+
+    private function getLunaLoanBalanceSubquery(): string
+    {
+        $customer_balance_builder = $this->db->table('customer_loans');
+        $customer_balance_builder->select([
+            'luna_id',
+            'customer_id',
+            'SUM(loan_amount) AS balance',
+        ]);
+        $customer_balance_builder->where('luna_id IS NOT NULL', null, false);
+        $customer_balance_builder->groupBy(['luna_id', 'customer_id']);
+
+        return 'SELECT luna_id, SUM(balance) AS loan_balance, COUNT(*) AS loan_balance_count '
+            . 'FROM (' . $customer_balance_builder->getCompiledSelect() . ') AS customer_balances '
+            . 'WHERE ABS(balance) > 0.00001 '
+            . 'GROUP BY luna_id';
     }
 
     private function buildManageSearchBuilder(string $search): BaseBuilder
