@@ -243,12 +243,37 @@ class Luna extends Model
     /**
      * Soft deletes a luna.
      */
-    public function delete_luna(int $luna_id): bool
+    public function delete_luna(int $luna_id, ?int $deleted_by = null): bool
     {
+        $luna = $this->get_manage_info($luna_id);
+
+        if ($luna === null) {
+            return false;
+        }
+
+        $this->db->transBegin();
+
         $builder = $this->db->table('lunas');
         $builder->where('luna_id', $luna_id);
+        $deleted = $builder->update(['deleted' => 1]);
 
-        return $builder->update(['deleted' => 1]);
+        $logged = $deleted && model(Deletion_log::class)->record(
+            'luna',
+            $luna_id,
+            $this->formatDeletionLabel($luna),
+            $this->buildDeletionSnapshot($luna),
+            $deleted_by,
+        );
+
+        if (! $logged) {
+            $this->db->transRollback();
+
+            return false;
+        }
+
+        $this->db->transCommit();
+
+        return $this->db->transStatus();
     }
 
     /**
@@ -479,6 +504,33 @@ class Luna extends Model
             . ' * ' . $itemsAlias . '.discount / 100'
             . ' ELSE ' . $itemsAlias . '.item_unit_price * ' . $quantity_expression
             . ' - ' . $itemsAlias . '.discount END)';
+    }
+
+    private function formatDeletionLabel(object $luna): string
+    {
+        return trim((string) ($luna->luna_name ?? '')) !== ''
+            ? (string) $luna->luna_name
+            : trim((string) ($luna->area_name ?? '') . ' (' . (string) ($luna->barangay ?? '') . ')');
+    }
+
+    private function buildDeletionSnapshot(object $luna): array
+    {
+        return [
+            'luna_id'                  => (int) $luna->luna_id,
+            'area_name'                => (string) $luna->area_name,
+            'barangay'                 => (string) $luna->barangay,
+            'landowner_id'             => (int) $luna->landowner_id,
+            'landowner_name'           => (string) ($luna->landowner_name ?? ''),
+            'landowner_loan'           => (float) ($luna->landowner_loan ?? 0),
+            'tenant_id'                => empty($luna->tenant_id) ? null : (int) $luna->tenant_id,
+            'tenant_name'              => (string) ($luna->tenant_name ?? ''),
+            'tenant_loan'              => (float) ($luna->tenant_loan ?? 0),
+            'total_loan'               => (float) ($luna->total_loan ?? 0),
+            'total_kilo_yield'         => (float) ($luna->total_kilo_yield ?? 0),
+            'average_kilo_yield'       => (float) ($luna->average_kilo_yield ?? 0),
+            'last_harvest_at'          => $luna->last_harvest_at ?? null,
+            'next_expected_harvest_at' => $luna->next_expected_harvest_at ?? null,
+        ];
     }
 
     private function appendHarvestMetadata(array $lunas): array

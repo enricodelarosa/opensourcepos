@@ -397,8 +397,10 @@ class Suppliers extends Persons
             ]);
         }
 
-        $deleted = $this->luna->delete_luna($luna_id);
-        $deleted = $deleted || $this->luna->get_info($luna_id) === null;
+        $deleted = $this->luna->delete_luna(
+            $luna_id,
+            (int) $this->employee->get_logged_in_employee_info()->person_id,
+        );
 
         return $this->response->setJSON([
             'success' => $deleted,
