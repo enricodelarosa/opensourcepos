@@ -104,6 +104,8 @@ if ($show_copra_split_breakdown) {
 
 <div id="receipt_wrapper">
     <div id="receipt_header">
+        <div id="sale_time" style="font-size: 85%; margin-bottom: 4px;"><?= esc($transaction_time) ?></div>
+
         <?php if ($config['company_logo'] !== '') { ?>
             <div id="company_name">
                 <img id="image" src="<?= base_url('uploads/' . esc($config['company_logo'], 'url')) ?>" alt="company_logo">
@@ -115,9 +117,6 @@ if ($show_copra_split_breakdown) {
         <?php } ?>
 
         <div id="company_address"><?= nl2br(esc($config['address'])) ?></div>
-        <div id="company_phone"><?= esc($config['phone']) ?></div>
-        <div id="sale_receipt"><?= lang('Receivings.receipt') ?></div>
-        <div id="sale_time"><?= esc($transaction_time) ?></div>
     </div>
 
     <div id="receipt_general_info">
@@ -134,12 +133,11 @@ if ($show_copra_split_breakdown) {
             <tr>
                 <td style="width: 50%; vertical-align: top;">
                     <?php if (isset($supplier)) { ?>
-                        <div id="customer"><?= lang('Suppliers.supplier') . esc(": {$supplier}") ?></div>
+                        <div id="customer"><?= lang('Suppliers.supplier') ?>: <strong><?= esc($supplier) ?></strong></div>
                     <?php } ?>
                     <?php if ($receipt_luna_label !== '') { ?>
                         <div id="luna"><?= lang('Suppliers.luna') . esc(": {$receipt_luna_label}") ?></div>
                     <?php } ?>
-                    <div id="sale_id"><?= lang('Receivings.id') . ": {$receiving_id}" ?></div>
                     <?php if (! empty($reference)) { ?>
                         <div id="reference"><?= lang('Receivings.reference') . esc(": {$reference}") ?></div>
                     <?php } ?>
@@ -157,16 +155,23 @@ if ($show_copra_split_breakdown) {
     <table id="receipt_items">
         <tr>
             <th style="width: 40%;"><?= lang('Items.item') ?></th>
-            <th style="width: 20%;"><?= lang('Common.price') ?></th>
             <th style="width: 20%;"><?= lang('Sales.quantity') ?></th>
+            <th style="width: 20%;"><?= lang('Common.price') ?></th>
             <th style="width: 15%; text-align: right;"><?= lang('Sales.total') ?></th>
         </tr>
 
         <?php foreach (array_reverse($cart, true) as $line => $item) { ?>
+            <?php
+            $receiving_quantity = (float) $item['receiving_quantity'];
+            $receiving_quantity_multiplier = ($receiving_quantity !== 0.0 && $receiving_quantity !== 1.0)
+                ? '&nbsp;&nbsp;&nbsp;x ' . to_quantity_decimals($receiving_quantity)
+                : '';
+            $quantity_unit_label = (int) $item['item_id'] === 4 ? ' kilos' : '';
+            ?>
             <tr>
                 <td><?= esc($item['name'] . ' ' . $item['attribute_values']) ?></td>
+                <td><?= to_quantity_decimals($item['quantity']) . $quantity_unit_label . ' ' . ($show_stock_locations ? ' [' . esc($item['stock_name']) . ']' : '') . $receiving_quantity_multiplier ?></td>
                 <td><?= to_currency($item['price']) ?></td>
-                <td><?= to_quantity_decimals($item['quantity']) . ' ' . ($show_stock_locations ? ' [' . esc($item['stock_name']) . ']' : '') ?>&nbsp;&nbsp;&nbsp;x <?= $item['receiving_quantity'] !== 0 ? to_quantity_decimals($item['receiving_quantity']) : 1 ?></td>
                 <td><div class="total-value"><?= to_currency($item['total']) ?></div></td>
             </tr>
             <tr>
@@ -418,14 +423,6 @@ if ($show_copra_split_breakdown) {
         <?php } ?>
     </table>
 
-    <div id="sale_return_policy">
-        <?= nl2br(esc($config['return_policy'])) ?>
-    </div>
-
-    <div id="barcode">
-        <?= $barcode ?><br>
-        <?= $receiving_id ?>
-    </div>
 </div>
 
 <?= view('partial/footer') ?>
