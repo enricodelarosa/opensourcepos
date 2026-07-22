@@ -117,7 +117,10 @@ class Expense extends Model
             $builder->select('
                 expenses.expense_id,
                 MAX(expenses.date) AS date,
-                MAX(suppliers.company_name) AS supplier_name,
+                MAX(COALESCE(
+                    NULLIF(TRIM(suppliers.company_name), ""),
+                    NULLIF(TRIM(CONCAT(COALESCE(supplier_people.first_name, ""), " ", COALESCE(supplier_people.last_name, ""))), "")
+                )) AS supplier_name,
                 MAX(expenses.supplier_tax_code) AS supplier_tax_code,
                 MAX(expenses.amount) AS amount,
                 MAX(expenses.tax_amount) AS tax_amount,
@@ -132,6 +135,7 @@ class Expense extends Model
         $builder->join('people AS employees', 'employees.person_id = expenses.employee_id', 'LEFT');
         $builder->join('expense_categories AS expense_categories', 'expense_categories.expense_category_id = expenses.expense_category_id', 'LEFT');
         $builder->join('suppliers AS suppliers', 'suppliers.person_id = expenses.supplier_id', 'LEFT');
+        $builder->join('people AS supplier_people', 'supplier_people.person_id = suppliers.person_id', 'LEFT');
 
         $builder->groupStart();
             $builder->like('employees.first_name', $search);
@@ -198,7 +202,10 @@ class Expense extends Model
         $builder->select('
             expenses.expense_id AS expense_id,
             expenses.date AS date,
-            suppliers.company_name AS supplier_name,
+            COALESCE(
+                NULLIF(TRIM(suppliers.company_name), ""),
+                NULLIF(TRIM(CONCAT(COALESCE(supplier_people.first_name, ""), " ", COALESCE(supplier_people.last_name, ""))), "")
+            ) AS supplier_name,
             expenses.supplier_id AS supplier_id,
             expenses.supplier_tax_code AS supplier_tax_code,
             expenses.amount AS amount,
@@ -216,6 +223,7 @@ class Expense extends Model
         $builder->join('people AS employees', 'employees.person_id = expenses.employee_id', 'LEFT');
         $builder->join('expense_categories AS expense_categories', 'expense_categories.expense_category_id = expenses.expense_category_id', 'LEFT');
         $builder->join('suppliers AS suppliers', 'suppliers.person_id = expenses.supplier_id', 'LEFT');
+        $builder->join('people AS supplier_people', 'supplier_people.person_id = suppliers.person_id', 'LEFT');
         $builder->where('expense_id', $expense_id);
 
         $query = $builder->get();

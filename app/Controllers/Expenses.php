@@ -110,6 +110,8 @@ class Expenses extends Secure_Controller
             $data['employees'][$stored_employee_id] = $stored_employee->first_name . ' ' . $stored_employee->last_name;
         }
         $data['can_assign_employee'] = $can_assign_employee;
+        $data['lock_expense_category'] = false;
+        $data['lock_payment_type'] = false;
 
         $expense_categories = [];
         foreach ($this->expense_category->get_all(0, 0, true)->getResultArray() as $row) {
@@ -120,9 +122,15 @@ class Expenses extends Secure_Controller
         if ($expense_id == NEW_ENTRY) {
             $data['expenses_info']->date = $this->getDefaultDateTimeFromRequest();
             $data['expenses_info']->employee_id = $current_employee_id;
+            $default_category_id = $this->getDefaultCategoryIdFromRequest($expense_categories);
+            if ($default_category_id !== null) {
+                $data['expenses_info']->expense_category_id = $default_category_id;
+                $data['lock_expense_category'] = true;
+            }
 
             if ($this->request->getGet('payment_type', FILTER_SANITIZE_FULL_SPECIAL_CHARS) === 'cash') {
                 $data['expenses_info']->payment_type = lang('Sales.cash');
+                $data['lock_payment_type'] = true;
             }
         }
 
@@ -150,6 +158,25 @@ class Expenses extends Secure_Controller
         }
 
         return date('Y-m-d H:i:s');
+    }
+
+    private function getDefaultCategoryIdFromRequest(array $expense_categories): ?int
+    {
+        $category_name = $this->request->getGet('atm', FILTER_SANITIZE_NUMBER_INT)
+            ? 'atm'
+            : $this->request->getGet('category_name', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+
+        if (! is_string($category_name) || trim($category_name) === '') {
+            return null;
+        }
+
+        foreach ($expense_categories as $category_id => $name) {
+            if (strtolower(trim((string) $name)) === strtolower(trim($category_name))) {
+                return (int) $category_id;
+            }
+        }
+
+        return null;
     }
 
     /**

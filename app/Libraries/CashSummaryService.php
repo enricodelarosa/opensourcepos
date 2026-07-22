@@ -47,11 +47,13 @@ class CashSummaryService
         $cashups            = $this->cashup->search('', $filters, 0, 0, 'open_date', 'asc')->getResult();
         $cashupSessions     = [];
         $loanAdjustmentRows = $this->loanAdjustment->get_cash_rows_for_period($dayStart, $dayEnd, true);
+        $expenseRows        = $this->getExpenseRows($dayStart, $dayEnd, true);
         $allRows            = [
             'cn' => $this->getCnRows($date, $date, $dayStart, $dayEnd, $this->getCaPaymentCnRows($loanAdjustmentRows)),
             'ca' => $this->getCaRows($loanAdjustmentRows),
             'cp' => $this->getCpRows($date, $date),
-            'oe' => $this->getOeRows($dayStart, $dayEnd, true),
+            'oe' => $this->getOeRows($expenseRows),
+            'atm' => $this->getAtmRows($expenseRows),
         ];
 
         foreach ($cashups as $cashup) {
@@ -128,7 +130,7 @@ class CashSummaryService
         return $this->receiving->get_cash_receivings_for_period($start, $end);
     }
 
-    private function getOeRows(string $start, string $end, bool $useTimeRange = false): array
+    private function getExpenseRows(string $start, string $end, bool $useTimeRange = false): array
     {
         $filters = [
             'start_date'     => $start,
@@ -146,11 +148,41 @@ class CashSummaryService
         $rows   = [];
 
         foreach ($result->getResult() as $expense) {
+            $categoryName = (string) ($expense->category_name ?? '');
+
             $rows[] = [
-                'particular' => $expense->description ?: $expense->category_name,
-                'amount'     => (float) ($expense->amount),
-                'trans_time' => $expense->date,
+                'particular'    => $expense->description ?: $categoryName,
+                'category_name' => $categoryName,
+                'supplier_name' => (string) ($expense->supplier_name ?? ''),
+                'description'   => (string) ($expense->description ?? ''),
+                'amount'        => (float) ($expense->amount),
+                'trans_time'    => $expense->date,
             ];
+        }
+
+        return $rows;
+    }
+
+    private function getOeRows(array $expenseRows): array
+    {
+        return array_values(array_filter($expenseRows, static fn (array $row): bool => strtolower(trim((string) ($row['category_name'] ?? ''))) !== 'atm'));
+    }
+
+    private function getAtmRows(array $expenseRows): array
+    {
+        $rows = [];
+
+        foreach ($expenseRows as $row) {
+            if (strtolower(trim((string) ($row['category_name'] ?? ''))) !== 'atm') {
+                continue;
+            }
+
+            $row['particular'] = implode(' - ', array_filter([
+                'atm',
+                trim((string) ($row['supplier_name'] ?? '')),
+                trim((string) ($row['description'] ?? '')),
+            ], static fn (string $part): bool => $part !== ''));
+            $rows[] = $row;
         }
 
         return $rows;
@@ -226,6 +258,7 @@ class CashSummaryService
             'ca' => $this->filterRowsByWindow($rowsByType['ca'], $windowStart, $windowEnd, $includeStart, $includeEnd),
             'cp' => $this->filterRowsByWindow($rowsByType['cp'], $windowStart, $windowEnd, $includeStart, $includeEnd),
             'oe' => $this->filterRowsByWindow($rowsByType['oe'], $windowStart, $windowEnd, $includeStart, $includeEnd),
+            'atm' => $this->filterRowsByWindow($rowsByType['atm'], $windowStart, $windowEnd, $includeStart, $includeEnd),
         ];
     }
 
@@ -235,11 +268,13 @@ class CashSummaryService
         $caTotal = array_sum(array_column($rowsByType['ca'], 'amount'));
         $cpTotal = array_sum(array_column($rowsByType['cp'], 'amount'));
         $oeTotal = array_sum(array_column($rowsByType['oe'], 'amount'));
+        $atmTotal = array_sum(array_column($rowsByType['atm'], 'amount'));
         $rows    = array_merge(
             array_map(fn ($row) => $this->buildSessionRow($row, 'cn'), $rowsByType['cn']),
             array_map(fn ($row) => $this->buildSessionRow($row, 'ca'), $rowsByType['ca']),
             array_map(fn ($row) => $this->buildSessionRow($row, 'cp'), $rowsByType['cp']),
             array_map(fn ($row) => $this->buildSessionRow($row, 'oe'), $rowsByType['oe']),
+            array_map(fn ($row) => $this->buildSessionRow($row, 'atm'), $rowsByType['atm']),
         );
         usort($rows, static fn (array $left, array $right): int => strcmp((string) ($left['trans_time'] ?? ''), (string) ($right['trans_time'] ?? '')));
 
@@ -249,7 +284,8 @@ class CashSummaryService
             'ca_total'    => $caTotal,
             'cp_total'    => $cpTotal,
             'oe_total'    => $oeTotal,
-            'cash_ending' => $cashBeginning + $cnTotal - $caTotal - $cpTotal - $oeTotal,
+            'atm_total'   => $atmTotal,
+            'cash_ending' => $cashBeginning + $cnTotal - $caTotal - $cpTotal - $oeTotal - $atmTotal,
             'copra_kilos' => $copraSummary['kilos'],
             'copra_avg_price_per_kilo' => $copraSummary['avg_price_per_kilo'],
             'copra_summary_display'    => $this->formatCopraSummary($copraSummary),
@@ -293,6 +329,7 @@ class CashSummaryService
             'ca'                 => $column === 'ca' ? $row['amount'] : null,
             'cp'                 => $column === 'cp' ? $row['amount'] : null,
             'oe'                 => $column === 'oe' ? $row['amount'] : null,
+            'atm'                => $column === 'atm' ? $row['amount'] : null,
         ];
     }
 
@@ -318,7 +355,8 @@ class CashSummaryService
         return ! empty($rowsByType['cn'])
             || ! empty($rowsByType['ca'])
             || ! empty($rowsByType['cp'])
-            || ! empty($rowsByType['oe']);
+            || ! empty($rowsByType['oe'])
+            || ! empty($rowsByType['atm']);
     }
 
     private function filterRowsByWindow(array $rows, string $windowStart, string $windowEnd, bool $includeStart = true, bool $includeEnd = true): array

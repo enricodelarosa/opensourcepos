@@ -7,6 +7,7 @@ return [
   'ca'         => 'CA',
   'cp'         => 'CP',
   'oe'         => 'OE',
+  'atm'        => 'ATM',
 
   // Row labels
   'cash_rem'        => 'Cash Rem.',
@@ -18,6 +19,7 @@ return [
   'add_cash_in'           => 'Add CN',
   'add_cash_advance'      => 'Add CA',
   'add_operating_expense' => 'Add OE',
+  'add_atm'               => 'Add ATM',
 
   // Session labels
   'outside_cashup' => 'Outside Cashup',

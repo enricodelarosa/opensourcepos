@@ -4,6 +4,8 @@
  * @var array $payment_options
  * @var array $expense_categories
  * @var array $employees
+ * @var bool $lock_expense_category
+ * @var bool $lock_payment_type
  * @var string $controller_name
  * @var array $config
  */
@@ -112,14 +114,36 @@
         <div class="form-group form-group-sm">
             <?= form_label(lang('Expenses.payment'), 'payment_type', ['class' => 'control-label col-xs-3']) ?>
             <div class="col-xs-6">
-                <?= form_dropdown('payment_type', $payment_options, $expenses_info->payment_type, ['class' => 'form-control', 'id' => 'payment_type']) ?>
+                <?php if (! empty($lock_payment_type)): ?>
+                    <?= form_hidden('payment_type', (string) $expenses_info->payment_type) ?>
+                    <?= form_input([
+                        'name'     => 'payment_type_name',
+                        'id'       => 'payment_type',
+                        'class'    => 'form-control',
+                        'value'    => $payment_options[$expenses_info->payment_type] ?? $expenses_info->payment_type,
+                        'readonly' => 'readonly',
+                    ]) ?>
+                <?php else: ?>
+                    <?= form_dropdown('payment_type', $payment_options, $expenses_info->payment_type, ['class' => 'form-control', 'id' => 'payment_type']) ?>
+                <?php endif; ?>
             </div>
         </div>
 
         <div class="form-group form-group-sm">
             <?= form_label(lang('Expenses_categories.name'), 'category', ['class' => 'control-label col-xs-3']) ?>
             <div class="col-xs-6">
-                <?= form_dropdown('expense_category_id', $expense_categories, $expenses_info->expense_category_id, ['class' => 'form-control', 'id' => 'category']) ?>
+                <?php if (! empty($lock_expense_category)): ?>
+                    <?= form_hidden('expense_category_id', (string) $expenses_info->expense_category_id) ?>
+                    <?= form_input([
+                        'name'     => 'expense_category_name',
+                        'id'       => 'category',
+                        'class'    => 'form-control',
+                        'value'    => $expense_categories[$expenses_info->expense_category_id] ?? '',
+                        'readonly' => 'readonly',
+                    ]) ?>
+                <?php else: ?>
+                    <?= form_dropdown('expense_category_id', $expense_categories, $expenses_info->expense_category_id, ['class' => 'form-control', 'id' => 'category']) ?>
+                <?php endif; ?>
             </div>
         </div>
 

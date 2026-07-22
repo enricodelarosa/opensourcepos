@@ -121,6 +121,11 @@ $action_header = static function () use ($date): void { ?>
                 <span class="glyphicon glyphicon-tags"></span><?= lang('Cash_summary.add_operating_expense') ?>
             </button>
         </th>
+        <th class="action-header">
+            <button class="btn btn-info btn-sm modal-dlg column-action" data-btn-submit="<?= lang('Common.submit') ?>" data-href="<?= 'expenses/view?date=' . rawurlencode($date) . '&payment_type=cash&atm=1' ?>" title="<?= lang('Expenses.new') ?>">
+                <span class="glyphicon glyphicon-tags"></span><?= lang('Cash_summary.add_atm') ?>
+            </button>
+        </th>
     </tr>
 <?php };
 
@@ -128,11 +133,12 @@ $column_header = static function () use ($action_header): void { ?>
     <thead>
         <?php $action_header() ?>
         <tr>
-            <th style="width:40%"><?= lang('Cash_summary.particular') ?></th>
-            <th style="width:15%"><?= lang('Cash_summary.cn') ?></th>
-            <th style="width:15%"><?= lang('Cash_summary.ca') ?></th>
-            <th style="width:15%"><?= lang('Cash_summary.cp') ?></th>
-            <th style="width:15%"><?= lang('Cash_summary.oe') ?></th>
+            <th style="width:35%"><?= lang('Cash_summary.particular') ?></th>
+            <th style="width:13%"><?= lang('Cash_summary.cn') ?></th>
+            <th style="width:13%"><?= lang('Cash_summary.ca') ?></th>
+            <th style="width:13%"><?= lang('Cash_summary.cp') ?></th>
+            <th style="width:13%"><?= lang('Cash_summary.oe') ?></th>
+            <th style="width:13%"><?= lang('Cash_summary.atm') ?></th>
         </tr>
     </thead>
 <?php }; ?>
@@ -148,7 +154,7 @@ $column_header = static function () use ($action_header): void { ?>
             <?php $column_header() ?>
             <tbody>
                 <tr>
-                    <td colspan="5" class="no-sessions"><?= lang('Cash_summary.no_results') ?></td>
+                    <td colspan="6" class="no-sessions"><?= lang('Cash_summary.no_results') ?></td>
                 </tr>
             </tbody>
         </table>
@@ -171,6 +177,7 @@ $column_header = static function () use ($action_header): void { ?>
                     <td></td>
                     <td></td>
                     <td></td>
+                    <td></td>
                 </tr>
                 <?php foreach ($session['rows'] as $row): ?>
                 <tr>
@@ -184,6 +191,7 @@ $column_header = static function () use ($action_header): void { ?>
                     <td class="amount"><?= $row['ca'] !== null ? to_currency($row['ca']) : '' ?></td>
                     <td class="amount"><?= $row['cp'] !== null ? to_currency($row['cp']) : '' ?></td>
                     <td class="amount"><?= $row['oe'] !== null ? to_currency($row['oe']) : '' ?></td>
+                    <td class="amount"><?= $row['atm'] !== null ? to_currency($row['atm']) : '' ?></td>
                 </tr>
                 <?php endforeach; ?>
             </tbody>
@@ -194,11 +202,12 @@ $column_header = static function () use ($action_header): void { ?>
                     <td class="amount"><?= to_currency($session['ca_total']) ?></td>
                     <td class="amount"><?= to_currency($session['cp_total']) ?></td>
                     <td class="amount"><?= to_currency($session['oe_total']) ?></td>
+                    <td class="amount"><?= to_currency($session['atm_total']) ?></td>
                 </tr>
                 <tr class="cash-ending">
                     <td><?= lang('Cash_summary.cash_ending') ?></td>
                     <td class="amount"><?= to_currency($session['cash_ending']) ?></td>
-                    <td colspan="3" class="copra-session-summary">
+                    <td colspan="4" class="copra-session-summary">
                         <?php if (! empty($session['copra_summary_display'])): ?>
                             <?= esc(lang('Cash_summary.copra_summary')) ?>: <?= esc($session['copra_summary_display']) ?>
                         <?php endif; ?>
