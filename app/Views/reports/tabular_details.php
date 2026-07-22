@@ -76,6 +76,14 @@
                 + '<td class="text-right">' + escapeHtml(split.landowner_share_percent) + '</td>'
                 + '<td class="text-right">' + escapeHtml(split.tenant_share_percent) + '</td>'
                 + '</tr>'
+                + (split.has_pre_split_expense ? '<tr>'
+                    + '<td><?= esc(lang('Receivings.shared_expenses_deducted_from_total')) ?></td>'
+                    + '<td class="text-right" colspan="2">' + escapeHtml(split.pre_split_expense_total) + '</td>'
+                    + '</tr>'
+                    + '<tr>'
+                    + '<td><?= esc(lang('Receivings.net_amount_for_split')) ?></td>'
+                    + '<td class="text-right" colspan="2">' + escapeHtml(split.net_amount_for_split) + '</td>'
+                    + '</tr>' : '')
                 + '<tr>'
                 + '<td><?= esc(lang('Receivings.base_share')) ?></td>'
                 + '<td class="text-right">' + escapeHtml(split.landowner_base_share) + '</td>'
@@ -85,17 +93,17 @@
                     + '<td><?= esc(lang('Receivings.shared_expense_split')) ?></td>'
                     + '<td class="text-right">' + escapeHtml(split.shared_transfer_amount) + '</td>'
                     + '<td class="text-right">' + escapeHtml(split.shared_transfer_amount) + '</td>'
-                    + '</tr>'
-                    + (split.has_landowner_add_back ? '<tr>'
-                        + '<td><?= esc(lang('Receivings.shared_expense_added_to_landowner')) ?></td>'
-                        + '<td class="text-right">' + escapeHtml(split.landowner_add_back_total) + '</td>'
-                        + '<td class="text-right"><?= esc(to_currency(0)) ?></td>'
-                        + '</tr>' : '')
-                    + (split.has_tenant_add_back ? '<tr>'
-                        + '<td><?= esc(lang('Receivings.shared_expense_added_to_tenant')) ?></td>'
-                        + '<td class="text-right"><?= esc(to_currency(0)) ?></td>'
-                        + '<td class="text-right">' + escapeHtml(split.tenant_add_back_total) + '</td>'
-                        + '</tr>' : '') : '')
+                    + '</tr>' : '')
+                + (split.has_landowner_add_back ? '<tr>'
+                    + '<td><?= esc(lang('Receivings.shared_expense_added_to_landowner')) ?></td>'
+                    + '<td class="text-right">' + escapeHtml(split.landowner_add_back_total) + '</td>'
+                    + '<td class="text-right"><?= esc(to_currency(0)) ?></td>'
+                    + '</tr>' : '')
+                + (split.has_tenant_add_back ? '<tr>'
+                    + '<td><?= esc(lang('Receivings.shared_expense_added_to_tenant')) ?></td>'
+                    + '<td class="text-right"><?= esc(to_currency(0)) ?></td>'
+                    + '<td class="text-right">' + escapeHtml(split.tenant_add_back_total) + '</td>'
+                    + '</tr>' : '')
                 + '<tr>'
                 + '<td><strong><?= esc(lang('Receivings.share_after_split')) ?></strong></td>'
                 + '<td class="text-right"><strong>' + escapeHtml(split.landowner_share_after_split) + '</strong></td>'

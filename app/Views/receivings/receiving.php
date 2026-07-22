@@ -867,6 +867,8 @@ if (isset($success)) {
         var deleteLabel = <?= json_encode(lang('Common.delete')) ?>;
         var addBackToTenantLabel = <?= json_encode(lang('Receivings.add_back_to_tenant')) ?>;
         var addBackToLandownerLabel = <?= json_encode(lang('Receivings.add_back_to_landowner')) ?>;
+        var addBackToSharedLandownerLabel = <?= json_encode(lang('Receivings.add_back_to_shared_landowner')) ?>;
+        var addBackToSharedTenantLabel = <?= json_encode(lang('Receivings.add_back_to_shared_tenant')) ?>;
         var invalidSplitMessages = {
             total: <?= json_encode(lang('Receivings.copra_split_total_invalid')) ?>,
             negative: <?= json_encode(lang('Receivings.copra_split_negative_result')) ?>
@@ -940,9 +942,16 @@ if (isset($success)) {
         function normalizeExpense(rawExpense) {
             var description = $.trim((rawExpense && rawExpense.description) || '');
             var amount = parseNumericValue(rawExpense && rawExpense.amount);
-            var addBackTo = ((rawExpense && rawExpense.add_back_to) === 'landowner' || (rawExpense && rawExpense.add_back_to) === 'supplier')
-                ? 'landowner'
-                : 'tenant';
+            var rawAddBackTo = rawExpense && rawExpense.add_back_to;
+            var addBackTo = 'tenant';
+
+            if (rawAddBackTo === 'landowner' || rawAddBackTo === 'supplier') {
+                addBackTo = 'landowner';
+            } else if (rawAddBackTo === 'shared_landowner') {
+                addBackTo = 'shared_landowner';
+            } else if (rawAddBackTo === 'shared_tenant' || rawAddBackTo === 'shared') {
+                addBackTo = 'shared_tenant';
+            }
 
             if (isNaN(amount) || amount < 0) {
                 amount = 0;
@@ -965,6 +974,8 @@ if (isset($success)) {
                     '<td><select class="form-control input-sm copra-expense-add-back-to">'
                         + '<option value="tenant"' + (normalizedExpense.add_back_to === 'tenant' ? ' selected' : '') + '>' + escapeHtml(addBackToTenantLabel) + '</option>'
                         + '<option value="landowner"' + (normalizedExpense.add_back_to === 'landowner' ? ' selected' : '') + '>' + escapeHtml(addBackToLandownerLabel) + '</option>'
+                        + '<option value="shared_landowner"' + (normalizedExpense.add_back_to === 'shared_landowner' ? ' selected' : '') + '>' + escapeHtml(addBackToSharedLandownerLabel) + '</option>'
+                        + '<option value="shared_tenant"' + (normalizedExpense.add_back_to === 'shared_tenant' ? ' selected' : '') + '>' + escapeHtml(addBackToSharedTenantLabel) + '</option>'
                     + '</select></td>' +
                     '<td style="text-align: center;"><button type="button" class="btn btn-link text-danger copra-expense-delete" style="padding: 0 2px;" title="' + escapeHtml(deleteLabel) + '"><span class="glyphicon glyphicon-trash"></span></button></td>' +
                 '</tr>';
@@ -1050,27 +1061,36 @@ if (isset($success)) {
             var landownerSharePercent = normalizePercentage($('#landowner_share_percent').val());
             var tenantSharePercent = normalizePercentage($('#tenant_share_percent').val());
             var expenses = getCopraExpenses();
-            var sharedTotal = 0;
+            var preSplitExpenseTotal = 0;
+            var splitExpenseTotal = 0;
             var landownerAddBackTotal = 0;
             var tenantAddBackTotal = 0;
 
             $.each(expenses, function(_, expense) {
-                sharedTotal += expense.amount;
-
-                if (expense.add_back_to === 'landowner') {
+                if (expense.add_back_to === 'shared_landowner') {
+                    preSplitExpenseTotal += expense.amount;
+                    landownerAddBackTotal += expense.amount;
+                } else if (expense.add_back_to === 'shared_tenant') {
+                    preSplitExpenseTotal += expense.amount;
+                    tenantAddBackTotal += expense.amount;
+                } else if (expense.add_back_to === 'landowner') {
+                    splitExpenseTotal += expense.amount;
                     landownerAddBackTotal += expense.amount;
                 } else {
+                    splitExpenseTotal += expense.amount;
                     tenantAddBackTotal += expense.amount;
                 }
             });
 
-            sharedTotal = roundCurrency(sharedTotal);
+            preSplitExpenseTotal = roundCurrency(preSplitExpenseTotal);
+            splitExpenseTotal = roundCurrency(splitExpenseTotal);
             landownerAddBackTotal = roundCurrency(landownerAddBackTotal);
             tenantAddBackTotal = roundCurrency(tenantAddBackTotal);
 
-            var sharedTransferAmount = roundCurrency(sharedTotal / 2);
-            var baseLandownerAmount = roundCurrency(purchaseTotal * (landownerSharePercent / 100));
-            var baseTenantAmount = roundCurrency(purchaseTotal - baseLandownerAmount);
+            var netAmountForSplit = roundCurrency(purchaseTotal - preSplitExpenseTotal);
+            var sharedTransferAmount = roundCurrency(splitExpenseTotal / 2);
+            var baseLandownerAmount = roundCurrency(netAmountForSplit * (landownerSharePercent / 100));
+            var baseTenantAmount = roundCurrency(netAmountForSplit - baseLandownerAmount);
             var landownerSuggestedAmount = roundCurrency(baseLandownerAmount - sharedTransferAmount + landownerAddBackTotal);
             var tenantSuggestedAmount = roundCurrency(baseTenantAmount - sharedTransferAmount + tenantAddBackTotal);
             var validationMessage = '';
@@ -1079,7 +1099,7 @@ if (isset($success)) {
             if (Math.abs((landownerSharePercent + tenantSharePercent) - 100) > 0.01) {
                 isValid = false;
                 validationMessage = invalidSplitMessages.total;
-            } else if (landownerSuggestedAmount < -0.01 || tenantSuggestedAmount < -0.01) {
+            } else if (netAmountForSplit < -0.01 || landownerSuggestedAmount < -0.01 || tenantSuggestedAmount < -0.01) {
                 isValid = false;
                 validationMessage = invalidSplitMessages.negative;
             }
@@ -1087,6 +1107,7 @@ if (isset($success)) {
             return {
                 landownerSharePercent: landownerSharePercent,
                 tenantSharePercent: tenantSharePercent,
+                netAmountForSplit: Math.max(0, netAmountForSplit),
                 baseLandownerAmount: baseLandownerAmount,
                 baseTenantAmount: baseTenantAmount,
                 landownerAddBackTotal: landownerAddBackTotal,

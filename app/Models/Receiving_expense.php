@@ -8,6 +8,9 @@ class Receiving_expense extends Model
 {
     public const ADD_BACK_TO_TENANT = 'tenant';
     public const ADD_BACK_TO_LANDOWNER = 'landowner';
+    public const ADD_BACK_TO_SHARED_LANDOWNER = 'shared_landowner';
+    public const ADD_BACK_TO_SHARED_TENANT = 'shared_tenant';
+    public const ADD_BACK_TO_SHARED = self::ADD_BACK_TO_SHARED_TENANT;
     public const ADD_BACK_TO_SUPPLIER = self::ADD_BACK_TO_LANDOWNER;
 
     protected $table            = 'receiving_expenses';
@@ -88,8 +91,11 @@ class Receiving_expense extends Model
 
     private function normalizeAddBackTo(mixed $value): string
     {
-        return in_array($value, [self::ADD_BACK_TO_LANDOWNER, 'supplier'], true)
-            ? self::ADD_BACK_TO_LANDOWNER
-            : self::ADD_BACK_TO_TENANT;
+        return match ($value) {
+            self::ADD_BACK_TO_LANDOWNER, 'supplier' => self::ADD_BACK_TO_LANDOWNER,
+            self::ADD_BACK_TO_SHARED_LANDOWNER => self::ADD_BACK_TO_SHARED_LANDOWNER,
+            self::ADD_BACK_TO_SHARED_TENANT, 'shared' => self::ADD_BACK_TO_SHARED_TENANT,
+            default => self::ADD_BACK_TO_TENANT,
+        };
     }
 }

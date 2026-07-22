@@ -230,12 +230,17 @@ class Receiving_loan_snapshot extends Model
         $rows = [];
 
         foreach ($builder->get()->getResultArray() as $row) {
+            $add_back_to = $row['add_back_to'] ?? Receiving_expense::ADD_BACK_TO_TENANT;
+
             $rows[(int) $row['receiving_id']][] = [
                 'description' => trim((string) ($row['description'] ?? '')),
                 'amount'      => round(max(0, (float) ($row['amount'] ?? 0)), 2),
-                'add_back_to' => ($row['add_back_to'] ?? Receiving_expense::ADD_BACK_TO_TENANT) === Receiving_expense::ADD_BACK_TO_SUPPLIER
-                    ? Receiving_expense::ADD_BACK_TO_LANDOWNER
-                    : Receiving_expense::ADD_BACK_TO_TENANT,
+                'add_back_to' => match ($add_back_to) {
+                    Receiving_expense::ADD_BACK_TO_SUPPLIER, 'supplier' => Receiving_expense::ADD_BACK_TO_LANDOWNER,
+                    Receiving_expense::ADD_BACK_TO_SHARED_LANDOWNER => Receiving_expense::ADD_BACK_TO_SHARED_LANDOWNER,
+                    Receiving_expense::ADD_BACK_TO_SHARED_TENANT, 'shared' => Receiving_expense::ADD_BACK_TO_SHARED_TENANT,
+                    default => Receiving_expense::ADD_BACK_TO_TENANT,
+                },
             ];
         }
 

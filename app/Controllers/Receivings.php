@@ -1147,31 +1147,43 @@ class Receivings extends Secure_Controller
         float $tenant_share_percent,
         array $expenses,
     ): array {
-        $shared_total = 0.0;
+        $pre_split_expense_total = 0.0;
+        $split_expense_total = 0.0;
         $landowner_add_back_total = 0.0;
         $tenant_add_back_total = 0.0;
 
         foreach ($this->receiving_expense->normalize_expenses($expenses) as $expense) {
             $amount = (float) ($expense['amount'] ?? 0);
-            $shared_total += $amount;
+            $add_back_to = $expense['add_back_to'] ?? Receiving_expense::ADD_BACK_TO_TENANT;
 
-            if (($expense['add_back_to'] ?? Receiving_expense::ADD_BACK_TO_TENANT) === Receiving_expense::ADD_BACK_TO_SUPPLIER) {
+            if ($add_back_to === Receiving_expense::ADD_BACK_TO_SHARED_LANDOWNER) {
+                $pre_split_expense_total += $amount;
+                $landowner_add_back_total += $amount;
+            } elseif ($add_back_to === Receiving_expense::ADD_BACK_TO_SHARED_TENANT) {
+                $pre_split_expense_total += $amount;
+                $tenant_add_back_total += $amount;
+            } elseif ($add_back_to === Receiving_expense::ADD_BACK_TO_SUPPLIER) {
+                $split_expense_total += $amount;
                 $landowner_add_back_total += $amount;
             } else {
+                $split_expense_total += $amount;
                 $tenant_add_back_total += $amount;
             }
         }
 
-        $shared_transfer_amount     = round($shared_total / 2, 2);
-        $base_landowner_amount      = round($cash_amount * ($landowner_share_percent / 100), 2);
-        $base_tenant_amount         = round($cash_amount - $base_landowner_amount, 2);
+        $net_amount_for_split       = round($cash_amount - $pre_split_expense_total, 2);
+        $shared_transfer_amount     = round($split_expense_total / 2, 2);
+        $base_landowner_amount      = round($net_amount_for_split * ($landowner_share_percent / 100), 2);
+        $base_tenant_amount         = round($net_amount_for_split - $base_landowner_amount, 2);
         $landowner_share_after_split = round($base_landowner_amount - $shared_transfer_amount + $landowner_add_back_total, 2);
         $tenant_share_after_split    = round($base_tenant_amount - $shared_transfer_amount + $tenant_add_back_total, 2);
         $landowner_suggested_amount  = $landowner_share_after_split;
         $tenant_suggested_amount     = $tenant_share_after_split;
 
         return [
-            'shared_total'                 => $shared_total,
+            'shared_total'                 => $split_expense_total,
+            'pre_split_expense_total'      => round($pre_split_expense_total, 2),
+            'net_amount_for_split'         => $net_amount_for_split,
             'shared_transfer_amount'       => $shared_transfer_amount,
             'landowner_add_back_total'     => round($landowner_add_back_total, 2),
             'tenant_add_back_total'        => round($tenant_add_back_total, 2),
@@ -1182,6 +1194,7 @@ class Receivings extends Secure_Controller
             'landowner_suggested_amount'   => $landowner_suggested_amount,
             'tenant_suggested_amount'      => $tenant_suggested_amount,
             'is_valid'                     => abs(($landowner_share_percent + $tenant_share_percent) - 100.0) <= 0.01
+                && $net_amount_for_split >= -0.01
                 && $landowner_suggested_amount >= -0.01
                 && $tenant_suggested_amount >= -0.01,
         ];

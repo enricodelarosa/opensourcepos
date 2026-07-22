@@ -111,6 +111,8 @@ return [
     'expense_add_back_to'                     => 'Add To',
     'add_back_to_tenant'                      => 'Tenant',
     'add_back_to_landowner'                   => 'Landowner',
+    'add_back_to_shared_landowner'            => 'Shared Expense - Landowner',
+    'add_back_to_shared_tenant'               => 'Shared Expense - Tenant',
     'add_expense'                             => 'Add Expense',
     'select_luna_with_tenant_for_split'       => 'Select a luna with an assigned tenant to configure the split and expenses.',
     'suggested_cash_to_landowner'             => 'Suggested Cash to Landowner',

@@ -1978,17 +1978,26 @@ class Reports extends Secure_Controller
             return null;
         }
 
-        $shared_total = 0.0;
+        $pre_split_expense_total = 0.0;
+        $split_expense_total = 0.0;
         $landowner_add_back_total = 0.0;
         $tenant_add_back_total = 0.0;
 
         foreach ($receiving_context['expenses'] ?? [] as $expense) {
             $amount = (float) ($expense['amount'] ?? 0);
-            $shared_total += $amount;
+            $add_back_to = $expense['add_back_to'] ?? Receiving_expense::ADD_BACK_TO_TENANT;
 
-            if (($expense['add_back_to'] ?? Receiving_expense::ADD_BACK_TO_TENANT) === Receiving_expense::ADD_BACK_TO_SUPPLIER) {
+            if ($add_back_to === Receiving_expense::ADD_BACK_TO_SHARED_LANDOWNER) {
+                $pre_split_expense_total += $amount;
+                $landowner_add_back_total += $amount;
+            } elseif ($add_back_to === Receiving_expense::ADD_BACK_TO_SHARED_TENANT) {
+                $pre_split_expense_total += $amount;
+                $tenant_add_back_total += $amount;
+            } elseif ($add_back_to === Receiving_expense::ADD_BACK_TO_SUPPLIER || $add_back_to === 'supplier') {
+                $split_expense_total += $amount;
                 $landowner_add_back_total += $amount;
             } else {
+                $split_expense_total += $amount;
                 $tenant_add_back_total += $amount;
             }
         }
@@ -1996,9 +2005,10 @@ class Reports extends Secure_Controller
         $landowner_name = trim((string) ($receiving_context['landowner_name'] ?? ''));
         $tenant_name    = trim((string) ($receiving_context['tenant_name'] ?? ''));
 
-        $shared_transfer_amount      = round($shared_total / 2, 2);
-        $landowner_base_share        = round($total * (((float) $landowner_share_percent) / 100), 2);
-        $tenant_base_share           = round($total - $landowner_base_share, 2);
+        $net_amount_for_split        = round($total - $pre_split_expense_total, 2);
+        $shared_transfer_amount      = round($split_expense_total / 2, 2);
+        $landowner_base_share        = round($net_amount_for_split * (((float) $landowner_share_percent) / 100), 2);
+        $tenant_base_share           = round($net_amount_for_split - $landowner_base_share, 2);
         $landowner_share_after_split = round($landowner_base_share - $shared_transfer_amount + $landowner_add_back_total, 2);
         $tenant_share_after_split    = round($tenant_base_share - $shared_transfer_amount + $tenant_add_back_total, 2);
 
@@ -2007,6 +2017,9 @@ class Reports extends Secure_Controller
             'tenant_name'                 => $tenant_name !== '' ? $tenant_name : lang('Reports.tenant'),
             'landowner_share_percent'     => to_decimals((float) $landowner_share_percent) . '%',
             'tenant_share_percent'        => to_decimals((float) $tenant_share_percent) . '%',
+            'has_pre_split_expense'       => $pre_split_expense_total > 0.009,
+            'pre_split_expense_total'      => $this->formatCurrencyAdjustment(-$pre_split_expense_total),
+            'net_amount_for_split'         => to_currency($net_amount_for_split),
             'landowner_base_share'        => to_currency($landowner_base_share),
             'tenant_base_share'           => to_currency($tenant_base_share),
             'has_shared_expense_transfer' => $shared_transfer_amount > 0.009,
@@ -2029,12 +2042,18 @@ class Reports extends Secure_Controller
         $rows = [];
 
         foreach ($receiving_context['expenses'] as $expense) {
+            $add_back_to = $expense['add_back_to'] ?? Receiving_expense::ADD_BACK_TO_TENANT;
+
             $rows[] = [
                 'description' => trim((string) ($expense['description'] ?? '')),
                 'amount'      => to_currency((float) ($expense['amount'] ?? 0)),
-                'add_back_to' => (($expense['add_back_to'] ?? Receiving_expense::ADD_BACK_TO_TENANT) === Receiving_expense::ADD_BACK_TO_SUPPLIER)
-                    ? lang('Receivings.add_back_to_landowner')
-                    : lang('Receivings.add_back_to_tenant'),
+                'add_back_to' => match ($add_back_to) {
+                    Receiving_expense::ADD_BACK_TO_SUPPLIER, 'supplier' => lang('Receivings.add_back_to_landowner'),
+                    Receiving_expense::ADD_BACK_TO_SHARED_LANDOWNER => lang('Receivings.add_back_to_shared_landowner'),
+                    Receiving_expense::ADD_BACK_TO_SHARED_TENANT => lang('Receivings.add_back_to_shared_tenant'),
+                    'shared' => lang('Receivings.add_back_to_shared_tenant'),
+                    default => lang('Receivings.add_back_to_tenant'),
+                },
             ];
         }
 
