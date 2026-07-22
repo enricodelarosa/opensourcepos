@@ -9,9 +9,10 @@ return [
   'oe'         => 'OE',
 
   // Row labels
-  'cash_rem'      => 'Cash Rem.',
-  'cash_ending'   => 'Cash Ending',
-  'copra_summary' => 'Copra Total',
+  'cash_rem'        => 'Cash Rem.',
+  'cash_ending'     => 'Cash Ending',
+  'copra_summary'   => 'Copra Total',
+  'ca_payment_note' => 'CA Payment',
 
   // Actions
   'add_cash_in'           => 'Add CN',

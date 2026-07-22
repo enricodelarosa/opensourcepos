@@ -44,11 +44,12 @@ class CashSummaryService
             'is_deleted' => false,
         ];
 
-        $cashups        = $this->cashup->search('', $filters, 0, 0, 'open_date', 'asc')->getResult();
-        $cashupSessions = [];
-        $allRows        = [
-            'cn' => $this->getCnRows($date, $date, $dayStart, $dayEnd),
-            'ca' => $this->getCaRows($dayStart, $dayEnd),
+        $cashups            = $this->cashup->search('', $filters, 0, 0, 'open_date', 'asc')->getResult();
+        $cashupSessions     = [];
+        $loanAdjustmentRows = $this->loanAdjustment->get_cash_rows_for_period($dayStart, $dayEnd, true);
+        $allRows            = [
+            'cn' => $this->getCnRows($date, $date, $dayStart, $dayEnd, $this->getCaPaymentCnRows($loanAdjustmentRows)),
+            'ca' => $this->getCaRows($loanAdjustmentRows),
             'cp' => $this->getCpRows($date, $date),
             'oe' => $this->getOeRows($dayStart, $dayEnd, true),
         ];
@@ -84,11 +85,12 @@ class CashSummaryService
         return $this->interleaveOutsideCashupSessions($allRows, $cashupSessions, $dayStart, $dayEnd);
     }
 
-    private function getCnRows(string $start, string $end, string $dayStart, string $dayEnd): array
+    private function getCnRows(string $start, string $end, string $dayStart, string $dayEnd, array $additionalRows = []): array
     {
         $rows = array_merge(
             $this->sale->get_cash_sales_for_period($start, $end),
             $this->cashMovement->get_cash_rows_for_period($dayStart, $dayEnd, true),
+            $additionalRows,
         );
 
         usort($rows, static fn (array $left, array $right): int => strcmp((string) ($left['trans_time'] ?? ''), (string) ($right['trans_time'] ?? '')));
@@ -96,9 +98,29 @@ class CashSummaryService
         return $rows;
     }
 
-    private function getCaRows(string $startDate, string $endDate): array
+    private function getCaRows(array $loanAdjustmentRows): array
     {
-        return $this->loanAdjustment->get_cash_rows_for_period($startDate, $endDate, true);
+        return array_values(array_filter($loanAdjustmentRows, static fn (array $row): bool => (float) ($row['amount'] ?? 0) > 0));
+    }
+
+    private function getCaPaymentCnRows(array $loanAdjustmentRows): array
+    {
+        $caPaymentNote = ' - ' . lang('Cash_summary.ca_payment_note');
+        $rows = [];
+
+        foreach ($loanAdjustmentRows as $row) {
+            $amount = (float) ($row['amount'] ?? 0);
+
+            if ($amount >= 0) {
+                continue;
+            }
+
+            $row['amount'] = abs($amount);
+            $row['particular_note'] = trim((string) ($row['particular_note'] ?? '') . $caPaymentNote);
+            $rows[] = $row;
+        }
+
+        return $rows;
     }
 
     private function getCpRows(string $start, string $end): array
