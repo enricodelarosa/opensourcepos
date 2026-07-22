@@ -106,6 +106,24 @@ if ($show_copra_split_breakdown) {
 }
 ?>
 
+<style>
+#receipt_wrapper .receipt-bordered-table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+#receipt_wrapper .receipt-bordered-table th,
+#receipt_wrapper .receipt-bordered-table td {
+    border: 1px solid #000;
+    padding: 3px 4px;
+}
+
+#receipt_wrapper .receipt-nested-table th,
+#receipt_wrapper .receipt-nested-table td {
+    padding: 4px;
+}
+</style>
+
 <div class="print_hide" id="control_buttons" style="text-align: right;">
     <a href="javascript:printdoc();">
         <div class="btn btn-info btn-sm" id="show_print_button"><?= '<span class="glyphicon glyphicon-print">&nbsp;</span>' . lang('Common.print') ?></div>
@@ -163,7 +181,7 @@ if ($show_copra_split_breakdown) {
         </table>
     </div>
 
-    <table id="receipt_items">
+    <table id="receipt_items" class="receipt-bordered-table">
         <tr>
             <th style="width: 40%;"><?= lang('Items.item') ?></th>
             <th style="width: 20%;"><?= lang('Sales.quantity') ?></th>
@@ -221,7 +239,7 @@ if ($show_copra_split_breakdown) {
         <?php if ($show_copra_split_breakdown) { ?>
             <tr>
                 <td colspan="4" style="padding-top: 8px;">
-                    <table style="width: 100%; border-collapse: collapse;">
+                    <table class="receipt-bordered-table receipt-nested-table">
                         <tr>
                             <th style="width: 34%; text-align: left; border-top: 1px solid #000; border-bottom: 1px solid #000; padding: 4px 0;"><?= lang('Receivings.copra_split_breakdown') ?></th>
                             <th style="width: 33%; text-align: right; border-top: 1px solid #000; border-bottom: 1px solid #000; padding: 4px 0;">
