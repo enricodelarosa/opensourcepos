@@ -95,6 +95,8 @@ return [
     'base_share'                              => 'Base Share',
     'shared_expenses_deducted_from_total'     => 'Less Shared Expenses From Total',
     'net_amount_for_split'                    => 'Net Amount for Split',
+    'remaining_after_expenses'                => 'Remaining After Expenses',
+    'total_expenses'                          => 'Total Expenses',
     'split_share'                             => 'Split Share',
     'shared_expense_split'                    => 'Expense Split (1/2 each)',
     'shared_expense_added_to_landowner'       => 'Expense Added Back to Landowner',

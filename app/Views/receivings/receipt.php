@@ -118,8 +118,12 @@ if ($show_copra_split_breakdown) {
     padding: 3px 4px;
 }
 
-#receipt_wrapper .receipt-nested-table th,
-#receipt_wrapper .receipt-nested-table td {
+#receipt_wrapper .receipt-section {
+    margin-top: 16px;
+}
+
+#receipt_wrapper #receipt_split th,
+#receipt_wrapper #receipt_split td {
     padding: 4px;
 }
 </style>
@@ -222,101 +226,11 @@ if ($show_copra_split_breakdown) {
                 <div class="total-value"><?= to_currency($total) ?></div>
             </td>
         </tr>
-        <?php if ($show_copra_split_breakdown && $has_pre_split_expense) { ?>
-            <tr>
-                <td colspan="3" style="text-align: right;"><?= lang('Receivings.shared_expenses_deducted_from_total') ?></td>
-                <td>
-                    <div class="total-value"><?= esc($format_adjustment(-$pre_split_expense_total)) ?></div>
-                </td>
-            </tr>
-            <tr>
-                <td colspan="3" style="text-align: right;"><?= lang('Receivings.net_amount_for_split') ?></td>
-                <td>
-                    <div class="total-value"><?= to_currency((float) $net_amount_for_split) ?></div>
-                </td>
-            </tr>
-        <?php } ?>
         <?php if ($show_copra_split_breakdown) { ?>
-            <tr>
-                <td colspan="4" style="padding-top: 8px;">
-                    <table class="receipt-bordered-table receipt-nested-table">
-                        <tr>
-                            <th style="width: 34%; text-align: left; border-top: 1px solid #000; border-bottom: 1px solid #000; padding: 4px 0;"><?= lang('Receivings.copra_split_breakdown') ?></th>
-                            <th style="width: 33%; text-align: right; border-top: 1px solid #000; border-bottom: 1px solid #000; padding: 4px 0;">
-                                <?= esc(lang('Reports.landowner')) ?><br>
-                                <span style="font-weight: normal; color: #666;"><?= esc($landowner_display_name) ?></span>
-                            </th>
-                            <th style="width: 33%; text-align: right; border-top: 1px solid #000; border-bottom: 1px solid #000; padding: 4px 0;">
-                                <?= esc(lang('Reports.tenant')) ?><br>
-                                <span style="font-weight: normal; color: #666;"><?= esc($tenant_display_name) ?></span>
-                            </th>
-                        </tr>
-                        <tr>
-                            <td style="padding-top: 4px;"><?= lang('Receivings.initial_split_guide') ?></td>
-                            <td style="text-align: right; padding-top: 4px;"><?= to_decimals($landowner_share_percent) ?>%</td>
-                            <td style="text-align: right; padding-top: 4px;"><?= to_decimals($tenant_share_percent) ?>%</td>
-                        </tr>
-                        <?php if ($has_shared_expense_transfer || $has_landowner_add_back || $has_tenant_add_back) { ?>
-                            <tr>
-                                <td><?= lang('Receivings.split_share') ?></td>
-                                <td style="text-align: right;"><?= to_currency((float) $landowner_split_share) ?></td>
-                                <td style="text-align: right;"><?= to_currency((float) $tenant_split_share) ?></td>
-                            </tr>
-                            <?php if ($has_landowner_add_back) { ?>
-                            <tr>
-                                <td><?= lang('Receivings.shared_expense_added_to_landowner') ?></td>
-                                <td style="text-align: right;"><?= esc($format_adjustment($landowner_add_back_total)) ?></td>
-                                <td style="text-align: right;"><?= to_currency(0) ?></td>
-                            </tr>
-                            <?php } ?>
-                            <?php if ($has_tenant_add_back) { ?>
-                            <tr>
-                                <td><?= lang('Receivings.shared_expense_added_to_tenant') ?></td>
-                                <td style="text-align: right;"><?= to_currency(0) ?></td>
-                                <td style="text-align: right;"><?= esc($format_adjustment($tenant_add_back_total)) ?></td>
-                            </tr>
-                            <?php } ?>
-                        <?php } else { ?>
-                            <tr>
-                                <td><?= lang('Receivings.base_share') ?></td>
-                                <td style="text-align: right;"><?= to_currency((float) $landowner_base_share) ?></td>
-                                <td style="text-align: right;"><?= to_currency((float) $tenant_base_share) ?></td>
-                            </tr>
-                        <?php } ?>
-                        <tr>
-                            <td><strong><?= lang('Receivings.share_after_split') ?></strong></td>
-                            <td style="text-align: right;"><strong><?= to_currency((float) $landowner_share_after_split) ?></strong></td>
-                            <td style="text-align: right;"><strong><?= to_currency((float) $tenant_share_after_split) ?></strong></td>
-                        </tr>
-                        <tr>
-                            <td><?= lang('Receivings.loan_deduction') ?></td>
-                            <td style="text-align: right;"><?= $loan_deduction > 0 ? '-' . to_currency((float) $loan_deduction) : to_currency(0) ?></td>
-                            <td style="text-align: right;"><?= $partner_loan_deduction > 0 ? '-' . to_currency((float) $partner_loan_deduction) : to_currency(0) ?></td>
-                        </tr>
-                        <?php if ($negative_loan_amount > 0) { ?>
-                            <tr>
-                                <td><?= lang('Receivings.remaining_as_landowner_negative_loan') ?></td>
-                                <td style="text-align: right;"><?= to_currency((float) $negative_loan_amount) ?></td>
-                                <td style="text-align: right;"><?= to_currency(0) ?></td>
-                            </tr>
-                        <?php } ?>
-                        <?php if (isset($loan_balance_after) || isset($partner_loan_balance_after)) { ?>
-                            <tr>
-                                <td><?= lang('Receivings.loan_balance_after') ?></td>
-                                <td style="text-align: right;"><?= isset($loan_balance_after) ? to_currency((float) $loan_balance_after) : '-' ?></td>
-                                <td style="text-align: right;"><?= isset($partner_loan_balance_after) ? to_currency((float) $partner_loan_balance_after) : '-' ?></td>
-                            </tr>
-                        <?php } ?>
-                        <tr>
-                            <td style="border-top: 1px solid #000; padding-top: 4px;"><strong><?= lang('Receivings.cash_after_loan') ?></strong></td>
-                            <td style="text-align: right; border-top: 1px solid #000; padding-top: 4px;"><strong><?= to_currency((float) $amount_tendered) ?></strong></td>
-                            <td style="text-align: right; border-top: 1px solid #000; padding-top: 4px;"><strong><?= to_currency((float) $partner_amount_tendered) ?></strong></td>
-                        </tr>
-                    </table>
-                </td>
-            </tr>
+    </table>
         <?php } ?>
         <?php if ($show_copra_expenses) { ?>
+    <table id="receipt_expenses" class="receipt-bordered-table receipt-section">
             <tr>
                 <td colspan="2" style="text-align: right;"><strong><?= lang('Receivings.copra_expenses') ?></strong></td>
                 <td style="text-align: right;"><strong><?= lang('Receivings.expense_add_back_to') ?></strong></td>
@@ -341,10 +255,115 @@ if ($show_copra_split_breakdown) {
                     </td>
                 </tr>
             <?php } ?>
+            <tr>
+                <td colspan="3" style="text-align: right;"><strong><?= lang('Receivings.total_expenses') ?></strong></td>
+                <td>
+                    <div class="total-value"><strong><?= to_currency($pre_split_expense_total + $split_expense_total) ?></strong></div>
+                </td>
+            </tr>
+        <?php if ($has_pre_split_expense) { ?>
+            <tr>
+                <td colspan="3" style="text-align: right;"><?= lang('Receivings.shared_expenses_deducted_from_total') ?></td>
+                <td>
+                    <div class="total-value"><?= esc($format_adjustment(-$pre_split_expense_total)) ?></div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="3" style="text-align: right;"><?= lang('Receivings.net_amount_for_split') ?></td>
+                <td>
+                    <div class="total-value"><?= to_currency((float) $net_amount_for_split) ?></div>
+                </td>
+            </tr>
+        <?php } ?>
+                <tr>
+                    <td colspan="3" style="text-align: right;">
+                        <?= lang('Receivings.remaining_after_expenses') ?>
+                        (<?= to_currency($total) ?> - <?= to_currency($pre_split_expense_total + $split_expense_total) ?>)
+                    </td>
+                    <td>
+                        <div class="total-value"><?= to_currency(round($total - $pre_split_expense_total - $split_expense_total, 2)) ?></div>
+                    </td>
+                </tr>
+    </table>
+        <?php } ?>
+        <?php if ($show_copra_split_breakdown) { ?>
+    <table id="receipt_split" class="receipt-bordered-table receipt-section">
+        <tr>
+            <th style="width: 34%; text-align: left; border-top: 1px solid #000; border-bottom: 1px solid #000; padding: 4px 0;"><?= lang('Receivings.copra_split_breakdown') ?></th>
+            <th style="width: 33%; text-align: right; border-top: 1px solid #000; border-bottom: 1px solid #000; padding: 4px 0;">
+                <?= esc(lang('Reports.landowner')) ?><br>
+                <span style="font-weight: normal; color: #666;"><?= esc($landowner_display_name) ?></span>
+            </th>
+            <th style="width: 33%; text-align: right; border-top: 1px solid #000; border-bottom: 1px solid #000; padding: 4px 0;">
+                <?= esc(lang('Reports.tenant')) ?><br>
+                <span style="font-weight: normal; color: #666;"><?= esc($tenant_display_name) ?></span>
+            </th>
+        </tr>
+        <tr>
+            <td style="padding-top: 4px;"><?= lang('Receivings.initial_split_guide') ?></td>
+            <td style="text-align: right; padding-top: 4px;"><?= to_decimals($landowner_share_percent) ?>%</td>
+            <td style="text-align: right; padding-top: 4px;"><?= to_decimals($tenant_share_percent) ?>%</td>
+        </tr>
+        <?php if ($has_shared_expense_transfer || $has_landowner_add_back || $has_tenant_add_back) { ?>
+            <tr>
+                <td><?= lang('Receivings.split_share') ?></td>
+                <td style="text-align: right;"><?= to_currency((float) $landowner_split_share) ?></td>
+                <td style="text-align: right;"><?= to_currency((float) $tenant_split_share) ?></td>
+            </tr>
+            <?php if ($has_landowner_add_back) { ?>
+            <tr>
+                <td><?= lang('Receivings.shared_expense_added_to_landowner') ?></td>
+                <td style="text-align: right;"><?= esc($format_adjustment($landowner_add_back_total)) ?></td>
+                <td style="text-align: right;"><?= to_currency(0) ?></td>
+            </tr>
+            <?php } ?>
+            <?php if ($has_tenant_add_back) { ?>
+            <tr>
+                <td><?= lang('Receivings.shared_expense_added_to_tenant') ?></td>
+                <td style="text-align: right;"><?= to_currency(0) ?></td>
+                <td style="text-align: right;"><?= esc($format_adjustment($tenant_add_back_total)) ?></td>
+            </tr>
+            <?php } ?>
+        <?php } else { ?>
+            <tr>
+                <td><?= lang('Receivings.base_share') ?></td>
+                <td style="text-align: right;"><?= to_currency((float) $landowner_base_share) ?></td>
+                <td style="text-align: right;"><?= to_currency((float) $tenant_base_share) ?></td>
+            </tr>
+        <?php } ?>
+        <tr>
+            <td><strong><?= lang('Receivings.share_after_split') ?></strong></td>
+            <td style="text-align: right;"><strong><?= to_currency((float) $landowner_share_after_split) ?></strong></td>
+            <td style="text-align: right;"><strong><?= to_currency((float) $tenant_share_after_split) ?></strong></td>
+        </tr>
+        <tr>
+            <td><?= lang('Receivings.loan_deduction') ?></td>
+            <td style="text-align: right;"><?= $loan_deduction > 0 ? '-' . to_currency((float) $loan_deduction) : to_currency(0) ?></td>
+            <td style="text-align: right;"><?= $partner_loan_deduction > 0 ? '-' . to_currency((float) $partner_loan_deduction) : to_currency(0) ?></td>
+        </tr>
+        <?php if ($negative_loan_amount > 0) { ?>
+            <tr>
+                <td><?= lang('Receivings.remaining_as_landowner_negative_loan') ?></td>
+                <td style="text-align: right;"><?= to_currency((float) $negative_loan_amount) ?></td>
+                <td style="text-align: right;"><?= to_currency(0) ?></td>
+            </tr>
+        <?php } ?>
+        <?php if (isset($loan_balance_after) || isset($partner_loan_balance_after)) { ?>
+            <tr>
+                <td><?= lang('Receivings.loan_balance_after') ?></td>
+                <td style="text-align: right;"><?= isset($loan_balance_after) ? to_currency((float) $loan_balance_after) : '-' ?></td>
+                <td style="text-align: right;"><?= isset($partner_loan_balance_after) ? to_currency((float) $partner_loan_balance_after) : '-' ?></td>
+            </tr>
+        <?php } ?>
+        <tr>
+            <td style="border-top: 1px solid #000; padding-top: 4px;"><strong><?= lang('Receivings.cash_after_loan') ?></strong></td>
+            <td style="text-align: right; border-top: 1px solid #000; padding-top: 4px;"><strong><?= to_currency((float) $amount_tendered) ?></strong></td>
+            <td style="text-align: right; border-top: 1px solid #000; padding-top: 4px;"><strong><?= to_currency((float) $partner_amount_tendered) ?></strong></td>
+        </tr>
         <?php } ?>
         <?php if ($mode !== 'requisition') { ?>
             <tr>
-                <td colspan="3" style="text-align: right;"><?= lang('Sales.payment') ?></td>
+                <td colspan="<?= $show_copra_split_breakdown ? 2 : 3 ?>" style="text-align: right;"><?= lang('Sales.payment') ?></td>
                 <td>
                     <div class="total-value"><?= esc($payment_type) ?></div>
                 </td>
