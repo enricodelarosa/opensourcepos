@@ -107,6 +107,11 @@ if ($show_copra_split_breakdown) {
 ?>
 
 <style>
+#receipt_wrapper {
+    font-size: 125%;
+    line-height: 1.5;
+}
+
 #receipt_wrapper .receipt-bordered-table {
     border-collapse: collapse;
     width: 100%;
@@ -114,7 +119,7 @@ if ($show_copra_split_breakdown) {
 
 #receipt_wrapper .receipt-bordered-table th,
 #receipt_wrapper .receipt-bordered-table td {
-    border: 1px solid #000;
+    border: 0.5px solid #000;
     padding: 3px 4px;
 }
 
@@ -125,6 +130,13 @@ if ($show_copra_split_breakdown) {
 #receipt_wrapper #receipt_split th,
 #receipt_wrapper #receipt_split td {
     padding: 4px;
+}
+
+@media print {
+    #receipt_wrapper {
+        font-size: 90%;
+        line-height: 1.3;
+    }
 }
 </style>
 
@@ -137,7 +149,7 @@ if ($show_copra_split_breakdown) {
 
 <div id="receipt_wrapper">
     <div id="receipt_header">
-        <div id="sale_time" style="font-size: 85%; margin-bottom: 4px;"><?= esc($transaction_time) ?></div>
+        <div id="sale_time" style="margin-bottom: 4px;"><?= esc($transaction_time) ?></div>
 
         <?php if ($config['company_logo'] !== '') { ?>
             <div id="company_name">
@@ -221,8 +233,8 @@ if ($show_copra_split_breakdown) {
             <?php } ?>
         <?php } ?>
         <tr>
-            <td colspan="3" style="text-align: right; border-top: 2px solid #000000;"><?= lang('Sales.total') ?></td>
-            <td style="border-top: 2px solid #000000;">
+            <td colspan="3" style="text-align: right; border-top: 1px solid #000000;"><?= lang('Sales.total') ?></td>
+            <td style="border-top: 1px solid #000000;">
                 <div class="total-value"><?= to_currency($total) ?></div>
             </td>
         </tr>
@@ -289,12 +301,12 @@ if ($show_copra_split_breakdown) {
         <?php if ($show_copra_split_breakdown) { ?>
     <table id="receipt_split" class="receipt-bordered-table receipt-section">
         <tr>
-            <th style="width: 34%; text-align: left; border-top: 1px solid #000; border-bottom: 1px solid #000; padding: 4px 0;"><?= lang('Receivings.copra_split_breakdown') ?></th>
-            <th style="width: 33%; text-align: right; border-top: 1px solid #000; border-bottom: 1px solid #000; padding: 4px 0;">
+            <th style="width: 34%; text-align: left; padding: 4px 0;"><?= lang('Receivings.copra_split_breakdown') ?></th>
+            <th style="width: 33%; text-align: right; padding: 4px 0;">
                 <?= esc(lang('Reports.landowner')) ?><br>
                 <span style="font-weight: normal; color: #666;"><?= esc($landowner_display_name) ?></span>
             </th>
-            <th style="width: 33%; text-align: right; border-top: 1px solid #000; border-bottom: 1px solid #000; padding: 4px 0;">
+            <th style="width: 33%; text-align: right; padding: 4px 0;">
                 <?= esc(lang('Reports.tenant')) ?><br>
                 <span style="font-weight: normal; color: #666;"><?= esc($tenant_display_name) ?></span>
             </th>
@@ -356,9 +368,9 @@ if ($show_copra_split_breakdown) {
             </tr>
         <?php } ?>
         <tr>
-            <td style="border-top: 1px solid #000; padding-top: 4px;"><strong><?= lang('Receivings.cash_after_loan') ?></strong></td>
-            <td style="text-align: right; border-top: 1px solid #000; padding-top: 4px;"><strong><?= to_currency((float) $amount_tendered) ?></strong></td>
-            <td style="text-align: right; border-top: 1px solid #000; padding-top: 4px;"><strong><?= to_currency((float) $partner_amount_tendered) ?></strong></td>
+            <td style="padding-top: 4px;"><strong><?= lang('Receivings.cash_after_loan') ?></strong></td>
+            <td style="text-align: right; padding-top: 4px;"><strong><?= to_currency((float) $amount_tendered) ?></strong></td>
+            <td style="text-align: right; padding-top: 4px;"><strong><?= to_currency((float) $partner_amount_tendered) ?></strong></td>
         </tr>
         <?php } ?>
         <?php if ($mode !== 'requisition') { ?>
