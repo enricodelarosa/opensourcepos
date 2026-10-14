@@ -137,6 +137,11 @@ if ($show_copra_split_breakdown) {
         font-size: 90%;
         line-height: 1.3;
     }
+
+    #receipt_wrapper .receipt-bordered-table th,
+    #receipt_wrapper .receipt-bordered-table td {
+        border: 0.25pt solid #ccc !important;
+    }
 }
 </style>
 
