@@ -41,8 +41,8 @@
             pageSize: <?= $config['lines_per_page'] ?>,
             uniqueId: 'expense_id',
             onLoadSuccess: function(response) {
+                $("#payment_summary").html(response.payment_summary);
                 if ($("#table tbody tr").length > 1) {
-                    $("#payment_summary").html(response.payment_summary);
                     $("#table tbody tr:last td:first").html("");
                     $("#table tbody tr:last").css('font-weight', 'bold');
                 }

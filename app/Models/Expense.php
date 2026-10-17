@@ -149,6 +149,10 @@ class Expense extends Model
 
         $builder->where('expenses.deleted', $filters['is_deleted']);
 
+        if (! empty($filters['hide_atm'])) {
+            $builder->where("LOWER(TRIM(COALESCE(expense_categories.category_name, ''))) !=", 'atm');
+        }
+
         if (empty($filters['use_time_range']) && empty($config['date_or_time_format'])) {
             $builder->where('DATE_FORMAT(expenses.date, "%Y-%m-%d") BETWEEN ' . $this->db->escape($filters['start_date']) . ' AND ' . $this->db->escape($filters['end_date']));
         } else {
@@ -313,7 +317,12 @@ class Expense extends Model
         // get payment summary
         $builder = $this->db->table('expenses');
         $builder->select('payment_type, COUNT(amount) AS count, SUM(amount) AS amount');
-        $builder->where('deleted', $filters['is_deleted']);
+        $builder->where('expenses.deleted', $filters['is_deleted']);
+
+        if (! empty($filters['hide_atm'])) {
+            $builder->join('expense_categories AS expense_categories', 'expense_categories.expense_category_id = expenses.expense_category_id', 'LEFT');
+            $builder->where("LOWER(TRIM(COALESCE(expense_categories.category_name, ''))) !=", 'atm');
+        }
 
         if (empty($filters['use_time_range']) && empty($config['date_or_time_format'])) {
             $builder->where('DATE_FORMAT(date, "%Y-%m-%d") BETWEEN ' . $this->db->escape($filters['start_date']) . ' AND ' . $this->db->escape($filters['end_date']));

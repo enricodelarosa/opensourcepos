@@ -29,6 +29,7 @@ return [
     "error_adding_updating"      => "Error adding/updating Expense",
     "expense_id"                 => "Id",
     "expenses_employee"          => "Employee",
+    "hide_atm"                   => "Hide ATM expenses",
     "info"                       => "Expense Info",
     "ip_address"                 => "",
     "is_deleted"                 => "Deleted",

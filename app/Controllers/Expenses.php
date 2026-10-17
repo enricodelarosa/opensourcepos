@@ -35,6 +35,7 @@ class Expenses extends Secure_Controller
             'only_check'  => lang('Expenses.check_filter'),
             'only_credit' => lang('Expenses.credit_filter'),
             'only_debit'  => lang('Expenses.debit_filter'),
+            'hide_atm'    => lang('Expenses.hide_atm'),
             'is_deleted'  => lang('Expenses.is_deleted')
         ];
 
@@ -62,6 +63,7 @@ class Expenses extends Secure_Controller
             'only_check'  => false,
             'only_credit' => false,
             'only_debit'  => false,
+            'hide_atm'    => false,
             'is_deleted'  => false
         ];
 
